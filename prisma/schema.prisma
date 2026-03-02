@@ -1,0 +1,378 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+model sysdiagrams {
+  name         String @db.NVarChar(128)
+  principal_id Int
+  diagram_id   Int    @id(map: "PK__sysdiagr__C2B05B61A0497249") @default(autoincrement())
+  version      Int?
+  definition   Bytes?
+
+  @@unique([principal_id, name], map: "UK_principal_name")
+}
+
+model tblCMMMachines {
+  ID              Int    @id(map: "PK_tblCMMMachines") @default(autoincrement())
+  SiteID          Int
+  CMMName         String @db.VarChar(50)
+  ISActive        Int    @db.SmallInt
+  IsBnS           Int    @db.SmallInt
+  IsActiveDisplay String @db.VarChar(3)
+  IsBnSDisplay    String @db.VarChar(3)
+}
+
+model tblCMMProbes {
+  ID               Int    @id(map: "PK_tblCMMProbes") @default(autoincrement())
+  SiteID           Int
+  ProbeName        String @db.VarChar(50)
+  IsActive         Int
+  IsBnS            Int    @db.SmallInt
+  CurrentQuantity  Int
+  ReorderQuantity  Int
+  IsActiveDisplay  String @db.VarChar(3)
+  IsBnSDisplay     String @db.VarChar(3)
+  IsOrdered        Int    @db.SmallInt
+  IsOrderedDisplay String @db.VarChar(3)
+}
+
+model tblDepartment {
+  ID                  Int       @id(map: "PK_tblDepartment") @default(autoincrement())
+  SiteID              Int?
+  DepartmentName      String?   @db.NVarChar(255)
+  ParentID            Int?
+  QualityCCList       String?   @db.VarChar(500)
+  ManufacturingCCList String?   @db.VarChar(500)
+  CellLeadCCList      String?   @db.VarChar(500)
+  CreatedTimestamp    DateTime? @db.DateTime
+  UpdatedTimestamp    DateTime? @db.DateTime
+  UpdateUserID        String?   @db.NVarChar(255)
+  CMMFilePath         String?   @db.VarChar(1000)
+}
+
+model tblEMailMessageTemplate {
+  ID                   Int     @id(map: "PK_tblEMailMessageTemplate") @default(autoincrement())
+  EventName            String? @db.NVarChar(255)
+  EMailMessageTemplate String? @db.NText
+}
+
+model tblIgnoreScheduleByTask {
+  ID                 Int     @id(map: "PK_tblIgnoreScheduleByTask") @default(autoincrement())
+  TaskID             Int?
+  TaskName           String? @db.NVarChar(255)
+  ScheduleIDToIgnore Int?
+}
+
+model tblMetrologyMachine {
+  ID                     Int    @id(map: "PK_tblMetrologyMachine") @default(autoincrement())
+  SiteID                 Int
+  MetrologyMachineName   String @db.VarChar(50)
+  IsActive               Int    @db.SmallInt
+  MetrologyMachineTypeID Int
+  IsActiveDisplay        String @db.VarChar(3)
+}
+
+model tblMetrologyMachineType {
+  ID                   Int    @id(map: "PK_tblMetrologyMachineType") @default(autoincrement())
+  MetrologyMachineType String @db.VarChar(50)
+  ServiceTypeID        Int?
+}
+
+model tblMetrologyMachineTypeProbeXREF {
+  ID                     Int @id(map: "PK_tblMetrologyMachineTypeProbeXREF") @default(autoincrement())
+  SiteID                 Int
+  MetrologyMachineTypeID Int
+  MetrologyProbeID       Int
+}
+
+model tblMetrologyProbes {
+  ID               Int    @id(map: "PK_tblMetrologyMachineProbes") @default(autoincrement())
+  SiteID           Int
+  ProbeName        String @db.VarChar(50)
+  IsActive         Int
+  CurrentQuantity  Int
+  ReorderQuantity  Int
+  IsActiveDisplay  String @db.VarChar(3)
+  IsOrdered        Int    @db.SmallInt
+  IsOrderedDisplay String @db.VarChar(3)
+}
+
+model tblProject {
+  ID                      Int       @id(map: "PK_tblProject") @default(autoincrement())
+  SiteID                  Int?
+  ProjectName             String?   @db.NVarChar(255)
+  ProjectDescription      String?   @db.NText
+  DepartmentID            Int?
+  PrimaryProjectOwnerID   Int?
+  SecondaryProjectOwnerID Int?
+  TertiaryProjectOwnerID  Int?
+  InitiatorEmployeeID     Int?
+  CountOfActiveTasks      Int?
+  CreatedTimestamp        DateTime? @db.DateTime
+  UpdatedTimestamp        DateTime? @db.DateTime
+  UpdateUserID            String?   @db.NVarChar(255)
+  TicketNumber            String?   @db.VarChar(50)
+  CreatedTimestampDisplay String?   @db.NVarChar(4000)
+  CreatedTimestampSort    String?   @db.NVarChar(4000)
+  UpdatedTimestampDisplay String?   @db.NVarChar(4000)
+  UpdatedTimestampSort    String?   @db.NVarChar(4000)
+  CarbonCopyEmailList     String?   @db.VarChar(2000)
+  RequiresModels          Int
+}
+
+model tblPurchaseOrder {
+  ID                    Int      @id(map: "PK_tblPurchaseOrder") @default(autoincrement())
+  SiteID                Int
+  PurchaseOrderNumber   String?  @db.VarChar(50)
+  PurchaseOrderStatusID Int
+  Vendor                String   @db.VarChar(255)
+  Description           String?  @db.VarChar(1000)
+  RequestorID           Int
+  DateCreated           DateTime @db.DateTime
+  LastUpdated           DateTime @db.DateTime
+  UpdateUserID          String   @db.VarChar(10)
+}
+
+model tblPurchaseOrderLineItem {
+  ID                  Int       @id(map: "PK_tblPurchaseOrderLineItem") @default(autoincrement())
+  PurchaseOrderID     Int
+  GageIDSN            String?   @db.VarChar(500)
+  LineItemTypeID      Int
+  LineItemStatusID    Int?
+  Quantity            Int?
+  Cost                Float?
+  ServiceDate         DateTime? @db.Date
+  DateScheduled       DateTime? @db.DateTime
+  DateReceived        DateTime? @db.DateTime
+  DateCreated         DateTime  @db.DateTime
+  DateUpdated         DateTime  @db.DateTime
+  UpdatedBy           String    @db.VarChar(10)
+  PerUnitCost         Float
+  ReceivedQuantity    Int
+  OutstandingQuantity Int?
+}
+
+model tblPurchaseOrderLineItemStatus {
+  ID     Int    @id(map: "PK_tblPurchaseOrderLineItemStatus") @default(autoincrement())
+  Status String @db.VarChar(50)
+}
+
+model tblPurchaseOrderNotes {
+  ID               Int      @id(map: "PK_tblPurchaseOrderNotes") @default(autoincrement())
+  poID             Int
+  poNote           String   @db.VarChar(Max)
+  CreatedTimestamp DateTime @db.DateTime
+  UpdateUserID     String   @db.VarChar(255)
+}
+
+model tblPurchaseOrderStatus {
+  ID                  Int    @id(map: "PK_tblPurchaseOrderStatus") @default(autoincrement())
+  PurchaseOrderStatus String @db.VarChar(50)
+}
+
+model tblPurchaseOrderType {
+  ID                Int    @id(map: "PK_tblPurchaseOrderType") @default(autoincrement())
+  PurchaseOrderType String @db.VarChar(50)
+}
+
+model tblPurchaseOrderVendors {
+  ID         Int    @id(map: "PK_tblPurchaseOrderVendors") @default(autoincrement())
+  VendorName String @db.VarChar(255)
+}
+
+model tblServiceNotes {
+  ID               Int       @id(map: "PK_tblServiceNotes") @default(autoincrement())
+  ServiceTicketID  Int?
+  TaskNote         String?   @db.VarChar(Max)
+  CreatedTimestamp DateTime? @db.DateTime
+  UpdateUserID     String?   @db.NVarChar(255)
+}
+
+model tblServiceStatus {
+  ID            Int    @id(map: "PK_tblServiceStatus") @default(autoincrement())
+  ServiceStatus String @db.VarChar(50)
+  IsActive      Int    @db.SmallInt
+}
+
+model tblServiceTicket {
+  ID                     Int      @id(map: "PK_tblServiceTicket") @default(autoincrement())
+  SiteID                 Int
+  TicketNumber           String?  @db.VarChar(50)
+  TicketName             String   @db.VarChar(500)
+  TicketDetails          String?  @db.VarChar(2000)
+  InitiatorID            Int
+  DepartmentID           Int
+  TicketTypeID           Int
+  CMMDownID              Int?
+  CMMDownPartNumber      String?  @db.VarChar(255)
+  CMMDownOperatorID      String?  @db.VarChar(10)
+  CMMDownOperatorName    String?  @db.VarChar(255)
+  CMMDownBrokenProbeID   Int?
+  AssignedToID           Int?
+  StatusID               Int
+  DueDate                DateTime @db.Date
+  CreateTimestamp        DateTime @db.DateTime
+  UpdateTimestamp        DateTime @db.DateTime
+  UpdatedBy              String?  @db.VarChar(10)
+  CreateTimestampDisplay String?  @db.NVarChar(4000)
+  CreateTimestampSort    String?  @db.NVarChar(4000)
+  UpdateTimestampDisplay String?  @db.NVarChar(4000)
+  UpdateTimestampSort    String?  @db.NVarChar(4000)
+  DueDateDisplay         String?  @db.NVarChar(4000)
+  DueDateSort            String?  @db.NVarChar(4000)
+  CarbonCopyEmailList    String?  @db.VarChar(2000)
+}
+
+model tblServiceType {
+  ID              Int    @id(map: "PK_tblServiceType") @default(autoincrement())
+  ServiceType     String @db.VarChar(50)
+  IsActive        Int    @db.SmallInt
+  IsActiveDisplay String @db.VarChar(3)
+}
+
+model tblSite {
+  ID                    Int     @id(map: "PK_tblSite") @default(autoincrement())
+  SiteName              String? @db.NVarChar(255)
+  EmailAddressCCList    String? @db.VarChar(1000)
+  MetrologyEmailAddress String? @db.VarChar(320)
+}
+
+model tblStatus {
+  ID                    Int       @id(map: "PK_tblStatus") @default(autoincrement())
+  Status                String?   @db.VarChar(255)
+  DefaultToTrue         Int?      @db.SmallInt
+  IsCompleteOrCancelled Int?      @db.SmallInt
+  CreatedTimestamp      DateTime? @db.DateTime
+  UpdatedTimestamp      DateTime? @db.DateTime
+  UpdateUserID          String?   @db.VarChar(255)
+}
+
+model tblTask {
+  ID                      Int       @id(map: "PK_tblTask") @default(autoincrement())
+  ProjectID               Int?
+  StatusID                Int?
+  TaskName                String?   @db.NVarChar(255)
+  TicketNumber            String?   @db.NVarChar(255)
+  DrawingNumber           String?   @db.NVarChar(255)
+  DueDate                 DateTime? @db.DateTime
+  CustomerRev             String?   @db.NVarChar(15)
+  ManufacturingRev        String?   @db.NVarChar(15)
+  Operation               String?   @db.NVarChar(15)
+  ScheduledDueDate        DateTime? @db.DateTime
+  EstimatedHours          Int?
+  TaskTypeID              Int?
+  AssignedToID            Int?
+  DateStarted             DateTime? @db.DateTime
+  DateCompleted           DateTime? @db.DateTime
+  ManualDueDate           Int?      @db.SmallInt
+  HavePart                Int?      @db.SmallInt
+  IUNumber                String?   @db.NVarChar(255)
+  CreatedTimestamp        DateTime? @db.DateTime
+  UpdatedTimestamp        DateTime? @db.DateTime
+  UpdateUserID            String?   @db.NVarChar(255)
+  DateCompletedDisplay    String?   @db.NVarChar(4000)
+  DateCompletedSort       String?   @db.NVarChar(4000)
+  CreatedTimestampDisplay String?   @db.NVarChar(4000)
+  CreatedTimestampSort    String?   @db.NVarChar(4000)
+  UpdatedTimestampDisplay String?   @db.NVarChar(4000)
+  UpdatedTimestampSort    String?   @db.NVarChar(4000)
+  DateStartedDisplay      String?   @db.NVarChar(4000)
+  DateStartedSortSort     String?   @db.NVarChar(4000)
+  DueDateDisplay          String?   @db.NVarChar(4000)
+  DueDateSort             String?   @db.NVarChar(4000)
+  ScheduledDueDateDisplay String?   @db.NVarChar(4000)
+  ScheduledDueDateSort    String?   @db.NVarChar(4000)
+  CurrentlyRunning        Int       @db.SmallInt
+  CurrentlyRunningDisplay String    @db.VarChar(3)
+
+  @@index([AssignedToID], map: "IDX_tblTask_Assignee")
+  @@index([TaskName], map: "Idx_tblTask_TaskName")
+}
+
+model tblTaskNotes {
+  ID               Int       @id(map: "PK_tblTaskNotes") @default(autoincrement())
+  TaskID           Int?
+  TaskNote         String?   @db.VarChar(Max)
+  CreatedTimestamp DateTime? @db.DateTime
+  UpdatedTimestamp DateTime? @db.DateTime
+  UpdateUserID     String?   @db.NVarChar(255)
+  IsNoteAutomated  Int?      @db.SmallInt
+}
+
+model tblTaskType {
+  ID                       Int       @id(map: "PK_tblTaskType") @default(autoincrement())
+  IsActive                 Int?      @db.SmallInt
+  TaskType                 String?   @db.VarChar(255)
+  TaskTypeGroupID          Int?
+  AverageCompletionHours   Int?
+  RequiresJobNumber        Int       @db.SmallInt
+  CreatedTimestamp         DateTime? @db.DateTime
+  UpdatedTimestamp         DateTime? @db.DateTime
+  UpdateUserID             String?   @db.VarChar(255)
+  IsActiveDisplay          String    @db.VarChar(3)
+  RequiresJobNumberDisplay String    @db.VarChar(3)
+  RequiresModels           Int
+}
+
+model tblTaskTypeGroup {
+  ID                Int     @id(map: "PK_tblTaskTypeGroup") @default(autoincrement())
+  TaskTypeGroupName String? @db.NVarChar(255)
+}
+
+model tblUser {
+  ID               Int       @id(map: "PK_tblUser") @default(autoincrement())
+  SiteID           Int?
+  DepartmentID     Int?
+  UserTypeID       Int?
+  IsActive         Int?      @db.SmallInt
+  FName            String?   @db.NVarChar(255)
+  LName            String?   @db.NVarChar(255)
+  EmployeeNumber   String?   @db.NVarChar(255)
+  EMailAddress     String?   @db.NVarChar(255)
+  NetworkUserName  String?   @db.NVarChar(255)
+  IsAdmin          Int?      @db.SmallInt
+  CreatedTimestamp DateTime? @db.DateTime
+  UpdatedTimestamp DateTime? @db.DateTime
+  UpdateUserID     String?   @db.NVarChar(255)
+  FullName         String?   @db.NVarChar(511)
+  ShortName        String?   @db.NVarChar(258)
+  DisplayName      String?   @db.NVarChar(512)
+  IsActiveDisplay  String    @db.VarChar(3)
+  IsAdminDisplay   String    @db.VarChar(3)
+}
+
+model tblUserType {
+  ID       Int    @id(map: "PK_tblUserType") @default(autoincrement())
+  UserType String @db.VarChar(255)
+}
+
+/// View qryTaskList - using @@id since views don't have named primary key constraints
+model qryTaskList {
+  ID               Int
+  ProjectID        Int?
+  StatusID         Int?
+  TaskName         String?   @db.NVarChar(255)
+  TicketNumber     String?   @db.NVarChar(255)
+  DrawingNumber    String?   @db.NVarChar(255)
+  DueDate          DateTime? @db.DateTime
+  CustomerRev      String?   @db.NVarChar(15)
+  ManufacturingRev String?   @db.NVarChar(15)
+  Operation        String?   @db.NVarChar(15)
+  ScheduledDueDate DateTime? @db.DateTime
+  EstimatedHours   Int?
+  TaskTypeID       Int?
+  AssignedToID     Int?
+  DateStarted      DateTime? @db.DateTime
+  DateCompleted    DateTime? @db.DateTime
+  ManualDueDate    Int?      @db.SmallInt
+  HavePart         Int?      @db.SmallInt
+  IUNumber         String?   @db.NVarChar(255)
+  CreatedTimestamp DateTime? @db.DateTime
+
+  @@id([ID])
+}
