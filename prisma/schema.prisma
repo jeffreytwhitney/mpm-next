@@ -353,26 +353,32 @@ model tblUserType {
 
 /// View qryTaskList - using @@id since views don't have named primary key constraints
 model qryTaskList {
-  ID               Int
-  ProjectID        Int?
-  StatusID         Int?
-  TaskName         String?   @db.NVarChar(255)
-  TicketNumber     String?   @db.NVarChar(255)
-  DrawingNumber    String?   @db.NVarChar(255)
-  DueDate          DateTime? @db.DateTime
-  CustomerRev      String?   @db.NVarChar(15)
-  ManufacturingRev String?   @db.NVarChar(15)
-  Operation        String?   @db.NVarChar(15)
-  ScheduledDueDate DateTime? @db.DateTime
-  EstimatedHours   Int?
-  TaskTypeID       Int?
-  AssignedToID     Int?
-  DateStarted      DateTime? @db.DateTime
-  DateCompleted    DateTime? @db.DateTime
-  ManualDueDate    Int?      @db.SmallInt
-  HavePart         Int?      @db.SmallInt
-  IUNumber         String?   @db.NVarChar(255)
-  CreatedTimestamp DateTime? @db.DateTime
+  ID                    Int
+  ProjectID             Int?
+  StatusID              Int?
+  TaskName              String?   @db.NVarChar(255)
+  TicketNumber          String?   @map("ProjectTicketNumber") @db.NVarChar(255)
+  DrawingNumber         String?   @db.NVarChar(255)
+  DueDate               DateTime? @db.DateTime
+  CustomerRev           String?   @db.NVarChar(15)
+  ManufacturingRev      String?   @db.NVarChar(15)
+  Operation             String?   @db.NVarChar(15)
+  ScheduledDueDate      DateTime? @db.DateTime
+  EstimatedHours        Int?
+  TaskTypeID            Int?
+  AssignedToID          Int?
+  DateStarted           DateTime? @db.DateTime
+  DateCompleted         DateTime? @db.DateTime
+  ManualDueDate         Int?      @db.SmallInt
+  CreatedTimestamp      DateTime? @db.DateTime
+  IsCompleteOrCancelled Int?      @db.SmallInt
+  SumOfHours            Int?
+  JobNumber             String?   @db.NVarChar(255)
+  TaskType              String?   @db.VarChar(255)
+  Status                String?   @db.VarChar(255)
+  AssignedToName        String?   @db.NVarChar(255)
+  ProjectName           String?   @db.NVarChar(255)
+  CurrentlyRunning      String?   @map("CurrentlyRunningDisplay") @db.NVarChar(255)
 
   @@id([ID])
 }

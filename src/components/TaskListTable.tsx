@@ -6,33 +6,55 @@ import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
-  getFilteredRowModel,
   useReactTable,
   SortingState,
-  ColumnFiltersState,
+  RowData,
 } from '@tanstack/react-table'
 import type { qryTaskListModel } from '@/generated/prisma/models'
+
+// Extend TanStack Table to support alignment metadata
+declare module '@tanstack/react-table' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    align?: 'left' | 'center' | 'right'
+  }
+}
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
 }
 
+// Helper function to get alignment classes
+function getAlignmentClass(align?: 'left' | 'center' | 'right'): string {
+  switch (align) {
+    case 'center':
+      return 'text-center'
+    case 'right':
+      return 'text-right'
+    case 'left':
+    default:
+      return 'text-left'
+  }
+}
+
 export function DataTable<TData, TValue>({columns, data,}: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+
+  // Memoize columns to prevent unnecessary re-renders
+  const memoizedColumns = React.useMemo(() => columns, [columns])
+
+  // Memoize data to prevent unnecessary re-renders
+  const memoizedData = React.useMemo(() => data, [data])
 
   const table = useReactTable({
-    data,
-    columns,
+    data: memoizedData,
+    columns: memoizedColumns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
-      columnFilters,
     },
   })
 
@@ -45,7 +67,12 @@ export function DataTable<TData, TValue>({columns, data,}: DataTableProps<TData,
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-2 text-left font-medium"
+                  className={`px-1 py-2 font-medium text-xs ${getAlignmentClass(header.column.columnDef.meta?.align)}`}
+                  style={{
+                    width: header.getSize(),
+                    minWidth: header.getSize(),
+                    maxWidth: header.getSize(),
+                  }}
                 >
                   {header.isPlaceholder
                     ? null
@@ -63,10 +90,18 @@ export function DataTable<TData, TValue>({columns, data,}: DataTableProps<TData,
             table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-b hover:bg-slate-50 dark:hover:bg-slate-900"
+                className="border-b hover:bg-slate-50 dark:hover:bg-slate-900 text-[11px]"
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-2">
+                  <td
+                    key={cell.id}
+                    className={`px-2 py-0.5 ${getAlignmentClass(cell.column.columnDef.meta?.align)}`}
+                    style={{
+                      width: cell.column.getSize(),
+                      minWidth: cell.column.getSize(),
+                      maxWidth: cell.column.getSize(),
+                    }}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -91,42 +126,89 @@ export function DataTable<TData, TValue>({columns, data,}: DataTableProps<TData,
 // Column definitions for the task list table
 export const taskColumns: ColumnDef<qryTaskListModel>[] = [
   {
-    accessorKey: 'ID',
-    header: 'ID',
-    cell: ({ row }) => <div>{row.getValue('ID')}</div>,
+    accessorKey: 'TicketNumber',
+    header: 'Ticket Nbr',
+    cell: ({ row }) => <div>{row.getValue('TicketNumber') || ''}</div>,
+    size: 40,
+    meta: {
+      align: 'center',
+    },
   },
   {
     accessorKey: 'TaskName',
     header: 'Task Name',
-    cell: ({ row }) => <div>{row.getValue('TaskName') || '-'}</div>,
+    cell: ({ row }) => <div>{row.getValue('TaskName') || ''}</div>,
+    size: 70,
+    meta: {
+      align: 'left',
+    },
   },
   {
-    accessorKey: 'TicketNumber',
-    header: 'Ticket Number',
-    cell: ({ row }) => <div>{row.getValue('TicketNumber') || '-'}</div>,
+    accessorKey: 'ProjectName',
+    header: 'Project Name',
+    cell: ({ row }) => <div>{row.getValue('ProjectName') || ''}</div>,
+    size: 70,
+    meta: {
+      align: 'left',
+    },
+  },
+  {
+    accessorKey: 'CurrentlyRunning',
+    header: 'Cur Run',
+    cell: ({ row }) => <div>{row.getValue('CurrentlyRunning') ? 'Yes' : 'No'}</div>,
+    size: 20,
+    meta: {
+      align: 'center',
+    },
+  },
+  {
+    accessorKey: 'ManufacturingRev',
+    header: 'Mfg Rev',
+    cell: ({ row }) => <div>{row.getValue('ManufacturingRev') || ''}</div>,
+    size: 20,
+    meta: {
+      align: 'center',
+    },
+  },
+  {
+    accessorKey: 'Status',
+    header: 'Status',
+    cell: ({ row }) => <div>{row.getValue('Status') || ''}</div>,
+    size: 40,
+    meta: {
+      align: 'left',
+    },
   },
   {
     accessorKey: 'DrawingNumber',
     header: 'Drawing Number',
-    cell: ({ row }) => <div>{row.getValue('DrawingNumber') || '-'}</div>,
+    cell: ({ row }) => <div>{row.getValue('DrawingNumber') || ''}</div>,
+    size: 150,
+    meta: {
+      align: 'left',
+    },
   },
   {
     accessorKey: 'Operation',
-    header: 'Operation',
-    cell: ({ row }) => <div>{row.getValue('Operation') || '-'}</div>,
+    header: 'Op Nbr',
+    cell: ({ row }) => <div>{row.getValue('Operation') || ''}</div>,
+    size: 80,
+    meta: {
+      align: 'center',
+    },
   },
   {
     accessorKey: 'DueDate',
     header: 'Due Date',
     cell: ({ row }) => {
       const date = row.getValue('DueDate') as Date | null
-      return <div>{date ? new Date(date).toLocaleDateString() : '-'}</div>
+      return <div>{date ? new Date(date).toLocaleDateString() : ''}</div>
+    },
+    size: 120,
+    meta: {
+      align: 'center',
     },
   },
-  {
-    accessorKey: 'StatusID',
-    header: 'Status',
-    cell: ({ row }) => <div>{row.getValue('StatusID') || '-'}</div>,
-  },
+
 ]
 

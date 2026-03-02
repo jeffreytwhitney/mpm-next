@@ -1,24 +1,32 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
+import {prisma} from '@/lib/prisma'
 
 export async function getTaskList(filters?: {
-  projectID?: number
   statusID?: number
-  assignedToID?: number
+  ticketNumber?: string
+  ticketName?: string
+  assignedToName?: string
+  taskName?: string
+  projectName?: string
+  departmentName?: string
+  submittedByName?: string
 }) {
   try {
-    const tasks = await prisma.qryTaskList.findMany({
+    return await prisma.qryTaskList.findMany({
       where: {
-        StatusID: filters?.statusID ?? { lt: 4 },
-        ...(filters?.projectID && { ProjectID: filters.projectID }),
-        ...(filters?.assignedToID && { AssignedToID: filters.assignedToID }),
+        StatusID: filters?.statusID !== undefined ? filters.statusID : {lt: 4},
+        ...(filters?.ticketNumber && {TicketNumber: {contains: filters.ticketNumber}}),
+        ...(filters?.assignedToName && {AssignedToName: filters.assignedToName}),
+        ...(filters?.taskName && {TaskName: {contains: filters.taskName}}),
+        ...(filters?.projectName && {ProjectName: {contains: filters.projectName}}),
+        ...(filters?.departmentName && {DepartmentName: filters.departmentName}),
+        ...(filters?.submittedByName && {SubmittedByName: filters.submittedByName}),
       },
       orderBy: {
         ID: 'asc',
       },
     })
-    return tasks
   } catch (error) {
     console.error('Error fetching tasks:', error)
     throw new Error('Failed to fetch tasks')
@@ -27,10 +35,9 @@ export async function getTaskList(filters?: {
 
 export async function getTaskById(id: number) {
   try {
-    const task = await prisma.tblTask.findFirst({
-      where: { ID: id },
+    return await prisma.tblTask.findFirst({
+      where: {ID: id},
     })
-    return task
   } catch (error) {
     console.error('Error fetching task:', error)
     throw new Error('Failed to fetch task')
