@@ -109,10 +109,7 @@ export function DataTable<TData, TValue>({columns, data,}: DataTableProps<TData,
             ))
           ) : (
             <tr>
-              <td
-                colSpan={columns.length}
-                className="h-24 text-center text-slate-500"
-              >
+              <td colSpan={columns.length} className="h-24 text-center text-slate-500">
                 No results.
               </td>
             </tr>
@@ -137,7 +134,10 @@ export const taskColumns: ColumnDef<qryTaskListModel>[] = [
   {
     accessorKey: 'TaskName',
     header: 'Task Name',
-    cell: ({ row }) => <div>{row.getValue('TaskName') || ''}</div>,
+    cell: ({ row }) => {
+      const taskName = row.getValue('TaskName') as string | null
+      return <div>{taskName ? taskName.slice(0, 30) : ''}</div>
+    },
     size: 70,
     meta: {
       align: 'left',
@@ -146,7 +146,10 @@ export const taskColumns: ColumnDef<qryTaskListModel>[] = [
   {
     accessorKey: 'ProjectName',
     header: 'Project Name',
-    cell: ({ row }) => <div>{row.getValue('ProjectName') || ''}</div>,
+    cell: ({ row }) => {
+      const projectName = row.getValue('ProjectName') as string | null
+      return <div>{projectName ? projectName.slice(0, 30) : ''}</div>
+    },
     size: 70,
     meta: {
       align: 'left',
@@ -155,7 +158,7 @@ export const taskColumns: ColumnDef<qryTaskListModel>[] = [
   {
     accessorKey: 'CurrentlyRunning',
     header: 'Cur Run',
-    cell: ({ row }) => <div>{row.getValue('CurrentlyRunning') ? 'Yes' : 'No'}</div>,
+    cell: ({ row }) => <div>{row.getValue('CurrentlyRunning')}</div>,
     size: 20,
     meta: {
       align: 'center',
