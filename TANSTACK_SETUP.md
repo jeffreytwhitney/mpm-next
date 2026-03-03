@@ -16,7 +16,7 @@ You now have a fully functional TanStack Table integrated with your Next.js 16 a
 - `getTaskList()` - Fetches all tasks with optional filtering
 - `getTaskById()` - Fetches a single task by ID
 
-### 3. **src/components/TaskListTable.tsx**
+### 3. **src/components/DataTable.tsx**
 - Reusable `DataTable` component using TanStack Table
 - Pre-configured column definitions in `taskColumns`
 - Features:
@@ -66,7 +66,7 @@ const task = await getTaskById(10)
 ```
 
 ### 4. **Customize Columns**
-Edit the `taskColumns` in `TaskListTable.tsx` to show different fields:
+Edit the `taskColumns` in `DataTable.tsx` to show different fields:
 ```typescript
 export const taskColumns: ColumnDef<tblTaskModel>[] = [
   {
@@ -95,7 +95,7 @@ Connection managed via `DATABASE_URL` in `.env`
 
 ## Next Steps
 
-1. **Customize columns** in `src/components/TaskListTable.tsx` based on your needs
+1. **Customize columns** in `src/components/DataTable.tsx` based on your needs
 2. **Add more server actions** in `src/app/actions/taskListActions.ts` for additional queries
 3. **Create additional pages** that use the DataTable component
 4. **Add pagination** by implementing limit/offset in server actions

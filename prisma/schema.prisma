@@ -363,6 +363,8 @@ model qryTaskList {
   CustomerRev           String?   @db.NVarChar(15)
   ManufacturingRev      String?   @db.NVarChar(15)
   Operation             String?   @db.NVarChar(15)
+  DepartmentID          Int?
+  DepartmentName        String?   @db.NVarChar(255)
   ScheduledDueDate      DateTime? @db.DateTime
   EstimatedHours        Int?
   TaskTypeID            Int?

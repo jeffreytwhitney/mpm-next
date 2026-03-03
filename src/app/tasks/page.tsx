@@ -1,6 +1,6 @@
-import { TasksClient } from './TasksClient'
+import { TaskListClient } from './TaskListClient'
 
-export default function TasksPage() {
-  return <TasksClient />
+export default function TaskListPage() {
+  return <TaskListClient />
 }
 

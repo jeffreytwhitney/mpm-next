@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
-import { DataTable, taskColumns } from '@/components/TaskListTable'
-import { getTaskList } from '@/app/actions/taskListActions'
-import type { qryTaskListModel } from '@/generated/prisma/models'
+import { DataTable } from '@/components/DataTable'
+import { getTaskList, type TaskListItem } from '@/app/actions/taskListActions'
 import DebouncedInput from '@/components/DebouncedInput'
+import {taskColumns} from "@/components/columnDefs/TaskListColumns"
 
 interface TaskFilters {
   statusID?: number
@@ -17,8 +17,8 @@ interface TaskFilters {
   submittedByName?: string
 }
 
-export function TasksClient() {
-  const [tasks, setTasks] = useState<qryTaskListModel[]>([])
+export function TaskListClient() {
+  const [tasks, setTasks] = useState<TaskListItem[]>([])
   const [filters, setFilters] = useState<TaskFilters>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

@@ -1,5 +1,14 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Project Documentation
+
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Quick performance decision tree and cheat sheet
+- **[PERFORMANCE_SUMMARY.md](PERFORMANCE_SUMMARY.md)** - Overview of Prisma vs SQL Server performance
+- **[DATABASE_PERFORMANCE_GUIDE.md](DATABASE_PERFORMANCE_GUIDE.md)** - Deep dive into optimization strategies
+- **[PERFORMANCE_OPTIMIZATION_CHECKLIST.md](PERFORMANCE_OPTIMIZATION_CHECKLIST.md)** - Step-by-step improvements
+- **[PRISMA_SETUP.md](PRISMA_SETUP.md)** - Prisma configuration and setup guide
+- **[TANSTACK_SETUP.md](TANSTACK_SETUP.md)** - TanStack Table setup guide
+
 ## Getting Started
 
 First, run the development server:
