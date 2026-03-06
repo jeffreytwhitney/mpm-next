@@ -34,8 +34,29 @@ export async function getTaskList(filters?: {
   projectName?: string
   departmentID?: number
   submittedByName?: string
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+  page?: number
+  pageSize?: number
 }): Promise<TaskListItem[]> {
   try {
+    const pageSize = filters?.pageSize ?? 50
+    const page = filters?.page ?? 1
+    const skip = (page - 1) * pageSize
+
+    // Map sort column names to actual DB columns
+    const sortFieldMap: Record<string, keyof typeof taskListSelect> = {
+      'ticketNumber': 'TicketNumber',
+      'taskName': 'TaskName',
+      'projectName': 'ProjectName',
+      'status': 'Status',
+      'dueDate': 'DueDate',
+      'departmentName': 'DepartmentName',
+    }
+
+    const sortField = filters?.sortBy ? sortFieldMap[filters.sortBy] : 'ID'
+    const sortOrder = filters?.sortOrder ?? 'asc'
+
     return await prisma.qryTaskList.findMany({
       select: taskListSelect,
       where: {
@@ -48,8 +69,10 @@ export async function getTaskList(filters?: {
         ...(filters?.submittedByName && {SubmittedByName: filters.submittedByName}),
       },
       orderBy: {
-        ID: 'asc',
+        [sortField]: sortOrder,
       },
+      take: pageSize,
+      skip: skip,
     })
   } catch (error) {
     console.error('Error fetching tasks:', error)

@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { DataTable } from '@/components/DataTable'
-import { getTaskList, type TaskListItem } from '@/app/actions/taskListActions'
+import { type TaskListItem } from '@/app/actions/taskListActions'
 import DebouncedInput from '@/components/DebouncedInput'
 import {taskColumns} from "@/components/columnDefs/TaskListColumns"
 
@@ -15,44 +16,71 @@ interface TaskFilters {
   projectName?: string
   departmentName?: string
   submittedByName?: string
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+  page?: number
+  pageSize?: number
 }
 
-export function TaskListClient() {
-  const [tasks, setTasks] = useState<TaskListItem[]>([])
-  const [filters, setFilters] = useState<TaskFilters>({})
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+interface TaskListClientProps {
+  initialTasks: TaskListItem[]
+  initialFilters: TaskFilters
+}
 
-  // Fetch tasks whenever filters change
+export function TaskListClient({ initialTasks, initialFilters }: TaskListClientProps) {
+  const router = useRouter()
+  const [filters, setFilters] = useState<TaskFilters>(initialFilters)
+  const isInitialMount = React.useRef(true)
+
+  // Update URL when filters, sort, or page change (triggers server-side refetch)
   React.useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        const result = await getTaskList(filters)
-        setTasks(result)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch tasks')
-        setTasks([])
-      } finally {
-        setIsLoading(false)
-      }
+    // Skip pushing URL on initial mount (server already has correct URL)
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
     }
-    fetchTasks()
-  }, [filters])
+
+    const params = new URLSearchParams()
+
+    // Update URL params based on current filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') {
+        params.set(key, value.toString())
+      } else {
+        params.delete(key)
+      }
+    })
+
+    // Navigate to new URL (this triggers server component to re-render)
+    router.push(`/tasks?${params.toString()}`, { scroll: false })
+  }, [filters, router])
 
   // Handle filter changes - update specific filter keys only
   const handleFilterChange = useCallback((key: keyof TaskFilters, value: string | number | undefined) => {
     setFilters((prevFilters) => {
-      // Only update if the value actually changed
-      if (prevFilters[key] === value) {
-        return prevFilters
+      // Reset to page 1 when filters change
+      if (key !== 'page') {
+        return {
+          ...prevFilters,
+          [key]: value,
+          page: 1, // Reset pagination
+        }
       }
       return {
         ...prevFilters,
-        [key]: value,
+        [key]: value as number | undefined,
       }
     })
+  }, [])
+
+  // Handle sort column click
+  const handleSortChange = useCallback((column: string, direction: 'asc' | 'desc') => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      sortBy: column,
+      sortOrder: direction,
+      page: 1, // Reset to first page
+    }))
   }, [])
 
   return (
@@ -101,20 +129,7 @@ export function TaskListClient() {
       </div>
 
       {/* Data Table */}
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
-          {error}
-        </div>
-      )}
-
-      {isLoading ? (
-        <div className="text-center py-10">
-          <p className="text-gray-600">Loading tasks...</p>
-        </div>
-      ) : (
-        <DataTable columns={taskColumns} data={tasks} />
-      )}
+      <DataTable columns={taskColumns} data={initialTasks} onSortChange={handleSortChange} />
     </div>
   )
 }
-

@@ -5,9 +5,7 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   RowData,
-  SortingState,
   useReactTable,
 } from '@tanstack/react-table'
 import {getAlignmentClass} from '@/lib/utils'
@@ -24,28 +22,20 @@ declare module '@tanstack/react-table' {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  onSortChange?: (column: string, direction: 'asc' | 'desc') => void
 }
 
-
-export function DataTable<TData, TValue>({columns, data,}: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-
+export function DataTable<TData, TValue>({columns, data, onSortChange}: DataTableProps<TData, TValue>) {
   // Memoize columns to prevent unnecessary re-renders
   const memoizedColumns = React.useMemo(() => columns, [columns])
 
   // Memoize data to prevent unnecessary re-renders
   const memoizedData = React.useMemo(() => data, [data])
 
-  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: memoizedData,
     columns: memoizedColumns,
     getCoreRowModel: getCoreRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    state: {
-      sorting,
-    },
   })
 
   return (
@@ -57,7 +47,12 @@ export function DataTable<TData, TValue>({columns, data,}: DataTableProps<TData,
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className={`px-1 py-2 font-medium text-xs ${getAlignmentClass(header.column.columnDef.meta?.align)}`}
+                  onClick={() => {
+                    if (onSortChange && header.column.columnDef.id) {
+                      onSortChange(header.column.columnDef.id, 'asc')
+                    }
+                  }}
+                  className={`px-1 py-2 font-medium text-xs ${getAlignmentClass(header.column.columnDef.meta?.align)} ${onSortChange ? 'cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700' : ''}`}
                   style={{
                     width: header.getSize(),
                     minWidth: header.getSize(),
