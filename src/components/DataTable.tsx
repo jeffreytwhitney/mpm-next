@@ -5,19 +5,11 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  RowData,
   useReactTable,
 } from '@tanstack/react-table'
 import {getAlignmentClass} from '@/lib/utils'
 
 
-// Extend TanStack Table to support alignment metadata
-declare module '@tanstack/react-table' {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface ColumnMeta<TData extends RowData, TValue> {
-    align?: 'left' | 'center' | 'right'
-  }
-}
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -32,6 +24,7 @@ export function DataTable<TData, TValue>({columns, data, onSortChange}: DataTabl
   // Memoize data to prevent unnecessary re-renders
   const memoizedData = React.useMemo(() => data, [data])
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: memoizedData,
     columns: memoizedColumns,
