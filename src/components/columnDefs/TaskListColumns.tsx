@@ -2,12 +2,22 @@
 import {ColumnDef} from "@tanstack/react-table";
 import type {TaskListItem} from "@/app/actions/taskListActions";
 import React from "react";
+import Link from 'next/link'
 
 export const taskColumns: ColumnDef<TaskListItem>[] = [
     {
         accessorKey: 'TicketNumber',
         header: 'Ticket Nbr',
-        cell: ({row}) => <div>{row.getValue('TicketNumber') || ''}</div>,
+        cell: ({row}) => {
+            const ticketNumber = row.getValue('TicketNumber') as string | null
+            const taskId = row.original.ID
+
+            return (
+                <Link href={`/tasks/${taskId}`} className="text-blue-700 hover:underline">
+                    {ticketNumber || ''}
+                </Link>
+            )
+        },
         size: 40,
         meta: {
             align: 'center',
@@ -18,7 +28,12 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
         header: 'Task Name',
         cell: ({row}) => {
             const taskName = row.getValue('TaskName') as string | null
-            return <div>{taskName ? taskName.slice(0, 30) : ''}</div>
+            const taskId = row.original.ID
+            return (
+                <Link href={`/tasks/${taskId}`} className="text-blue-700 hover:underline">
+                    {taskName ? taskName.slice(0, 30) : ''}
+                </Link>
+            )
         },
         size: 70,
         meta: {
