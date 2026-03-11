@@ -1,10 +1,16 @@
 import React from 'react'
 
-export default function TasksLayout(props: { [key: string]: React.ReactNode }) {
+interface TasksLayoutProps {
+  children: React.ReactNode
+  modal: React.ReactNode
+  params: Promise<Record<string, never>>
+}
+
+export default function TasksLayout({ children, modal }: TasksLayoutProps) {
   return (
     <>
-      {props.children}
-      {props.modal}
+      {children}
+      {modal}
     </>
   )
 }

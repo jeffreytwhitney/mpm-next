@@ -3,35 +3,19 @@
 import React, { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { DataTable } from '@/components/DataTable'
-import { type TaskListItem, type TaskStatusOption } from '@/app/actions/taskListActions'
+import { type TaskListFilters, type TaskListItem, type TaskStatusOption } from '@/app/actions/taskListActions'
 import DebouncedInput from '@/components/DebouncedInput'
 import {taskColumns} from "@/components/columnDefs/TaskListColumns"
 
-interface TaskFilters {
-  statusID?: number
-  statusPreset?: 'activeNotWaiting'
-  ticketNumber?: string
-  ticketName?: string
-  assignedToName?: string
-  taskName?: string
-  projectName?: string
-  departmentName?: string
-  submittedByName?: string
-  sortBy?: string
-  sortOrder?: 'asc' | 'desc'
-  page?: number
-  pageSize?: number
-}
-
 interface TaskListClientProps {
   initialTasks: TaskListItem[]
-  initialFilters: TaskFilters
+  initialFilters: TaskListFilters
   initialStatusOptions: TaskStatusOption[]
 }
 
 export function TaskListClient({ initialTasks, initialFilters, initialStatusOptions }: TaskListClientProps) {
   const router = useRouter()
-  const [filters, setFilters] = useState<TaskFilters>(initialFilters)
+  const [filters, setFilters] = useState<TaskListFilters>(initialFilters)
   const isInitialMount = React.useRef(true)
   const statusOptions = React.useMemo(() => {
     if (filters.statusID === undefined) {
@@ -70,7 +54,7 @@ export function TaskListClient({ initialTasks, initialFilters, initialStatusOpti
   }, [filters, router])
 
   // Handle filter changes - update specific filter keys only
-  const handleFilterChange = useCallback((key: keyof TaskFilters, value: string | number | undefined) => {
+  const handleFilterChange = useCallback((key: keyof TaskListFilters, value: string | number | undefined) => {
     setFilters((prevFilters) => {
       // Reset to page 1 when filters change
       if (key !== 'page') {

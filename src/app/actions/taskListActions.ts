@@ -30,7 +30,7 @@ export interface TaskStatusOption {
 
 export type TaskStatusPreset = 'activeNotWaiting'
 
-export async function getTaskList(filters?: {
+export interface TaskListFilters {
     statusID?: number
     statusPreset?: TaskStatusPreset
     ticketNumber?: string
@@ -44,7 +44,48 @@ export async function getTaskList(filters?: {
     sortOrder?: 'asc' | 'desc'
     page?: number
     pageSize?: number
-}): Promise<TaskListItem[]> {
+}
+
+export type TaskListSearchParams = Partial<Record<keyof TaskListFilters, string>>
+
+const parseOptionalInt = (value?: string): number | undefined => {
+    if (!value) {
+        return undefined
+    }
+
+    const parsed = parseInt(value, 10)
+    return Number.isNaN(parsed) ? undefined : parsed
+}
+
+const parsePositiveIntOrDefault = (value: string | undefined, defaultValue: number): number => {
+    const parsed = parseOptionalInt(value)
+    return parsed !== undefined && parsed > 0 ? parsed : defaultValue
+}
+
+/// Parses URL search parameters into TaskListFilters, handling type conversions and defaults
+/// This is because URL search parameters are always strings, but our filters expect specific types (e.g. numbers, enums)
+export function parseTaskListFilters(searchParams: TaskListSearchParams): TaskListFilters {
+    const statusPreset: TaskStatusPreset | undefined =
+        searchParams.statusPreset === 'activeNotWaiting' ? 'activeNotWaiting' : undefined
+
+    return {
+        statusID: parseOptionalInt(searchParams.statusID),
+        statusPreset,
+        ticketNumber: searchParams.ticketNumber,
+        ticketName: searchParams.ticketName,
+        assignedToID: parseOptionalInt(searchParams.assignedToID),
+        taskName: searchParams.taskName,
+        projectName: searchParams.projectName,
+        departmentID: parseOptionalInt(searchParams.departmentID),
+        submittedByName: searchParams.submittedByName,
+        sortBy: searchParams.sortBy,
+        sortOrder: searchParams.sortOrder === 'desc' ? 'desc' : 'asc',
+        page: parsePositiveIntOrDefault(searchParams.page, 1),
+        pageSize: parsePositiveIntOrDefault(searchParams.pageSize, 25),
+    }
+}
+
+export async function getTaskList(filters?: TaskListFilters): Promise<TaskListItem[]> {
     try {
         const pageSize = filters?.pageSize ?? 50
         const page = filters?.page ?? 1
@@ -79,10 +120,10 @@ export async function getTaskList(filters?: {
             where: {
                 StatusID: statusFilter,
                 ...(filters?.ticketNumber && {TicketNumber: {contains: filters.ticketNumber}}),
-                ...(filters?.assignedToID && {AssignedToID: filters.assignedToID}),
+                ...(filters?.assignedToID !== undefined && {AssignedToID: filters.assignedToID}),
                 ...(filters?.taskName && {TaskName: {contains: filters.taskName}}),
                 ...(filters?.projectName && {ProjectName: {contains: filters.projectName}}),
-                ...(filters?.departmentID && {DepartmentID: filters.departmentID}),
+                ...(filters?.departmentID !== undefined && {DepartmentID: filters.departmentID}),
                 ...(filters?.submittedByName && {SubmittedByName: filters.submittedByName}),
             },
             orderBy: {
@@ -107,4 +148,3 @@ export async function getTaskById(id: number) {
         throw new Error('Failed to fetch task')
     }
 }
-

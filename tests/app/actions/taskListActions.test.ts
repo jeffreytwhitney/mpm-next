@@ -40,6 +40,7 @@ describe('taskListActions', () => {
       page: 2,
       pageSize: 25,
       ticketNumber: 'T-100',
+      assignedToID: 7,
       departmentID: 5,
     })
 
@@ -48,6 +49,7 @@ describe('taskListActions', () => {
         where: expect.objectContaining({
           StatusID: 2,
           TicketNumber: { contains: 'T-100' },
+          AssignedToID: 7,
           DepartmentID: 5,
         }),
         orderBy: { TaskName: 'desc' },
