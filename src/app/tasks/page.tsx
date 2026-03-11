@@ -1,8 +1,11 @@
 import { TaskListClient } from './TaskListClient'
 import { getTaskList } from '@/app/actions/taskListActions'
+import type { TaskStatusPreset } from '@/app/actions/taskListActions'
+import {getTaskStatusOptions} from "@/app/actions/statusActions";
 
 interface SearchParams {
   statusID?: string
+  statusPreset?: string
   ticketNumber?: string
   ticketName?: string
   assignedToName?: string
@@ -23,10 +26,14 @@ interface TaskListPageProps {
 export default async function TaskListPage({ searchParams }: TaskListPageProps) {
   // Await searchParams Promise
   const params = await searchParams
+  const parsedStatusID = params.statusID ? parseInt(params.statusID, 10) : undefined
+  const statusPreset: TaskStatusPreset | undefined =
+    params.statusPreset === 'activeNotWaiting' ? 'activeNotWaiting' : undefined
 
   // Convert URL search params to filter object
   const filters = {
-    statusID: params.statusID ? parseInt(params.statusID) : undefined,
+    statusID: parsedStatusID !== undefined && !Number.isNaN(parsedStatusID) ? parsedStatusID : undefined,
+    statusPreset,
     ticketNumber: params.ticketNumber,
     ticketName: params.ticketName,
     assignedToName: params.assignedToName,
@@ -37,11 +44,20 @@ export default async function TaskListPage({ searchParams }: TaskListPageProps) 
     sortBy: params.sortBy,
     sortOrder: (params.sortOrder as 'asc' | 'desc') || 'asc',
     page: params.page ? parseInt(params.page) : 1,
-    pageSize: params.pageSize ? parseInt(params.pageSize) : 50,
+    pageSize: params.pageSize ? parseInt(params.pageSize) : 25,
   }
 
   // Fetch data on the server with filters from URL
-  const tasks = await getTaskList(filters)
+  const [tasks, statusOptions] = await Promise.all([
+    getTaskList(filters),
+    getTaskStatusOptions(),
+  ])
 
-  return <TaskListClient initialTasks={tasks} initialFilters={filters} />
+  return (
+    <TaskListClient
+      initialTasks={tasks}
+      initialFilters={filters}
+      initialStatusOptions={statusOptions}
+    />
+  )
 }

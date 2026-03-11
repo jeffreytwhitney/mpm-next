@@ -3,12 +3,13 @@
 import React, { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { DataTable } from '@/components/DataTable'
-import { type TaskListItem } from '@/app/actions/taskListActions'
+import { type TaskListItem, type TaskStatusOption } from '@/app/actions/taskListActions'
 import DebouncedInput from '@/components/DebouncedInput'
 import {taskColumns} from "@/components/columnDefs/TaskListColumns"
 
 interface TaskFilters {
   statusID?: number
+  statusPreset?: 'activeNotWaiting'
   ticketNumber?: string
   ticketName?: string
   assignedToName?: string
@@ -25,12 +26,25 @@ interface TaskFilters {
 interface TaskListClientProps {
   initialTasks: TaskListItem[]
   initialFilters: TaskFilters
+  initialStatusOptions: TaskStatusOption[]
 }
 
-export function TaskListClient({ initialTasks, initialFilters }: TaskListClientProps) {
+export function TaskListClient({ initialTasks, initialFilters, initialStatusOptions }: TaskListClientProps) {
   const router = useRouter()
   const [filters, setFilters] = useState<TaskFilters>(initialFilters)
   const isInitialMount = React.useRef(true)
+  const statusOptions = React.useMemo(() => {
+    if (filters.statusID === undefined) {
+      return initialStatusOptions
+    }
+
+    const hasSelected = initialStatusOptions.some((option) => option.value === filters.statusID)
+    if (hasSelected) {
+      return initialStatusOptions
+    }
+
+    return [...initialStatusOptions, { value: filters.statusID, label: `Status ${filters.statusID}` }]
+  }, [initialStatusOptions, filters.statusID])
 
   // Update URL when filters, sort, or page change (triggers server-side refetch)
   React.useEffect(() => {
@@ -83,53 +97,111 @@ export function TaskListClient({ initialTasks, initialFilters }: TaskListClientP
     }))
   }, [])
 
+  const renderHeaderFilter = useCallback((columnId: string) => {
+    switch (columnId) {
+      case 'TicketNumber':
+        return (
+          <DebouncedInput
+            type="text"
+            placeholder="Filter..."
+            value={filters.ticketNumber ?? ''}
+            onChange={(value) =>
+              handleFilterChange('ticketNumber', value ? value.toString() : undefined)
+            }
+            className="w-full border rounded-md px-2 py-1 text-xs"
+            debounce={300}
+          />
+        )
+      case 'TaskName':
+        return (
+          <DebouncedInput
+            type="text"
+            placeholder="Filter..."
+            value={filters.taskName ?? ''}
+            onChange={(value) =>
+              handleFilterChange('taskName', value ? value.toString() : undefined)
+            }
+            className="w-full border rounded-md px-2 py-1 text-xs"
+            debounce={300}
+          />
+        )
+      case 'ProjectName':
+        return (
+          <DebouncedInput
+            type="text"
+            placeholder="Filter..."
+            value={filters.projectName ?? ''}
+            onChange={(value) =>
+              handleFilterChange('projectName', value ? value.toString() : undefined)
+            }
+            className="w-full border rounded-md px-2 py-1 text-xs"
+            debounce={300}
+          />
+        )
+      case 'Status':
+        const statusSelectValue = filters.statusID !== undefined
+          ? filters.statusID.toString()
+          : (filters.statusPreset ?? '')
+
+        return (
+          <select
+            value={statusSelectValue}
+            onChange={(event) => {
+              const { value } = event.target
+
+              if (value === 'activeNotWaiting') {
+                setFilters((prevFilters) => ({
+                  ...prevFilters,
+                  statusID: undefined,
+                  statusPreset: 'activeNotWaiting',
+                  page: 1,
+                }))
+                return
+              }
+
+              if (value === '') {
+                setFilters((prevFilters) => ({
+                  ...prevFilters,
+                  statusID: undefined,
+                  statusPreset: undefined,
+                  page: 1,
+                }))
+                return
+              }
+
+              const parsedStatusId = parseInt(value, 10)
+              setFilters((prevFilters) => ({
+                ...prevFilters,
+                statusID: Number.isNaN(parsedStatusId) ? undefined : parsedStatusId,
+                statusPreset: undefined,
+                page: 1,
+              }))
+            }}
+            className="w-full border rounded-md px-2 py-1 text-xs bg-white"
+          >
+            <option value="">Active</option>
+            <option value="activeNotWaiting">Active Not Waiting</option>
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        )
+      default:
+        return null
+    }
+  }, [filters.ticketNumber, filters.taskName, filters.projectName, filters.statusID, filters.statusPreset, handleFilterChange, statusOptions])
+
   return (
     <div className="container mx-auto py-10">
-      {/* Filter Section */}
-      <div className="mb-1 p-4 bg-slate-50 dark:bg-slate-900 rounded-md border">
-        <h2 className="text-lg font-semibold mb-1">Filters</h2>
-        <div className="grid grid-cols-3 gap-1">
-          <div>
-            <label className="block text-sm font-medium mb-1">Status ID</label>
-            <DebouncedInput
-                type="number"
-                placeholder="Leave empty for active (< 4)"
-                value={filters.statusID?.toString() ?? ''}
-                onChange={(value) =>
-                    handleFilterChange('statusID', value ? parseInt(value.toString()) : undefined)
-                }
-                className="w-full px-3 py-.5 border rounded-md text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Task Name</label>
-            <DebouncedInput
-              type="text"
-              placeholder="Filter by task name"
-              value={filters.taskName?.toString() ?? ''}
-              onChange={(value) =>
-                handleFilterChange('taskName', value ? value.toString() : undefined)
-              }
-              className="w-full px-3 py-.5 border rounded-md text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Project Name</label>
-            <DebouncedInput
-                type="text"
-                placeholder="Filter by Ticket Name"
-                value={filters.projectName?.toString() ?? ''}
-                onChange={(value) =>
-                    handleFilterChange('projectName', value ? value.toString() : undefined)
-                }
-                className="w-full px-3 py-.5 border rounded-md text-sm"
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Data Table */}
-      <DataTable columns={taskColumns} data={initialTasks} onSortChange={handleSortChange} />
+      <DataTable
+        columns={taskColumns}
+        data={initialTasks}
+        onSortChange={handleSortChange}
+        renderHeaderFilter={renderHeaderFilter}
+      />
     </div>
   )
 }

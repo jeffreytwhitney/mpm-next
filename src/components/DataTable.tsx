@@ -15,9 +15,12 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   onSortChange?: (column: string, direction: 'asc' | 'desc') => void
+  renderHeaderFilter?: (columnId: string) => React.ReactNode
 }
 
-export function DataTable<TData, TValue>({columns, data, onSortChange}: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({columns, data, onSortChange, renderHeaderFilter}: DataTableProps<TData, TValue>) {
+  const [sortState, setSortState] = React.useState<{ column: string; direction: 'asc' | 'desc' } | null>(null)
+
   // Memoize columns to prevent unnecessary re-renders
   const memoizedColumns = React.useMemo(() => columns, [columns])
 
@@ -36,16 +39,23 @@ export function DataTable<TData, TValue>({columns, data, onSortChange}: DataTabl
       <table className="w-full">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="border-b bg-slate-100 dark:bg-slate-800">
+            <tr key={headerGroup.id} className="border-b bg-slate-100">
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
                   onClick={() => {
-                    if (onSortChange && header.column.columnDef.id) {
-                      onSortChange(header.column.columnDef.id, 'asc')
+                    if (!onSortChange) {
+                      return
                     }
+
+                    const columnId = header.column.id
+                    const nextDirection: 'asc' | 'desc' =
+                      sortState?.column === columnId && sortState.direction === 'asc' ? 'desc' : 'asc'
+
+                    setSortState({ column: columnId, direction: nextDirection })
+                    onSortChange(columnId, nextDirection)
                   }}
-                  className={`px-1 py-2 font-medium text-xs ${getAlignmentClass(header.column.columnDef.meta?.align)} ${onSortChange ? 'cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700' : ''}`}
+                  className={`px-1 py-2 font-medium text-xs ${getAlignmentClass(header.column.columnDef.meta?.align)} ${onSortChange ? 'cursor-pointer hover:bg-slate-200' : ''}`}
                   style={{
                     width: header.getSize(),
                     minWidth: header.getSize(),
@@ -62,13 +72,30 @@ export function DataTable<TData, TValue>({columns, data, onSortChange}: DataTabl
               ))}
             </tr>
           ))}
+          {renderHeaderFilter ? (
+            <tr className="border-b bg-slate-50">
+              {table.getFlatHeaders().map((header) => (
+                <th
+                  key={`${header.id}-filter`}
+                  className={`px-1 py-1 font-normal ${getAlignmentClass(header.column.columnDef.meta?.align)}`}
+                  style={{
+                    width: header.getSize(),
+                    minWidth: header.getSize(),
+                    maxWidth: header.getSize(),
+                  }}
+                >
+                  {renderHeaderFilter(header.column.id)}
+                </th>
+              ))}
+            </tr>
+          ) : null}
         </thead>
         <tbody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-b hover:bg-slate-50 dark:hover:bg-slate-900 text-[11px]"
+                className="border-b hover:bg-slate-50 text-[11px]"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
