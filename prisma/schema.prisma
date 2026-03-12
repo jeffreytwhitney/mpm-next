@@ -380,6 +380,7 @@ model qryTaskListRaw {
   Status                String?   @db.VarChar(255)
   AssignedToName        String?   @db.NVarChar(255)
   ProjectName           String?   @db.NVarChar(255)
+  InitiatorName         String?   @db.NVarChar(255)
   CurrentlyRunning      String?   @map("CurrentlyRunningDisplay") @db.NVarChar(255)
 
   @@id([ID])

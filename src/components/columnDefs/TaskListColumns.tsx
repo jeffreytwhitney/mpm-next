@@ -18,7 +18,7 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
                 </Link>
             )
         },
-        size: 40,
+        size: 20,
         meta: {
             align: 'center',
         },
@@ -35,7 +35,7 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
                 </Link>
             )
         },
-        size: 70,
+        size: 50,
         meta: {
             align: 'left',
         },
@@ -47,25 +47,37 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
             const projectName = row.getValue('ProjectName') as string | null
             return <div>{projectName ? projectName.slice(0, 30) : ''}</div>
         },
-        size: 70,
+        size: 50,
         meta: {
             align: 'left',
         },
     },
     {
         accessorKey: 'CurrentlyRunning',
-        header: 'Cur Run',
+        header: () => (
+            <div className="leading-tight text-center">
+                <div>Cur</div>
+                <div>Run</div>
+            </div>
+        ),
         cell: ({row}) => <div>{row.getValue('CurrentlyRunning')}</div>,
-        size: 20,
+        size: 5,
+        minSize: 5,
         meta: {
             align: 'center',
         },
     },
     {
         accessorKey: 'ManufacturingRev',
-        header: 'Mfg Rev',
+        header: () => (
+            <div className="leading-tight text-center">
+                <div>Mfg</div>
+                <div>Rev</div>
+            </div>
+        ),
         cell: ({row}) => <div>{row.getValue('ManufacturingRev') || ''}</div>,
-        size: 20,
+        size: 5,
+        minSize: 5,
         meta: {
             align: 'center',
         },
@@ -74,25 +86,22 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
         accessorKey: 'Status',
         header: 'Status',
         cell: ({row}) => <div>{row.getValue('Status') || ''}</div>,
-        size: 40,
-        meta: {
-            align: 'left',
-        },
-    },
-    {
-        accessorKey: 'DrawingNumber',
-        header: 'Drawing Number',
-        cell: ({row}) => <div>{row.getValue('DrawingNumber') || ''}</div>,
-        size: 50,
+        size: 30,
         meta: {
             align: 'left',
         },
     },
     {
         accessorKey: 'Operation',
-        header: 'Op Nbr',
+        header: () => (
+            <div className="leading-tight text-center">
+                <div>Op</div>
+                <div>Nbr</div>
+            </div>
+        ),
         cell: ({row}) => <div>{row.getValue('Operation') || ''}</div>,
-        size: 80,
+        size: 5,
+        minSize: 5,
         meta: {
             align: 'center',
         },
@@ -100,23 +109,25 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
     {
         accessorKey: 'DueDate',
         header: 'Due Date',
-        cell: ({row}) => {
-            const rawDueDate = row.original.DueDate as Date | string | null | undefined
-            const dateValue = typeof rawDueDate === 'string' ? rawDueDate.trim() : rawDueDate
-
-            if (!dateValue) {
-                return <div></div>
-            }
-
-            const parsedDate = dateValue instanceof Date ? dateValue : new Date(dateValue)
-            if (Number.isNaN(parsedDate.getTime())) {
-                // Fallback for unexpected DB/view date formats.
-                return <div>{String(dateValue)}</div>
-            }
-
-            return <div>{parsedDate.toLocaleDateString()}</div>
+        cell: ({ row }) => {
+            const dueDate = row.getValue('DueDate') as Date | null
+            return <div>{dueDate ? dueDate.toLocaleDateString() : ''}</div>
+        }
+        ,
+        size: 30,
+        meta: {
+            align: 'center',
         },
-        size: 120,
+    },
+    {
+        accessorKey: 'ScheduledDueDate',
+        header: 'Sched. Due Date',
+        cell: ({ row }) => {
+            const schedDueDate = row.getValue('ScheduledDueDate') as Date | null
+            return <div>{schedDueDate ? schedDueDate.toLocaleDateString() : '--'}</div>
+        }
+        ,
+        size: 30,
         meta: {
             align: 'center',
         },

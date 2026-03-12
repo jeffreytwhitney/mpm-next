@@ -95,7 +95,7 @@ export function TaskListClient({initialTasks, initialFilters, initialStatusOptio
                         onChange={(value) =>
                             handleFilterChange('ticketNumber', value ? value.toString() : undefined)
                         }
-                        className="w-full border rounded-sm px-0 py-0 text-xs bg-[#F1EB9C] font-semibold"
+                        className="w-full border rounded-sm px-0 py-0 text-[11px] bg-[#F1EB9C] font-semibold"
                         debounce={300}
                     />
                 )
@@ -108,7 +108,7 @@ export function TaskListClient({initialTasks, initialFilters, initialStatusOptio
                         onChange={(value) =>
                             handleFilterChange('taskName', value ? value.toString() : undefined)
                         }
-                        className="w-full border rounded-sm px-0 py-0 text-xs bg-[#F1EB9C] font-semibold"
+                        className="w-full border rounded-sm px-0 py-0 text-[11px] bg-[#F1EB9C] font-semibold"
                         debounce={300}
                     />
                 )
@@ -121,7 +121,7 @@ export function TaskListClient({initialTasks, initialFilters, initialStatusOptio
                         onChange={(value) =>
                             handleFilterChange('projectName', value ? value.toString() : undefined)
                         }
-                        className="w-full border rounded-sm px-0 py-0 text-xs bg-[#F1EB9C] font-semibold"
+                        className="w-full border rounded-sm px-0 py-0 text-[11px] bg-[#F1EB9C] font-semibold"
                         debounce={300}
                     />
                 )
@@ -164,10 +164,10 @@ export function TaskListClient({initialTasks, initialFilters, initialStatusOptio
                                 page: 1,
                             }))
                         }}
-                        className="w-full border rounded-sm px-2 py-0 text-xs bg-[#F1EB9C] font-semibold"
+                        className="w-full border rounded-sm px-2 py-0 text-[11px] bg-[#F1EB9C] font-semibold"
                     >
                         <option value="">Active</option>
-                        <option value="activeNotWaiting">Active Not Waiting</option>
+                        <option value="activeNotWaiting">Not Waiting</option>
                         {statusOptions.map((option) => (
                             <option key={option.value} value={option.value}>
                                 {option.label}
