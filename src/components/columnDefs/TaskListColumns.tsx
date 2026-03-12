@@ -13,7 +13,7 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
             const taskId = row.original.ID
 
             return (
-                <Link href={`/tasks/${taskId}`} className="text-blue-700 hover:underline">
+                <Link href={`/tasks/${taskId}`} className="text-[#0000EE] hover:underline font-semibold">
                     {ticketNumber || ''}
                 </Link>
             )
@@ -30,7 +30,7 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
             const taskName = row.getValue('TaskName') as string | null
             const taskId = row.original.ID
             return (
-                <Link href={`/tasks/${taskId}`} className="text-blue-700 hover:underline">
+                <Link href={`/tasks/${taskId}`} className="text-[#0000EE] hover:underline font-semibold">
                     {taskName ? taskName.slice(0, 30) : ''}
                 </Link>
             )
@@ -101,8 +101,20 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
         accessorKey: 'DueDate',
         header: 'Due Date',
         cell: ({row}) => {
-            const date = row.getValue('DueDate') as Date | null
-            return <div>{date ? new Date(date).toLocaleDateString() : ''}</div>
+            const rawDueDate = row.original.DueDate as Date | string | null | undefined
+            const dateValue = typeof rawDueDate === 'string' ? rawDueDate.trim() : rawDueDate
+
+            if (!dateValue) {
+                return <div></div>
+            }
+
+            const parsedDate = dateValue instanceof Date ? dateValue : new Date(dateValue)
+            if (Number.isNaN(parsedDate.getTime())) {
+                // Fallback for unexpected DB/view date formats.
+                return <div>{String(dateValue)}</div>
+            }
+
+            return <div>{parsedDate.toLocaleDateString()}</div>
         },
         size: 120,
         meta: {

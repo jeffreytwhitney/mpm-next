@@ -18,6 +18,7 @@ export default async function TaskListPage({ searchParams }: TaskListPageProps) 
     getTaskStatusDropdownOptions(),
   ])
 
+
   return (
     <TaskListClient
       initialTasks={tasks}

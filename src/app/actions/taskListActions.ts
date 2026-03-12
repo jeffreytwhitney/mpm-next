@@ -19,18 +19,21 @@ const taskListSelect = {
     DueDate: true,
     TaskType: true,
     TaskTypeID: true,
-} satisfies Prisma.qryTaskListSelect
+} satisfies Prisma.qryTaskListRawSelect
 
 // Export the return type for use in components
-export type TaskListItem = Prisma.qryTaskListGetPayload<{select: typeof taskListSelect}>
+export type TaskListItem = Prisma.qryTaskListRawGetPayload<{select: typeof taskListSelect}>
+
 
 
 
 export type TaskStatusPreset = 'activeNotWaiting'
+export type UnassignedPreset = 'unAssigned'
 
 export interface TaskListFilters {
     statusID?: number
     statusPreset?: TaskStatusPreset
+    unassignedPreset?: UnassignedPreset
     ticketNumber?: string
     ticketName?: string
     assignedToID?: number
@@ -52,10 +55,13 @@ export type TaskListSearchParams = Partial<Record<keyof TaskListFilters, string>
 export function parseTaskListFilters(searchParams: TaskListSearchParams): TaskListFilters {
     const statusPreset: TaskStatusPreset | undefined =
         searchParams.statusPreset === 'activeNotWaiting' ? 'activeNotWaiting' : undefined
+    const unassignedPreset: UnassignedPreset | undefined =
+        searchParams.unassignedPreset === 'unAssigned' ? 'unAssigned' : undefined
 
     return {
         statusID: parseOptionalInt(searchParams.statusID),
         statusPreset,
+        unassignedPreset,
         ticketNumber: searchParams.ticketNumber,
         ticketName: searchParams.ticketName,
         assignedToID: parseOptionalInt(searchParams.assignedToID),
@@ -101,13 +107,19 @@ export async function getTaskList(filters?: TaskListFilters): Promise<TaskListIt
             : filters?.statusPreset === 'activeNotWaiting'
                 ? {lt: 3}
                 : {lt: 4}
+        const assigneeFilter = filters?.unassignedPreset === 'unAssigned'
+            ? null
+            : filters?.assignedToID !== undefined
+                ? filters.assignedToID
+                : undefined
+            
 
-        return await prisma.qryTaskList.findMany({
+        return await prisma.qryTaskListRaw.findMany({
             select: taskListSelect,
             where: {
                 StatusID: statusFilter,
                 ...(filters?.ticketNumber && {TicketNumber: {contains: filters.ticketNumber}}),
-                ...(filters?.assignedToID !== undefined && {AssignedToID: filters.assignedToID}),
+                ...(assigneeFilter !== undefined && {AssignedToID: assigneeFilter}),
                 ...(filters?.taskName && {TaskName: {contains: filters.taskName}}),
                 ...(filters?.projectName && {ProjectName: {contains: filters.projectName}}),
                 ...(filters?.departmentID !== undefined && {DepartmentID: filters.departmentID}),

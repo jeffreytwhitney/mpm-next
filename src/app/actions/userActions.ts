@@ -237,3 +237,32 @@ export async function getManufacturingEngineerDropdownOptions(departmentID: numb
         throw new Error('Failed to fetch user')
     }
 }
+
+export async function getCellLeadDropdownOptions(departmentID: number): Promise<UserDropDownOption[]> {
+    try {
+        const cellLeadUsers = await prisma.tblUser.findMany({
+            select: {
+                ID: true,
+                FullName: true,
+            },
+            where: {
+                DepartmentID: departmentID,
+                IsActive: 1,
+                UserTypeID: 5,
+            }
+        })
+
+        return cellLeadUsers
+            .filter((user): user is { ID: number; FullName: string } => typeof user.FullName === 'string'
+                && user.FullName.length > 0)
+            .map((user) => ({
+                value: user.ID,
+                label: user.FullName,
+            }));
+
+    }
+    catch (error) {
+        console.error('Error fetching user:', error)
+        throw new Error('Failed to fetch user')
+    }
+}

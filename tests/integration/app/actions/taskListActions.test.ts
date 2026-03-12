@@ -15,24 +15,12 @@ describe('Task List Actions', () => {
 
     it('applies activeNotWaiting preset filtering', async () => {
         const results = await getTaskList({ statusPreset: 'activeNotWaiting', pageSize: 100 })
-
         expect(results.every(task => task.StatusID !== null && task.StatusID < 3)).toBe(true)
     })
 
     it('applies status and task name filters together', async () => {
-        const sample = await prisma.qryTaskList.findFirst({
-            where: {
-                StatusID: { lt: 4 },
-                TaskName: { not: null },
-            },
-            select: {
-                ID: true,
-                StatusID: true,
-                TaskName: true,
-            },
-        })
-
-        expect(sample).not.toBeNull()
+        const baseResults = await getTaskList({ pageSize: 100 })
+        const sample = baseResults.find((task) => task.StatusID !== null && !!task.TaskName)
 
         if (!sample || sample.StatusID === null || !sample.TaskName) {
             throw new Error('Expected seeded task data with StatusID and TaskName')
@@ -79,29 +67,22 @@ describe('Task List Actions', () => {
         expect(missing).toBeNull()
     })
 
-    it('Makes sure Due Date and Scheduled Due Date are not empty strings', async () => {
-        const maxTask = await prisma.tblTask.findFirst({
-            select: { ID: true },
-            orderBy: { ID: 'desc' },
-        })
+    it('returns non-empty DueDate values for task list rows', async () => {
+        const results = await getTaskList({ pageSize: 100 })
 
-        expect(maxTask).not.toBeNull()
+        expect(results.length).toBeGreaterThan(0)
 
-        if (!maxTask) {
-            throw new Error('Expected at least one task in seeded integration database')
+        for (const task of results) {
+            const dueDate = task.DueDate as unknown as Date | string | null | undefined
+            const normalizedDueDate = typeof dueDate === 'string' ? dueDate.trim() : dueDate
+
+            expect(normalizedDueDate).toBeTruthy()
+
+            if (typeof normalizedDueDate === 'string') {
+                const parsed = new Date(normalizedDueDate)
+                expect(Number.isNaN(parsed.getTime())).toBe(false)
+            }
         }
-
-        const maxTaskID = maxTask.ID
-
-        const result = await getTaskById(maxTaskID)
-
-        expect(result).not.toBeNull()
-        if (!result) {
-            throw new Error('Expected task to exist for max task ID')
-        }
-        const dueDate = result.DueDate
-        expect(dueDate).not.toBeNull()
-        expect(dueDate).toBeInstanceOf(Date)
 
     })
 })

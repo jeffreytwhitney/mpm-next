@@ -55,7 +55,7 @@ export function DataTable<TData, TValue>({columns, data, onSortChange, renderHea
                     setSortState({ column: columnId, direction: nextDirection })
                     onSortChange(columnId, nextDirection)
                   }}
-                  className={`px-1 py-2 font-medium text-xs ${getAlignmentClass(header.column.columnDef.meta?.align)} ${onSortChange ? 'cursor-pointer hover:bg-slate-200' : ''}`}
+                  className={`px-1 py-0 font-medium text-xs ${getAlignmentClass(header.column.columnDef.meta?.align)} ${onSortChange ? 'cursor-pointer hover:bg-slate-200' : ''}`}
                   style={{
                     width: header.getSize(),
                     minWidth: header.getSize(),
@@ -77,7 +77,7 @@ export function DataTable<TData, TValue>({columns, data, onSortChange, renderHea
               {table.getFlatHeaders().map((header) => (
                 <th
                   key={`${header.id}-filter`}
-                  className={`px-1 py-1 font-normal ${getAlignmentClass(header.column.columnDef.meta?.align)}`}
+                  className={`px-1 py-0 font-normal ${getAlignmentClass(header.column.columnDef.meta?.align)}`}
                   style={{
                     width: header.getSize(),
                     minWidth: header.getSize(),
