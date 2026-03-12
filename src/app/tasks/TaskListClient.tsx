@@ -3,14 +3,15 @@
 import React, { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { DataTable } from '@/components/DataTable'
-import { type TaskListFilters, type TaskListItem, type TaskStatusOption } from '@/app/actions/taskListActions'
+import { type TaskListFilters, type TaskListItem } from '@/app/actions/taskListActions'
 import DebouncedInput from '@/components/DebouncedInput'
 import {taskColumns} from "@/components/columnDefs/TaskListColumns"
+import {TaskStatusDropdownOption} from "@/app/actions/taskStatusActions";
 
 interface TaskListClientProps {
   initialTasks: TaskListItem[]
   initialFilters: TaskListFilters
-  initialStatusOptions: TaskStatusOption[]
+  initialStatusOptions: TaskStatusDropdownOption[]
 }
 
 export function TaskListClient({ initialTasks, initialFilters, initialStatusOptions }: TaskListClientProps) {

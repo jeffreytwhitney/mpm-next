@@ -1,3 +1,5 @@
+import {getTaskById} from "@/app/actions/taskActions";
+
 const mockFindManyTaskList = jest.fn()
 const mockFindFirstTask = jest.fn()
 
@@ -12,7 +14,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }))
 
-import { getTaskById, getTaskList } from '@/app/actions/taskListActions'
+import { getTaskList } from '@/app/actions/taskListActions'
 
 describe('taskListActions', () => {
   it('builds default query for getTaskList', async () => {

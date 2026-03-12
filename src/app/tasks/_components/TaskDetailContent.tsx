@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import { getTaskById } from '@/app/actions/taskListActions'
+
+import {getTaskById} from "@/app/actions/taskActions";
 
 interface TaskDetailContentProps {
   taskId: number

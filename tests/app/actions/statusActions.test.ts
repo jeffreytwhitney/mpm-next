@@ -8,7 +8,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }))
 
-import { getTaskStatusOptions } from '@/app/actions/statusActions'
+import { getTaskStatusDropdownOptions } from '@/app/actions/taskStatusActions'
 
 describe('statusActions', () => {
   it('maps statuses to value/label options and filters invalid labels', async () => {
@@ -19,7 +19,7 @@ describe('statusActions', () => {
       { ID: 4, Status: 'Closed' },
     ])
 
-    const result = await getTaskStatusOptions()
+    const result = await getTaskStatusDropdownOptions()
 
     expect(mockFindManyStatus).toHaveBeenCalledWith({
       select: { ID: true, Status: true },
@@ -34,7 +34,7 @@ describe('statusActions', () => {
   it('throws a consistent error when status query fails', async () => {
     mockFindManyStatus.mockRejectedValueOnce(new Error('db fail'))
 
-    await expect(getTaskStatusOptions()).rejects.toThrow('Failed to fetch task status options')
+    await expect(getTaskStatusDropdownOptions()).rejects.toThrow('Failed to fetch task status options')
   })
 })
 

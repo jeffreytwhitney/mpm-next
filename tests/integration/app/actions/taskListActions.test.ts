@@ -1,5 +1,6 @@
-import { getTaskById, getTaskList } from '@/app/actions/taskListActions'
+import { getTaskList } from '@/app/actions/taskListActions'
 import { prisma } from '@/lib/prisma'
+import {getTaskById} from "@/app/actions/taskActions";
 
 describe('Task List Actions', () => {
     afterAll(async () => {
@@ -8,7 +9,6 @@ describe('Task List Actions', () => {
 
     it('gets default active task list with the default 50 row cap', async () => {
         const results = await getTaskList()
-
         expect(results.length).toBeLessThanOrEqual(50)
         expect(results.every(task => task.StatusID !== null && task.StatusID < 4)).toBe(true)
     })
@@ -77,6 +77,32 @@ describe('Task List Actions', () => {
 
         expect(existing).toEqual(expect.objectContaining({ ID: firstTask.ID }))
         expect(missing).toBeNull()
+    })
+
+    it('Makes sure Due Date and Scheduled Due Date are not empty strings', async () => {
+        const maxTask = await prisma.tblTask.findFirst({
+            select: { ID: true },
+            orderBy: { ID: 'desc' },
+        })
+
+        expect(maxTask).not.toBeNull()
+
+        if (!maxTask) {
+            throw new Error('Expected at least one task in seeded integration database')
+        }
+
+        const maxTaskID = maxTask.ID
+
+        const result = await getTaskById(maxTaskID)
+
+        expect(result).not.toBeNull()
+        if (!result) {
+            throw new Error('Expected task to exist for max task ID')
+        }
+        const dueDate = result.DueDate
+        expect(dueDate).not.toBeNull()
+        expect(dueDate).toBeInstanceOf(Date)
+
     })
 })
 

@@ -1,12 +1,13 @@
 import {prisma} from "@/lib/prisma";
-import {TaskStatusOption} from "@/app/actions/taskListActions";
+export interface TaskTypeDropdownOption {value: number, label: string}
 
-export async function getTaskStatusOptions(): Promise<TaskStatusOption[]> {
+
+export async function getTaskTypeDropdownOptions(): Promise<TaskTypeDropdownOption[]> {
     try {
-        const statuses = await prisma.tblStatus.findMany({
+        const statuses = await prisma.tblTaskType.findMany({
             select: {
                 ID: true,
-                Status: true,
+                TaskType: true,
             },
             orderBy: {
                 ID: 'asc',
@@ -16,11 +17,11 @@ export async function getTaskStatusOptions(): Promise<TaskStatusOption[]> {
         return statuses
             .filter((status): status is {
                 ID: number;
-                Status: string
-            } => typeof status.Status === 'string' && status.Status.length > 0)
+                TaskType: string
+            } => typeof status.TaskType === 'string' && status.TaskType.length > 0)
             .map((status) => ({
                 value: status.ID,
-                label: status.Status,
+                label: status.TaskType,
             }))
     } catch (error) {
         console.error('Error fetching task status options:', error)

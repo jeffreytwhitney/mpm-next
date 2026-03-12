@@ -1,5 +1,6 @@
 import {prisma} from '@/lib/prisma'
 import type {Prisma} from '@/generated/prisma/client'
+import {parseOptionalInt, parsePositiveIntOrDefault} from "@/app/actions/lib/common";
 
 // Define the select object to be reused
 const taskListSelect = {
@@ -16,17 +17,14 @@ const taskListSelect = {
     DrawingNumber: true,
     Operation: true,
     DueDate: true,
+    TaskType: true,
+    TaskTypeID: true,
 } satisfies Prisma.qryTaskListSelect
 
 // Export the return type for use in components
-export type TaskListItem = Prisma.qryTaskListGetPayload<{
-    select: typeof taskListSelect
-}>
+export type TaskListItem = Prisma.qryTaskListGetPayload<{select: typeof taskListSelect}>
 
-export interface TaskStatusOption {
-    value: number
-    label: string
-}
+
 
 export type TaskStatusPreset = 'activeNotWaiting'
 
@@ -39,6 +37,7 @@ export interface TaskListFilters {
     taskName?: string
     projectName?: string
     departmentID?: number
+    taskTypeID?: number
     submittedByName?: string
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
@@ -47,20 +46,6 @@ export interface TaskListFilters {
 }
 
 export type TaskListSearchParams = Partial<Record<keyof TaskListFilters, string>>
-
-const parseOptionalInt = (value?: string): number | undefined => {
-    if (!value) {
-        return undefined
-    }
-
-    const parsed = parseInt(value, 10)
-    return Number.isNaN(parsed) ? undefined : parsed
-}
-
-const parsePositiveIntOrDefault = (value: string | undefined, defaultValue: number): number => {
-    const parsed = parseOptionalInt(value)
-    return parsed !== undefined && parsed > 0 ? parsed : defaultValue
-}
 
 /// Parses URL search parameters into TaskListFilters, handling type conversions and defaults
 /// This is because URL search parameters are always strings, but our filters expect specific types (e.g. numbers, enums)
@@ -77,6 +62,7 @@ export function parseTaskListFilters(searchParams: TaskListSearchParams): TaskLi
         taskName: searchParams.taskName,
         projectName: searchParams.projectName,
         departmentID: parseOptionalInt(searchParams.departmentID),
+        taskTypeID: parseOptionalInt(searchParams.taskTypeID),
         submittedByName: searchParams.submittedByName,
         sortBy: searchParams.sortBy,
         sortOrder: searchParams.sortOrder === 'desc' ? 'desc' : 'asc',
@@ -105,6 +91,7 @@ export async function getTaskList(filters?: TaskListFilters): Promise<TaskListIt
             'status': 'Status',
             'dueDate': 'DueDate',
             'departmentName': 'DepartmentName',
+            'taskTypeID': 'TaskTypeID',
         }
 
         const sortField = filters?.sortBy ? (sortFieldMap[filters.sortBy] ?? 'DueDate') : 'DueDate'
@@ -125,6 +112,7 @@ export async function getTaskList(filters?: TaskListFilters): Promise<TaskListIt
                 ...(filters?.projectName && {ProjectName: {contains: filters.projectName}}),
                 ...(filters?.departmentID !== undefined && {DepartmentID: filters.departmentID}),
                 ...(filters?.submittedByName && {SubmittedByName: filters.submittedByName}),
+                ...(filters?.taskTypeID && {TaskTypeID: filters.taskTypeID}),
             },
             orderBy: {
                 [sortField]: sortOrder,
@@ -138,13 +126,3 @@ export async function getTaskList(filters?: TaskListFilters): Promise<TaskListIt
     }
 }
 
-export async function getTaskById(id: number) {
-    try {
-        return await prisma.tblTask.findFirst({
-            where: {ID: id},
-        })
-    } catch (error) {
-        console.error('Error fetching task:', error)
-        throw new Error('Failed to fetch task')
-    }
-}

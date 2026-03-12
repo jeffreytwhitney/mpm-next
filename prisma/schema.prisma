@@ -359,13 +359,13 @@ model qryTaskList {
   TaskName              String?   @db.NVarChar(255)
   TicketNumber          String?   @map("ProjectTicketNumber") @db.NVarChar(255)
   DrawingNumber         String?   @db.NVarChar(255)
-  DueDate               DateTime? @db.DateTime
+  DueDate               DateTime  @db.DateTime
   CustomerRev           String?   @db.NVarChar(15)
   ManufacturingRev      String?   @db.NVarChar(15)
   Operation             String?   @db.NVarChar(15)
   DepartmentID          Int?
   DepartmentName        String?   @db.NVarChar(255)
-  ScheduledDueDate      DateTime? @db.DateTime
+  ScheduledDueDate      DateTime  @db.DateTime
   EstimatedHours        Int?
   TaskTypeID            Int?
   AssignedToID          Int?
