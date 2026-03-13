@@ -8,6 +8,7 @@ const taskListSelect = {
     TicketNumber: true,
     TaskName: true,
     ProjectName: true,
+    ProjectID: true,
     CurrentlyRunning: true,
     ManufacturingRev: true,
     Status: true,
@@ -28,6 +29,7 @@ const taskListSelect = {
     DueDate: true,
     TaskType: true,
     TaskTypeID: true,
+    IsInSchedule: true,
 } satisfies Prisma.qryTaskListRawSelect
 
 // Export the return type for use in components

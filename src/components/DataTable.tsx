@@ -16,9 +16,10 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   onSortChange?: (column: string, direction: 'asc' | 'desc') => void
   renderHeaderFilter?: (columnId: string) => React.ReactNode
+  getRowClassName?: (rowData: TData) => string
 }
 
-export function DataTable<TData, TValue>({columns, data, onSortChange, renderHeaderFilter}: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({columns, data, onSortChange, renderHeaderFilter, getRowClassName}: DataTableProps<TData, TValue>) {
   const [sortState, setSortState] = React.useState<{ column: string; direction: 'asc' | 'desc' } | null>(null)
 
   // Memoize columns to prevent unnecessary re-renders
@@ -55,7 +56,7 @@ export function DataTable<TData, TValue>({columns, data, onSortChange, renderHea
                     setSortState({ column: columnId, direction: nextDirection })
                     onSortChange(columnId, nextDirection)
                   }}
-                  className={`px-1 py-0 font-medium text-xs ${getAlignmentClass(header.column.columnDef.meta?.align)} ${onSortChange ? 'cursor-pointer hover:bg-slate-200' : ''}`}
+                  className={`px-0 py-0 font-medium text-xs ${getAlignmentClass(header.column.columnDef.meta?.align)} ${onSortChange ? 'cursor-pointer hover:bg-slate-200' : ''}`}
                   style={{
                     width: header.getSize(),
                     minWidth: header.getSize(),
@@ -77,7 +78,7 @@ export function DataTable<TData, TValue>({columns, data, onSortChange, renderHea
               {table.getFlatHeaders().map((header) => (
                 <th
                   key={`${header.id}-filter`}
-                  className={`px-1 py-0 font-normal ${getAlignmentClass(header.column.columnDef.meta?.align)}`}
+                  className={`px-.5 py-0 font-normal ${getAlignmentClass(header.column.columnDef.meta?.align)}`}
                   style={{
                     width: header.getSize(),
                     minWidth: header.getSize(),
@@ -95,12 +96,12 @@ export function DataTable<TData, TValue>({columns, data, onSortChange, renderHea
             table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-b hover:bg-slate-50 text-[11px]"
+                className={`border-b hover:bg-slate-50 text-[11px] ${getRowClassName ? getRowClassName(row.original) : ''}`}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    className={`px-2 py-0.5 ${getAlignmentClass(cell.column.columnDef.meta?.align)}`}
+                    className={`px-0 py-0.5 ${getAlignmentClass(cell.column.columnDef.meta?.align)}`}
                     style={{
                       width: cell.column.getSize(),
                       minWidth: cell.column.getSize(),

@@ -4,34 +4,37 @@ import type {TaskListItem} from "@/app/actions/taskListActions";
 import React from "react";
 import Link from 'next/link'
 
+const taskLinkClassName = "text-[#0E7490] hover:text-[#155E75] hover:underline font-semibold transition-colors"
+
 export const taskColumns: ColumnDef<TaskListItem>[] = [
     {
         accessorKey: 'TicketNumber',
         header: 'Ticket Nbr',
         cell: ({row}) => {
             const ticketNumber = row.getValue('TicketNumber') as string | null
-            const taskId = row.original.ID
-
+            const projectId = row.original.ProjectID
             return (
-                <Link href={`/tasks/${taskId}`} className="text-[#0000EE] hover:underline font-semibold">
+                <Link href={`/tickets/${projectId}`} className={taskLinkClassName}>
                     {ticketNumber || ''}
                 </Link>
             )
         },
-        size: 20,
+        size: 15,
+        minSize:15,
         meta: {
             align: 'center',
         },
     },
     {
-        accessorKey: 'TaskName',
-        header: 'Task Name',
+        accessorKey: 'ProjectName',
+        header: 'Ticket Name',
         cell: ({row}) => {
-            const taskName = row.getValue('TaskName') as string | null
-            const taskId = row.original.ID
+            const projectName = row.getValue('ProjectName') as string | null
+            const projectId = row.original.ProjectID
+
             return (
-                <Link href={`/tasks/${taskId}`} className="text-[#0000EE] hover:underline font-semibold">
-                    {taskName ? taskName.slice(0, 30) : ''}
+                <Link href={`/tickets/${projectId}`} className={taskLinkClassName}>
+                    {projectName ? projectName.slice(0, 30) : ''}
                 </Link>
             )
         },
@@ -41,11 +44,16 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
         },
     },
     {
-        accessorKey: 'ProjectName',
-        header: 'Project Name',
+        accessorKey: 'TaskName',
+        header: 'Part/Task Name',
         cell: ({row}) => {
-            const projectName = row.getValue('ProjectName') as string | null
-            return <div>{projectName ? projectName.slice(0, 30) : ''}</div>
+            const taskName = row.getValue('TaskName') as string | null
+            const taskId = row.original.ID
+            return (
+                <Link href={`/tasks/${taskId}`} className={taskLinkClassName}>
+                    {taskName ? taskName.slice(0, 30) : ''}
+                </Link>
+            )
         },
         size: 50,
         meta: {
@@ -83,15 +91,6 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
         },
     },
     {
-        accessorKey: 'Status',
-        header: 'Status',
-        cell: ({row}) => <div>{row.getValue('Status') || ''}</div>,
-        size: 30,
-        meta: {
-            align: 'left',
-        },
-    },
-    {
         accessorKey: 'Operation',
         header: () => (
             <div className="leading-tight text-center">
@@ -107,6 +106,72 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
         },
     },
     {
+        accessorKey: 'Status',
+        header: 'Status',
+        cell: ({row}) => <div>{row.getValue('Status') || ''}</div>,
+        size: 15,
+        minSize: 15,
+        meta: {
+            align: 'left',
+        },
+    },
+    {
+        accessorKey: 'IsInSchedule',
+        header: () => (
+            <div className="leading-tight text-center">
+                <div>In</div>
+                <div>Sched</div>
+            </div>
+        ),
+        cell: ({row}) => <div>{row.getValue('IsInSchedule') || ''}</div>,
+        size: 7,
+        minSize: 7,
+        meta: {
+            align: 'center',
+        },
+    },
+    {
+        accessorKey: 'TaskType',
+        header: 'Task Type',
+        cell: ({row}) => <div>{row.getValue('TaskType') || ''}</div>,
+        minSize: 15,
+        size: 15,
+        meta: {
+            align: 'left',
+        },
+    },
+    {
+        accessorKey: 'AssignedToName',
+        header: 'Assigned To',
+        cell: ({row}) => <div>{row.getValue('AssignedToName') || ''}</div>,
+        size: 20,
+        meta: {
+            align: 'left',
+        },
+    },
+    {
+        accessorKey: 'JobNumber',
+        header: 'Job Nbr',
+        cell: ({row}) => <div>{row.getValue('JobNumber') || ''}</div>,
+        size: 20,
+        meta: {
+            align: 'left',
+        },
+    },
+    {
+        accessorKey: 'DateStarted',
+        header: 'Date Started',
+        cell: ({ row }) => {
+            const dateStarted = row.getValue('DateStarted') as Date | null
+            return <div>{dateStarted ? dateStarted.toLocaleDateString() : ''}</div>
+        },
+        size: 15,
+        minSize: 15,
+        meta: {
+            align: 'left',
+        },
+    },
+    {
         accessorKey: 'DueDate',
         header: 'Due Date',
         cell: ({ row }) => {
@@ -114,7 +179,8 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
             return <div>{dueDate ? dueDate.toLocaleDateString() : ''}</div>
         }
         ,
-        size: 30,
+        size: 15,
+        minSize: 15,
         meta: {
             align: 'center',
         },
@@ -127,7 +193,36 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
             return <div>{schedDueDate ? schedDueDate.toLocaleDateString() : '--'}</div>
         }
         ,
-        size: 30,
+        size: 15,
+        minSize: 15,
+        meta: {
+            align: 'center',
+        },
+    },
+    {
+        accessorKey: 'ManualDueDate',
+        header: () => (
+            <div className="leading-tight text-center">
+                <div>Man</div>
+                <div>Dt</div>
+            </div>
+        ),
+        cell: ({row}) => {
+            const manualDueDate = row.getValue('ManualDueDate')
+            const isChecked = manualDueDate === 1 || manualDueDate === '1' || manualDueDate === true
+
+            return (
+                <input
+                    type="checkbox"
+                    checked={isChecked}
+                    disabled
+                    readOnly
+                    aria-label="Manual due date"
+                />
+            )
+        },
+        size: 5,
+        minSize: 5,
         meta: {
             align: 'center',
         },
