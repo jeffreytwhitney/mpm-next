@@ -17,9 +17,10 @@ interface DataTableProps<TData, TValue> {
   onSortChange?: (column: string, direction: 'asc' | 'desc') => void
   renderHeaderFilter?: (columnId: string) => React.ReactNode
   getRowClassName?: (rowData: TData) => string
+  getRowStyle?: (rowData: TData) => React.CSSProperties | undefined
 }
 
-export function DataTable<TData, TValue>({columns, data, onSortChange, renderHeaderFilter, getRowClassName}: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({columns, data, onSortChange, renderHeaderFilter, getRowClassName, getRowStyle}: DataTableProps<TData, TValue>) {
   const [sortState, setSortState] = React.useState<{ column: string; direction: 'asc' | 'desc' } | null>(null)
 
   // Memoize columns to prevent unnecessary re-renders
@@ -97,6 +98,7 @@ export function DataTable<TData, TValue>({columns, data, onSortChange, renderHea
               <tr
                 key={row.id}
                 className={`border-b hover:bg-slate-50 text-[11px] ${getRowClassName ? getRowClassName(row.original) : ''}`}
+                style={getRowStyle ? getRowStyle(row.original) : undefined}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td

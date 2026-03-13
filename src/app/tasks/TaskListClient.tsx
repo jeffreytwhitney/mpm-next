@@ -11,7 +11,15 @@ import {parseDateValue, startOfDay} from '@/lib/date'
 import {TaskTypeDropdownOption} from "@/app/actions/taskTypeActions";
 import {UserDropDownOption} from "@/app/actions/userActions";
 
-function getTaskRowClassName(task: TaskListItem): string {
+const ROW_HIGHLIGHT_OPACITY = 0.1
+
+function makeRowHighlight(red: number, green: number, blue: number): React.CSSProperties {
+    return {
+        backgroundColor: `rgba(${red}, ${green}, ${blue}, ${ROW_HIGHLIGHT_OPACITY})`,
+    }
+}
+
+function getTaskRowStyle(task: TaskListItem): React.CSSProperties | undefined {
     const today = startOfDay(new Date())
     const oneMonthAgo = new Date(today)
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
@@ -23,25 +31,27 @@ function getTaskRowClassName(task: TaskListItem): string {
     const isOverdue = dueDate ? startOfDay(dueDate) <= today : false
     const isStarted = statusID === 2
     const isWaiting = statusID === 3
+    const isCompleted = statusID === 4 || statusID === 5
+
     const startedMoreThanMonthAgo = startedDate ? startOfDay(startedDate) < oneMonthAgo : false
 
     if (isOverdue) {
-        return 'text-red-600'
+        return makeRowHighlight(239, 68, 68)
     }
 
     if (isStarted && startedMoreThanMonthAgo) {
-        return 'text-orange-500'
+        return makeRowHighlight(249, 115, 22)
     }
 
     if (isStarted) {
-        return 'text-green-600'
+        return makeRowHighlight(22, 163, 74)
     }
 
     if (isWaiting) {
-        return 'text-blue-600'
+        return makeRowHighlight(37, 99, 235)
     }
 
-    return ''
+    return undefined
 }
 
 interface TaskListClientProps {
@@ -332,14 +342,14 @@ export function TaskListClient({initialTasks, initialFilters, initialStatusOptio
     }, [filters.ticketNumber, filters.taskName, filters.projectName, filters.statusID, filters.statusPreset, filters.taskTypeID, filters.assignedToID, filters.unassignedPreset, handleFilterChange, statusOptions, taskTypeOptions, assignedToOptions])
 
     return (
-        <div className="container mx-auto py-10">
+        <div className="mx-auto py-4 px-3">
             {/* Data Table */}
             <DataTable
                 columns={taskColumns}
                 data={initialTasks}
                 onSortChange={handleSortChange}
                 renderHeaderFilter={renderHeaderFilter}
-                getRowClassName={getTaskRowClassName}
+                getRowStyle={getTaskRowStyle}
             />
         </div>
     )

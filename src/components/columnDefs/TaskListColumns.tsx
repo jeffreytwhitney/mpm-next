@@ -69,8 +69,8 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
             </div>
         ),
         cell: ({row}) => <div>{row.getValue('CurrentlyRunning')}</div>,
-        size: 5,
-        minSize: 5,
+        size: 7,
+        minSize: 7,
         meta: {
             align: 'center',
         },
@@ -84,8 +84,8 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
             </div>
         ),
         cell: ({row}) => <div>{row.getValue('ManufacturingRev') || ''}</div>,
-        size: 5,
-        minSize: 5,
+        size: 7,
+        minSize: 7,
         meta: {
             align: 'center',
         },
@@ -99,8 +99,8 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
             </div>
         ),
         cell: ({row}) => <div>{row.getValue('Operation') || ''}</div>,
-        size: 5,
-        minSize: 5,
+        size: 7,
+        minSize: 7,
         meta: {
             align: 'center',
         },
@@ -190,7 +190,7 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
         header: 'Sched. Due Date',
         cell: ({ row }) => {
             const schedDueDate = row.getValue('ScheduledDueDate') as Date | null
-            return <div>{schedDueDate ? schedDueDate.toLocaleDateString() : '--'}</div>
+            return <div>{schedDueDate ? schedDueDate.toLocaleDateString() : ''}</div>
         }
         ,
         size: 15,
@@ -225,6 +225,55 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
         minSize: 5,
         meta: {
             align: 'center',
+        },
+    },
+    {
+        accessorKey: 'SumOfHours',
+        header: () => (
+            <div className="leading-tight text-center">
+                <div>Tot</div>
+                <div>Hrs</div>
+            </div>
+        ),
+        cell: ({row}) => <div>{row.getValue('SumOfHours') || ''}</div>,
+        size: 5,
+        minSize: 5,
+        meta: {
+            align: 'center',
+        },
+    },
+    {
+        accessorKey: 'DepartmentName',
+        header: 'Department',
+        cell: ({row}) => <div>{row.getValue('DepartmentName') || ''}</div>,
+        size: 20,
+        minSize: 20,
+        meta: {
+            align: 'left',
+        },
+    },
+    {
+        accessorKey: 'InitiatorName',
+        header: 'Submittor',
+        cell: ({row}) => <div>{row.getValue('InitiatorName') || ''}</div>,
+        size: 20,
+        minSize: 20,
+        meta: {
+            align: 'left',
+        },
+    },
+    {
+        accessorKey: 'CreatedTimestamp',
+        header: 'Create Date',
+        cell: ({ row }) => {
+            const createDate = row.getValue('CreatedTimestamp') as Date | null
+            return <div>{createDate ? createDate.toLocaleDateString() : ''}</div>
+        }
+        ,
+        size: 15,
+        minSize: 15,
+        meta: {
+            align: 'left',
         },
     },
 ]

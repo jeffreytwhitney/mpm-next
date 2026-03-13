@@ -1,6 +1,7 @@
 import {prisma} from '@/lib/prisma'
 import type {Prisma} from '@/generated/prisma/client'
 import {parseOptionalInt, parsePositiveIntOrDefault} from "@/app/actions/lib/common";
+import {resolveSiteID} from '@/lib/site'
 
 // Define the select object to be reused
 const taskListSelect = {
@@ -42,6 +43,7 @@ export type TaskStatusPreset = 'activeNotWaiting'
 export type UnassignedPreset = 'unAssigned'
 
 export interface TaskListFilters {
+    siteID: string
     statusID?: number
     statusPreset?: TaskStatusPreset
     unassignedPreset?: UnassignedPreset
@@ -63,13 +65,14 @@ export type TaskListSearchParams = Partial<Record<keyof TaskListFilters, string>
 
 /// Parses URL search parameters into TaskListFilters, handling type conversions and defaults
 /// This is because URL search parameters are always strings, but our filters expect specific types (e.g. numbers, enums)
-export function parseTaskListFilters(searchParams: TaskListSearchParams): TaskListFilters {
+export function parseTaskListFilters(searchParams: TaskListSearchParams, defaultSiteID = '1'): TaskListFilters {
     const statusPreset: TaskStatusPreset | undefined =
         searchParams.statusPreset === 'activeNotWaiting' ? 'activeNotWaiting' : undefined
     const unassignedPreset: UnassignedPreset | undefined =
         searchParams.unassignedPreset === 'unAssigned' ? 'unAssigned' : undefined
 
     return {
+        siteID: resolveSiteID(searchParams.siteID, defaultSiteID),
         statusID: parseOptionalInt(searchParams.statusID),
         statusPreset,
         unassignedPreset,
@@ -88,8 +91,9 @@ export function parseTaskListFilters(searchParams: TaskListSearchParams): TaskLi
     }
 }
 
-export async function getTaskList(filters?: TaskListFilters): Promise<TaskListItem[]> {
+export async function getTaskList(filters?: Partial<TaskListFilters>): Promise<TaskListItem[]> {
     try {
+        const siteID = parseOptionalInt(filters?.siteID) ?? 1
         const pageSize = filters?.pageSize ?? 50
         const page = filters?.page ?? 1
         const skip = (page - 1) * pageSize
@@ -100,7 +104,6 @@ export async function getTaskList(filters?: TaskListFilters): Promise<TaskListIt
             'TaskName': 'TaskName',
             'ProjectName': 'ProjectName',
             'Status': 'Status',
-            'DueDate': 'DueDate',
             'DepartmentName': 'DepartmentName',
             'ticketNumber': 'TicketNumber',
             'taskName': 'TaskName',
@@ -108,6 +111,7 @@ export async function getTaskList(filters?: TaskListFilters): Promise<TaskListIt
             'status': 'Status',
             'dueDate': 'DueDate',
             'departmentName': 'DepartmentName',
+            'scheduledDueDate': 'ScheduledDueDate',
             'taskTypeID': 'TaskTypeID',
         }
 
@@ -128,6 +132,7 @@ export async function getTaskList(filters?: TaskListFilters): Promise<TaskListIt
         return await prisma.qryTaskListRaw.findMany({
             select: taskListSelect,
             where: {
+                SiteID: siteID,
                 StatusID: statusFilter,
                 ...(filters?.ticketNumber && {TicketNumber: {contains: filters.ticketNumber}}),
                 ...(assigneeFilter !== undefined && {AssignedToID: assigneeFilter}),

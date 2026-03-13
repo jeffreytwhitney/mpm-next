@@ -354,6 +354,7 @@ model tblUserType {
 /// View qryTaskList - using @@id since views don't have named primary key constraints
 model qryTaskListRaw {
   ID                    Int
+  SiteID                Int
   ProjectID             Int?
   StatusID              Int?
   TaskName              String?   @db.NVarChar(255)
