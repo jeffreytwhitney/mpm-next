@@ -58,6 +58,7 @@ describe('authActions', () => {
     const sessionUser = {
       userId: 10,
       userTypeID: 1,
+      isAdmin: false,
       employeeNumber: '4404',
       networkUserName: 'jdoe',
       displayName: 'John Doe',
@@ -87,6 +88,7 @@ describe('authActions', () => {
     const sessionUser = {
       userId: 10,
       userTypeID: 1,
+      isAdmin: false,
       employeeNumber: '4404',
       networkUserName: 'jdoe',
       displayName: 'John Doe',
@@ -114,16 +116,23 @@ describe('authActions', () => {
   })
 
   it('returns the current session user', async () => {
-    mockGetSessionUser.mockResolvedValueOnce({ userId: 10, userTypeID: 3 })
+    mockGetSessionUser.mockResolvedValueOnce({ userId: 10, userTypeID: 3, isAdmin: false })
 
-    await expect(getCurrentSessionUser()).resolves.toEqual({ userId: 10, userTypeID: 3 })
+    await expect(getCurrentSessionUser()).resolves.toEqual({ userId: 10, userTypeID: 3, isAdmin: false })
   })
 
   it('checks permissions for the current session user', async () => {
-    mockGetSessionUser.mockResolvedValueOnce({ userId: 10, userTypeID: 3 })
+    mockGetSessionUser.mockResolvedValue({ userId: 10, userTypeID: 3, isAdmin: false })
 
     await expect(currentUserHasPermission('tickets.create')).resolves.toBe(true)
     await expect(currentUserHasPermission('programmingTasks.manage')).resolves.toBe(false)
+  })
+
+  it('allows admin-eligible users with isAdmin=true to bypass base permission matrix', async () => {
+    mockGetSessionUser.mockResolvedValue({ userId: 11, userTypeID: 2, isAdmin: true })
+
+    await expect(currentUserHasPermission('programmingTasks.manage')).resolves.toBe(true)
+    await expect(currentUserHasPermission('tickets.create')).resolves.toBe(true)
   })
 })
 

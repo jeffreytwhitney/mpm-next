@@ -42,6 +42,29 @@ describe('auth permissions', () => {
     expect(hasPermission({ UserTypeID: USER_TYPE_IDS.cellLeader }, 'tickets.addTasks')).toBe(false)
   })
 
+  it('grants full access only when an admin-eligible user has IsAdmin enabled', () => {
+    const adminUser = {
+      UserTypeID: USER_TYPE_IDS.metrologyCalibrationTechnician,
+      IsAdmin: 1,
+    }
+
+    expect(hasPermission(adminUser, 'programmingTasks.manage')).toBe(true)
+    expect(hasPermission(adminUser, 'tickets.create')).toBe(true)
+    expect(hasPermission(adminUser, 'tickets.addTasks')).toBe(true)
+    expect(hasPermission(adminUser, 'serviceTickets.manage')).toBe(true)
+  })
+
+  it('does not treat non-eligible user types as admins even when IsAdmin is set', () => {
+    const notEligibleAdmin = {
+      UserTypeID: USER_TYPE_IDS.qualityEngineer,
+      IsAdmin: 1,
+    }
+
+    expect(hasPermission(notEligibleAdmin, 'programmingTasks.manage')).toBe(false)
+    expect(hasPermission(notEligibleAdmin, 'serviceTickets.manage')).toBe(false)
+    expect(hasPermission(notEligibleAdmin, 'tickets.create')).toBe(true)
+  })
+
   it('requires authentication before permissions are evaluated', () => {
     expect(() => requireAuthenticatedUser(null)).toThrow('Authentication required')
     expect(() => requirePermission(null, 'tickets.create')).toThrow('Authentication required')

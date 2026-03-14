@@ -61,6 +61,9 @@ export async function getCurrentSessionUser(): Promise<SessionUser | null> {
 
 export async function currentUserHasPermission(permission: AppPermission): Promise<boolean> {
   const sessionUser = await getCurrentSessionUser()
-  return hasPermission(sessionUser ? { UserTypeID: sessionUser.userTypeID } : null, permission)
+  return hasPermission(
+    sessionUser ? { UserTypeID: sessionUser.userTypeID, IsAdmin: sessionUser.isAdmin } : null,
+    permission,
+  )
 }
 

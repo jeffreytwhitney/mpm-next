@@ -5,6 +5,7 @@ import {usePathname, useRouter, useSearchParams} from 'next/navigation'
 import {setCurrentSiteCookie} from '@/app/actions/siteActions'
 import {SITE_OPTIONS, parseSiteID} from '@/lib/site'
 import {useSite} from './SiteProvider'
+import NavLinks from './NavLinks'
 
 export function SideNav() {
     const router = useRouter()
@@ -61,6 +62,9 @@ export function SideNav() {
                         ))}
                     </select>
                 </label>
+                <nav className="flex flex-col gap-1">
+                    <NavLinks />
+                </nav>
             </div>
         </aside>
     )

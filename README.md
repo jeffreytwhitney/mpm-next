@@ -45,6 +45,11 @@ Current permission mapping based on `tblUser.UserTypeID`:
 - `4` Manufacturing Engineer: no mutation rights currently
 - `5` Cell Leader: no mutation rights currently
 
+Admin override rule:
+
+- `tblUser.IsAdmin` only grants admin override when `tblUser.UserTypeID` is `1` or `2`
+- If `IsAdmin` is set for any other user type, it is ignored for permission elevation
+
 Generate a bcrypt password hash from the terminal with:
 
 ```bash

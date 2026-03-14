@@ -15,6 +15,7 @@ describe('auth session utilities', () => {
     const token = await createSessionToken({
       userId: 10,
       userTypeID: 1,
+      isAdmin: true,
       employeeNumber: '4404',
       networkUserName: 'jdoe',
       displayName: 'John Doe',
@@ -24,6 +25,7 @@ describe('auth session utilities', () => {
     await expect(verifySessionToken(token)).resolves.toEqual({
       userId: 10,
       userTypeID: 1,
+      isAdmin: true,
       employeeNumber: '4404',
       networkUserName: 'jdoe',
       displayName: 'John Doe',
@@ -35,6 +37,7 @@ describe('auth session utilities', () => {
     const token = await createSessionToken({
       userId: 10,
       userTypeID: 1,
+      isAdmin: false,
       employeeNumber: '4404',
       networkUserName: 'jdoe',
       displayName: 'John Doe',
