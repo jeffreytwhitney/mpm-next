@@ -1,4 +1,5 @@
 import {
+    getActiveUserForAuth,
     getMetrologyProgrammerUsers,
     getMetrologyUsers,
     getUserByEmployeeNumber,
@@ -17,11 +18,19 @@ describe('userActions', () => {
     it('gets user by ID', async () => {
         const result = await getUserById(10)
         expect(result).toEqual(expect.objectContaining({EmployeeNumber: '4404'}))
+        expect(result).not.toHaveProperty('Password')
     });
 
     it('gets users by Employee Number', async () => {
         const result = await getUserByEmployeeNumber('4404')
         expect(result).toEqual(expect.objectContaining({ID: 10}))
+    })
+
+    it('gets active user for auth with password field available', async () => {
+        const result = await getActiveUserForAuth('4404')
+
+        expect(result).toEqual(expect.objectContaining({ID: 10, EmployeeNumber: '4404'}))
+        expect(result).toHaveProperty('Password')
     })
 
     it('get Metrology Users', async () => {

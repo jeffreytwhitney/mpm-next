@@ -1,18 +1,18 @@
-'use client'
+import { getSessionUser } from '@/lib/auth/session'
+import { HeaderAuthControls } from '@/components/HeaderAuthControls'
 
-import React from 'react'
-import {SITE_OPTIONS} from '@/lib/site'
-import {useCurrentSite} from './useCurrentSite'
-
-export function Header() {
-  const siteID = useCurrentSite()
-  const siteName = SITE_OPTIONS.find((site) => site.id === siteID)?.label ?? 'Unknown Site'
+export async function Header() {
+  const sessionUser = await getSessionUser()
+  const isAnonymous = !sessionUser
+  const userLabel = isAnonymous
+    ? 'Anonymous'
+    : sessionUser.fullName ?? sessionUser.displayName ?? sessionUser.networkUserName ?? sessionUser.employeeNumber ?? 'Signed in'
 
   return (
     <header className="border-b border-gray-200 bg-white">
       <div className="flex items-center justify-between px-4 py-3">
         <h1 className="text-lg font-semibold text-gray-900">Task List</h1>
-        <span className="text-sm text-gray-600">{siteName}</span>
+        <HeaderAuthControls fullName={userLabel} isAnonymous={isAnonymous} />
       </div>
     </header>
   )

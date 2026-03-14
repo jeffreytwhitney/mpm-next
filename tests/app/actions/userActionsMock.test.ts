@@ -1,5 +1,10 @@
 const mockFindFirstUser = jest.fn()
 const mockFindManyUser = jest.fn()
+const mockVerifyPassword = jest.fn()
+
+jest.mock('@/lib/hash', () => ({
+  verifyPassword: (...args: unknown[]) => mockVerifyPassword(...args),
+}))
 
 jest.mock('@/lib/prisma', () => ({
   prisma: {
@@ -11,14 +16,20 @@ jest.mock('@/lib/prisma', () => ({
 }))
 
 import {
+  getActiveUserForAuth,
   getMetrologyProgrammerUsers,
   getMetrologyUsers,
   getUserByEmployeeNumber,
   getUserById,
   getUsersByDepartmentAndUserTypeID,
+  verifyUserCredentials,
 } from '@/app/actions/userActions'
 
 describe('userActions', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   it('queries user by id', async () => {
     mockFindFirstUser.mockResolvedValueOnce({ ID: 8 })
 
@@ -38,6 +49,64 @@ describe('userActions', () => {
     expect(mockFindFirstUser).toHaveBeenCalledWith(
       expect.objectContaining({ where: { EmployeeNumber: 'E123' } }),
     )
+  })
+
+  it('queries active user for auth by employee number or network username and includes password', async () => {
+    mockFindFirstUser.mockResolvedValueOnce({ ID: 11, Password: 'hash' })
+
+    await getActiveUserForAuth('E123')
+
+    expect(mockFindFirstUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          IsActive: 1,
+          OR: [
+            { EmployeeNumber: 'E123' },
+            { NetworkUserName: 'E123' },
+          ],
+        },
+        select: expect.objectContaining({ Password: true }),
+      }),
+    )
+  })
+
+  it('returns null for blank auth identifiers', async () => {
+    await expect(getActiveUserForAuth('   ')).resolves.toBeNull()
+    expect(mockFindFirstUser).not.toHaveBeenCalled()
+  })
+
+  it('verifies credentials and returns a safe user without password', async () => {
+    mockFindFirstUser.mockResolvedValueOnce({
+      ID: 11,
+      EmployeeNumber: 'E123',
+      NetworkUserName: 'jdoe',
+      Password: '$2b$12$hash',
+    })
+    mockVerifyPassword.mockResolvedValueOnce(true)
+
+    const result = await verifyUserCredentials('E123', 'Aw3s0me5auc3')
+
+    expect(mockVerifyPassword).toHaveBeenCalledWith('Aw3s0me5auc3', '$2b$12$hash')
+    expect(result).toEqual({
+      ID: 11,
+      EmployeeNumber: 'E123',
+      NetworkUserName: 'jdoe',
+    })
+    expect(result).not.toHaveProperty('Password')
+  })
+
+  it('returns null when auth user has no stored password', async () => {
+    mockFindFirstUser.mockResolvedValueOnce({ ID: 11, Password: null })
+
+    await expect(verifyUserCredentials('E123', 'Aw3s0me5auc3')).resolves.toBeNull()
+    expect(mockVerifyPassword).not.toHaveBeenCalled()
+  })
+
+  it('returns null when password verification fails', async () => {
+    mockFindFirstUser.mockResolvedValueOnce({ ID: 11, Password: '$2b$12$hash' })
+    mockVerifyPassword.mockResolvedValueOnce(false)
+
+    await expect(verifyUserCredentials('E123', 'wrong-password')).resolves.toBeNull()
   })
 
   it('filters metrology programmer users by site and user type 1', async () => {

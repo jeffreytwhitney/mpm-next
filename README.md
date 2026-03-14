@@ -29,6 +29,34 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Auth Foundation
+
+The app currently keeps page viewing public. Authentication is only being added as groundwork for future create/update flows.
+
+- JWT-backed session cookie utilities live in `src/lib/auth/session.ts`
+- Login/logout actions live in `src/app/actions/authActions.ts`
+- User-type/permission helpers live in `src/lib/auth/permissions.ts`
+
+Current permission mapping based on `tblUser.UserTypeID`:
+
+- `1` Metrology Programmer: full programming-task rights, service-ticket rights, can create tickets, can add tasks to tickets
+- `2` Metrology Calibration Technician: service-ticket rights only
+- `3` Quality Engineer: can create tickets and add tasks to tickets
+- `4` Manufacturing Engineer: no mutation rights currently
+- `5` Cell Leader: no mutation rights currently
+
+Generate a bcrypt password hash from the terminal with:
+
+```bash
+npm run password:hash -- Aw3s0me5auc3
+```
+
+Run the focused auth tests with:
+
+```bash
+npx jest tests/lib/auth/permissions.test.ts tests/lib/auth/session.test.ts tests/app/actions/authActions.test.ts --runInBand
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

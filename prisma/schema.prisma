@@ -335,6 +335,7 @@ model tblUser {
   EmployeeNumber   String?   @db.NVarChar(255)
   EMailAddress     String?   @db.NVarChar(255)
   NetworkUserName  String?   @db.NVarChar(255)
+  Password         String?   @db.VarChar(255)
   IsAdmin          Int?      @db.SmallInt
   CreatedTimestamp DateTime? @db.DateTime
   UpdatedTimestamp DateTime? @db.DateTime

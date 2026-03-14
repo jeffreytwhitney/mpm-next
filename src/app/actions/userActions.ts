@@ -1,5 +1,6 @@
 import {prisma} from '@/lib/prisma'
 import type { Prisma } from '@/generated/prisma/client'
+import { verifyPassword } from '@/lib/hash'
 
 
 const userSelect = {
@@ -7,6 +8,7 @@ const userSelect = {
     SiteID:true,
     DepartmentID:true,
     UserTypeID:true,
+    IsAdmin: true,
     EmployeeNumber:true,
     EMailAddress:true,
     NetworkUserName:true,
@@ -19,6 +21,25 @@ const userSelect = {
     UpdatedTimestamp: true,
 } satisfies Prisma.tblUserSelect
 
+const authUserSelect = {
+    ID: true,
+    SiteID: true,
+    DepartmentID: true,
+    UserTypeID: true,
+    IsAdmin: true,
+    EmployeeNumber: true,
+    EMailAddress: true,
+    NetworkUserName: true,
+    FName: true,
+    LName: true,
+    FullName: true,
+    ShortName: true,
+    DisplayName: true,
+    CreatedTimestamp: true,
+    UpdatedTimestamp: true,
+    Password: true,
+} satisfies Prisma.tblUserSelect
+
 export interface UserDropDownOption {
     value: number,
     label: string
@@ -26,6 +47,16 @@ export interface UserDropDownOption {
 
 
 export type MPMUser = Prisma.tblUserGetPayload<{select: typeof userSelect}>
+export type MPMAuthUser = Prisma.tblUserGetPayload<{select: typeof authUserSelect}>
+
+function normalizeIdentifier(identifier: string): string {
+    return identifier.trim()
+}
+
+function toSafeUser(user: MPMAuthUser): MPMUser {
+    const { Password: _password, ...safeUser } = user
+    return safeUser
+}
 
 export async function getUserById(id: number): Promise<MPMUser | null> {
     try {
@@ -49,6 +80,46 @@ export async function getUserByEmployeeNumber(empNum: string): Promise<MPMUser |
         console.error('Error fetching user:', error)
         throw new Error('Failed to fetch user')
     }
+}
+
+export async function getActiveUserForAuth(identifier: string): Promise<MPMAuthUser | null> {
+    try {
+        const normalizedIdentifier = normalizeIdentifier(identifier)
+
+        if (!normalizedIdentifier) {
+            return null
+        }
+
+        return await prisma.tblUser.findFirst({
+            where: {
+                IsActive: 1,
+                OR: [
+                    {EmployeeNumber: normalizedIdentifier},
+                    {NetworkUserName: normalizedIdentifier},
+                ],
+            },
+            select: authUserSelect,
+        })
+    } catch (error) {
+        console.error('Error fetching user for auth:', error)
+        throw new Error('Failed to fetch user for auth')
+    }
+}
+
+export async function verifyUserCredentials(identifier: string, password: string): Promise<MPMUser | null> {
+    const user = await getActiveUserForAuth(identifier)
+
+    if (!user?.Password) {
+        return null
+    }
+
+    const isValidPassword = await verifyPassword(password, user.Password)
+
+    if (!isValidPassword) {
+        return null
+    }
+
+    return toSafeUser(user)
 }
 
 export async function getMetrologyProgrammerUsers(siteID: number): Promise<MPMUser[]> {
@@ -266,3 +337,4 @@ export async function getCellLeadDropdownOptions(departmentID: number): Promise<
         throw new Error('Failed to fetch user')
     }
 }
+
