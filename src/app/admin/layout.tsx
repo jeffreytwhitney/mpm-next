@@ -3,11 +3,11 @@ import {Header} from '@/components/Header'
 import {SideNav} from '@/components/SideNav'
 import {getSessionUser} from '@/lib/auth/session'
 
-interface ServiceTicketsLayoutProps {
+interface AdminLayoutProps {
     children: React.ReactNode
 }
 
-export default async function ServiceTicketsLayout({children}: ServiceTicketsLayoutProps) {
+export default async function AdminLayout({children}: AdminLayoutProps) {
     const sessionUser = await getSessionUser()
     const isAdmin = sessionUser?.isAdmin === true
 

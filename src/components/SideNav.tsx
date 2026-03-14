@@ -6,8 +6,13 @@ import {setCurrentSiteCookie} from '@/app/actions/siteActions'
 import {SITE_OPTIONS, parseSiteID} from '@/lib/site'
 import {useSite} from './SiteProvider'
 import NavLinks from './NavLinks'
+import AdminNavLinks from './AdminNavLinks'
 
-export function SideNav() {
+interface SideNavProps {
+    isAdmin?: boolean
+}
+
+export function SideNav({ isAdmin = false }: SideNavProps) {
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
@@ -65,6 +70,14 @@ export function SideNav() {
                 <nav className="flex flex-col gap-1">
                     <NavLinks />
                 </nav>
+                {isAdmin && (
+                    <div className="border-t border-gray-200 pt-4">
+                        <p className="mb-1 px-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Admin</p>
+                        <nav className="flex flex-col gap-1">
+                            <AdminNavLinks />
+                        </nav>
+                    </div>
+                )}
             </div>
         </aside>
     )
