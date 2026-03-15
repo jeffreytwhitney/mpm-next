@@ -17,30 +17,6 @@ model sysdiagrams {
   @@unique([principal_id, name], map: "UK_principal_name")
 }
 
-model tblCMMMachines {
-  ID              Int    @id(map: "PK_tblCMMMachines") @default(autoincrement())
-  SiteID          Int
-  CMMName         String @db.VarChar(50)
-  ISActive        Int    @db.SmallInt
-  IsBnS           Int    @db.SmallInt
-  IsActiveDisplay String @db.VarChar(3)
-  IsBnSDisplay    String @db.VarChar(3)
-}
-
-model tblCMMProbes {
-  ID               Int    @id(map: "PK_tblCMMProbes") @default(autoincrement())
-  SiteID           Int
-  ProbeName        String @db.VarChar(50)
-  IsActive         Int
-  IsBnS            Int    @db.SmallInt
-  CurrentQuantity  Int
-  ReorderQuantity  Int
-  IsActiveDisplay  String @db.VarChar(3)
-  IsBnSDisplay     String @db.VarChar(3)
-  IsOrdered        Int    @db.SmallInt
-  IsOrderedDisplay String @db.VarChar(3)
-}
-
 model tblDepartment {
   ID                  Int       @id(map: "PK_tblDepartment") @default(autoincrement())
   SiteID              Int?
@@ -74,7 +50,6 @@ model tblMetrologyMachine {
   MetrologyMachineName   String @db.VarChar(50)
   IsActive               Int    @db.SmallInt
   MetrologyMachineTypeID Int
-  IsActiveDisplay        String @db.VarChar(3)
 }
 
 model tblMetrologyMachineType {
@@ -91,15 +66,13 @@ model tblMetrologyMachineTypeProbeXREF {
 }
 
 model tblMetrologyProbes {
-  ID               Int    @id(map: "PK_tblMetrologyMachineProbes") @default(autoincrement())
-  SiteID           Int
-  ProbeName        String @db.VarChar(50)
-  IsActive         Int
-  CurrentQuantity  Int
-  ReorderQuantity  Int
-  IsActiveDisplay  String @db.VarChar(3)
-  IsOrdered        Int    @db.SmallInt
-  IsOrderedDisplay String @db.VarChar(3)
+  ID              Int    @id(map: "PK_tblMetrologyMachineProbes") @default(autoincrement())
+  SiteID          Int
+  ProbeName       String @db.VarChar(50)
+  IsActive        Int
+  CurrentQuantity Int
+  ReorderQuantity Int
+  IsOrdered       Int    @db.SmallInt
 }
 
 model tblProject {
@@ -117,10 +90,6 @@ model tblProject {
   UpdatedTimestamp        DateTime? @db.DateTime
   UpdateUserID            String?   @db.NVarChar(255)
   TicketNumber            String?   @db.VarChar(50)
-  CreatedTimestampDisplay String?   @db.NVarChar(4000)
-  CreatedTimestampSort    String?   @db.NVarChar(4000)
-  UpdatedTimestampDisplay String?   @db.NVarChar(4000)
-  UpdatedTimestampSort    String?   @db.NVarChar(4000)
   CarbonCopyEmailList     String?   @db.VarChar(2000)
   RequiresModels          Int
 }
@@ -200,39 +169,32 @@ model tblServiceStatus {
 }
 
 model tblServiceTicket {
-  ID                     Int      @id(map: "PK_tblServiceTicket") @default(autoincrement())
-  SiteID                 Int
-  TicketNumber           String?  @db.VarChar(50)
-  TicketName             String   @db.VarChar(500)
-  TicketDetails          String?  @db.VarChar(2000)
-  InitiatorID            Int
-  DepartmentID           Int
-  TicketTypeID           Int
-  CMMDownID              Int?
-  CMMDownPartNumber      String?  @db.VarChar(255)
-  CMMDownOperatorID      String?  @db.VarChar(10)
-  CMMDownOperatorName    String?  @db.VarChar(255)
-  CMMDownBrokenProbeID   Int?
-  AssignedToID           Int?
-  StatusID               Int
-  DueDate                DateTime @db.Date
-  CreateTimestamp        DateTime @db.DateTime
-  UpdateTimestamp        DateTime @db.DateTime
-  UpdatedBy              String?  @db.VarChar(10)
-  CreateTimestampDisplay String?  @db.NVarChar(4000)
-  CreateTimestampSort    String?  @db.NVarChar(4000)
-  UpdateTimestampDisplay String?  @db.NVarChar(4000)
-  UpdateTimestampSort    String?  @db.NVarChar(4000)
-  DueDateDisplay         String?  @db.NVarChar(4000)
-  DueDateSort            String?  @db.NVarChar(4000)
-  CarbonCopyEmailList    String?  @db.VarChar(2000)
+  ID                   Int      @id(map: "PK_tblServiceTicket") @default(autoincrement())
+  SiteID               Int
+  TicketNumber         String?  @db.VarChar(50)
+  TicketName           String   @db.VarChar(500)
+  TicketDetails        String?  @db.VarChar(2000)
+  InitiatorID          Int
+  DepartmentID         Int
+  TicketTypeID         Int
+  CMMDownID            Int?
+  CMMDownPartNumber    String?  @db.VarChar(255)
+  CMMDownOperatorID    String?  @db.VarChar(10)
+  CMMDownOperatorName  String?  @db.VarChar(255)
+  CMMDownBrokenProbeID Int?
+  AssignedToID         Int?
+  StatusID             Int
+  DueDate              DateTime @db.Date
+  CreateTimestamp      DateTime @db.DateTime
+  UpdateTimestamp      DateTime @db.DateTime
+  UpdatedBy            String?  @db.VarChar(10)
+  CarbonCopyEmailList  String?  @db.VarChar(2000)
 }
 
 model tblServiceType {
-  ID              Int    @id(map: "PK_tblServiceType") @default(autoincrement())
-  ServiceType     String @db.VarChar(50)
-  IsActive        Int    @db.SmallInt
-  IsActiveDisplay String @db.VarChar(3)
+  ID          Int    @id(map: "PK_tblServiceType") @default(autoincrement())
+  ServiceType String @db.VarChar(50)
+  IsActive    Int    @db.SmallInt
 }
 
 model tblSite {
@@ -253,42 +215,29 @@ model tblStatus {
 }
 
 model tblTask {
-  ID                      Int       @id(map: "PK_tblTask") @default(autoincrement())
-  ProjectID               Int?
-  StatusID                Int?
-  TaskName                String?   @db.NVarChar(255)
-  TicketNumber            String?   @db.NVarChar(255)
-  DrawingNumber           String?   @db.NVarChar(255)
-  DueDate                 DateTime? @db.DateTime
-  CustomerRev             String?   @db.NVarChar(15)
-  ManufacturingRev        String?   @db.NVarChar(15)
-  Operation               String?   @db.NVarChar(15)
-  ScheduledDueDate        DateTime? @db.DateTime
-  EstimatedHours          Int?
-  TaskTypeID              Int?
-  AssignedToID            Int?
-  DateStarted             DateTime? @db.DateTime
-  DateCompleted           DateTime? @db.DateTime
-  ManualDueDate           Int?      @db.SmallInt
-  HavePart                Int?      @db.SmallInt
-  IUNumber                String?   @db.NVarChar(255)
-  CreatedTimestamp        DateTime? @db.DateTime
-  UpdatedTimestamp        DateTime? @db.DateTime
-  UpdateUserID            String?   @db.NVarChar(255)
-  DateCompletedDisplay    String?   @db.NVarChar(4000)
-  DateCompletedSort       String?   @db.NVarChar(4000)
-  CreatedTimestampDisplay String?   @db.NVarChar(4000)
-  CreatedTimestampSort    String?   @db.NVarChar(4000)
-  UpdatedTimestampDisplay String?   @db.NVarChar(4000)
-  UpdatedTimestampSort    String?   @db.NVarChar(4000)
-  DateStartedDisplay      String?   @db.NVarChar(4000)
-  DateStartedSortSort     String?   @db.NVarChar(4000)
-  DueDateDisplay          String?   @db.NVarChar(4000)
-  DueDateSort             String?   @db.NVarChar(4000)
-  ScheduledDueDateDisplay String?   @db.NVarChar(4000)
-  ScheduledDueDateSort    String?   @db.NVarChar(4000)
-  CurrentlyRunning        Int       @db.SmallInt
-  CurrentlyRunningDisplay String    @db.VarChar(3)
+  ID               Int       @id(map: "PK_tblTask") @default(autoincrement())
+  ProjectID        Int?
+  StatusID         Int?
+  TaskName         String?   @db.NVarChar(255)
+  TicketNumber     String?   @db.NVarChar(255)
+  DrawingNumber    String?   @db.NVarChar(255)
+  DueDate          DateTime? @db.DateTime
+  CustomerRev      String?   @db.NVarChar(15)
+  ManufacturingRev String?   @db.NVarChar(15)
+  Operation        String?   @db.NVarChar(15)
+  ScheduledDueDate DateTime? @db.DateTime
+  EstimatedHours   Int?
+  TaskTypeID       Int?
+  AssignedToID     Int?
+  DateStarted      DateTime? @db.DateTime
+  DateCompleted    DateTime? @db.DateTime
+  ManualDueDate    Int?      @db.SmallInt
+  HavePart         Int?      @db.SmallInt
+  IUNumber         String?   @db.NVarChar(255)
+  CreatedTimestamp DateTime? @db.DateTime
+  UpdatedTimestamp DateTime? @db.DateTime
+  UpdateUserID     String?   @db.NVarChar(255)
+  CurrentlyRunning Int       @db.SmallInt
 
   @@index([AssignedToID], map: "IDX_tblTask_Assignee")
   @@index([TaskName], map: "Idx_tblTask_TaskName")
@@ -305,18 +254,16 @@ model tblTaskNotes {
 }
 
 model tblTaskType {
-  ID                       Int       @id(map: "PK_tblTaskType") @default(autoincrement())
-  IsActive                 Int?      @db.SmallInt
-  TaskType                 String?   @db.VarChar(255)
-  TaskTypeGroupID          Int?
-  AverageCompletionHours   Int?
-  RequiresJobNumber        Int       @db.SmallInt
-  CreatedTimestamp         DateTime? @db.DateTime
-  UpdatedTimestamp         DateTime? @db.DateTime
-  UpdateUserID             String?   @db.VarChar(255)
-  IsActiveDisplay          String    @db.VarChar(3)
-  RequiresJobNumberDisplay String    @db.VarChar(3)
-  RequiresModels           Int
+  ID                     Int       @id(map: "PK_tblTaskType") @default(autoincrement())
+  IsActive               Int?      @db.SmallInt
+  TaskType               String?   @db.VarChar(255)
+  TaskTypeGroupID        Int?
+  AverageCompletionHours Int?
+  RequiresJobNumber      Int       @db.SmallInt
+  CreatedTimestamp       DateTime? @db.DateTime
+  UpdatedTimestamp       DateTime? @db.DateTime
+  UpdateUserID           String?   @db.VarChar(255)
+  RequiresModels         Int
 }
 
 model tblTaskTypeGroup {
@@ -343,8 +290,6 @@ model tblUser {
   FullName         String?   @db.NVarChar(511)
   ShortName        String?   @db.NVarChar(258)
   DisplayName      String?   @db.NVarChar(512)
-  IsActiveDisplay  String    @db.VarChar(3)
-  IsAdminDisplay   String    @db.VarChar(3)
 }
 
 model tblUserType {

@@ -1,8 +1,10 @@
 import {
     getDepartments,
-    getDepartmentById
+    getDepartmentById, getDepartmentDropdownOptions, getTopLevelDepartments
 } from '@/app/actions/departmentActions'
-import { prisma } from '@/lib/prisma'
+import {prisma} from '@/lib/prisma'
+
+
 
 describe('Department Actions', () => {
     afterAll(async () => {
@@ -19,4 +21,33 @@ describe('Department Actions', () => {
         const results = await getDepartments(1);
         expect(results.every(d => d.SiteID === 1)).toBe(true)
     });
+
+    it('Gets Department Dropdown Options', async () => {
+        const results = await getDepartmentDropdownOptions(1);
+        expect(results.some(r => r.value === 1)).toBe(true);
+    })
+    
+    it('Gets Top Level Departments', async () => {
+        const results = await getTopLevelDepartments(1);
+        expect(results.every(d => d.ParentID === null)).toBe(true);
+    })
+
+    it('returns empty results for an unassigned site id', async () => {
+        const siteIdWithoutDepartments = 3;
+
+        await expect(getDepartments(siteIdWithoutDepartments)).resolves.toEqual([]);
+        await expect(getTopLevelDepartments(siteIdWithoutDepartments)).resolves.toEqual([]);
+        await expect(getDepartmentDropdownOptions(siteIdWithoutDepartments)).resolves.toEqual([]);
+    })
+
+    it('returns null when department id is greater than the max id', async () => {
+        const maxDepartment = await prisma.tblDepartment.findFirst({
+            select: {ID: true},
+            orderBy: {ID: 'desc'},
+        });
+
+        expect(maxDepartment).not.toBeNull();
+        const result = await getDepartmentById((maxDepartment?.ID ?? 0) + 1_000_000);
+        expect(result).toBeNull();
+    })
 });
