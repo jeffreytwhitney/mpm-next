@@ -4,6 +4,7 @@ import {Prisma as PrismaNamespace} from "@/generated/prisma/client";
 
 const taskSelect = {
     ID: true,
+    StatusID: true,
     TaskName: true,
     TaskTypeID: true,
     AssignedToID: true,

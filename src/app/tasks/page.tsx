@@ -4,6 +4,7 @@ import type {TaskListSearchParams} from '@/app/actions/taskListActions';
 import {getTaskStatusDropdownOptions} from "@/app/actions/taskStatusActions";
 import {getTaskTypeDropdownOptions} from '@/app/actions/taskTypeActions';
 import {getMetrologyUserDropdownOptions} from '@/app/actions/userActions';
+import {getTopLevelDepartmentDropdownOptions} from '@/app/actions/departmentActions'
 import {cookies} from 'next/headers';
 import {resolveSiteID, SITE_COOKIE_NAME} from '@/lib/site';
 
@@ -20,11 +21,12 @@ export default async function TaskListPage({searchParams}: TaskListPageProps) {
     const filters = parseTaskListFilters(params, defaultSiteID)
 
     // Fetch data on the server with filters from URL
-    const [tasks, statusOptions, taskTypeOptions, assigneeOptions] = await Promise.all([
+    const [tasks, statusOptions, taskTypeOptions, assigneeOptions, departmentOptions] = await Promise.all([
         getTaskList(filters),
         getTaskStatusDropdownOptions(),
         getTaskTypeDropdownOptions(),
         getMetrologyUserDropdownOptions(Number(filters.siteID) || 1),
+        getTopLevelDepartmentDropdownOptions(Number(filters.siteID) || 1),
     ])
 
 
@@ -35,6 +37,7 @@ export default async function TaskListPage({searchParams}: TaskListPageProps) {
             initialStatusOptions={statusOptions}
             initialTaskTypeOptions={taskTypeOptions}
             initialAssigneeOptions={assigneeOptions}
+            initialDepartmentOptions={departmentOptions}
         />
     )
 }

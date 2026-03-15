@@ -10,9 +10,18 @@ jest.mock('@/lib/prisma', () => ({
   },
 }))
 
-import { getDepartmentById, getDepartments } from '@/app/actions/departmentActions'
+import {
+  getDepartmentById,
+  getDepartments,
+  getTopLevelDepartmentDropdownOptions,
+} from '@/app/actions/departmentActions'
 
 describe('departmentActions', () => {
+  beforeEach(() => {
+    mockFindManyDepartment.mockReset()
+    mockFindFirstDepartment.mockReset()
+  })
+
   it('queries departments by site id ordered by name', async () => {
     mockFindManyDepartment.mockResolvedValueOnce([])
 
@@ -20,9 +29,15 @@ describe('departmentActions', () => {
 
     expect(mockFindManyDepartment).toHaveBeenCalledWith({
       select: {
+        CMMFilePath: true,
+        CellLeadCCList: true,
+        CreatedTimestamp: true,
         ID: true,
         SiteID: true,
         DepartmentName: true,
+        ManufacturingCCList: true,
+        ParentID: true,
+        QualityCCList: true,
       },
       where: { SiteID: 7 },
       orderBy: { DepartmentName: 'asc' },
@@ -40,8 +55,40 @@ describe('departmentActions', () => {
 
     const result = await getDepartmentById(3)
 
-    expect(mockFindFirstDepartment).toHaveBeenCalledWith({ where: { ID: 3 } })
+    expect(mockFindFirstDepartment).toHaveBeenCalledWith({
+      select: {
+        CMMFilePath: true,
+        CellLeadCCList: true,
+        CreatedTimestamp: true,
+        DepartmentName: true,
+        ID: true,
+        ManufacturingCCList: true,
+        ParentID: true,
+        QualityCCList: true,
+        SiteID: true,
+      },
+      where: { ID: 3 },
+    })
     expect(result).toEqual({ ID: 3 })
+  })
+
+  it('queries top-level department dropdown options by site id', async () => {
+    mockFindManyDepartment.mockResolvedValueOnce([{ ID: 4, DepartmentName: 'Quality' }])
+
+    const result = await getTopLevelDepartmentDropdownOptions(9)
+
+    expect(mockFindManyDepartment).toHaveBeenCalledWith({
+      select: {
+        ID: true,
+        DepartmentName: true,
+      },
+      where: {
+        SiteID: 9,
+        ParentID: null,
+      },
+      orderBy: { DepartmentName: 'asc' },
+    })
+    expect(result).toEqual([{ value: 4, label: 'Quality' }])
   })
 })
 

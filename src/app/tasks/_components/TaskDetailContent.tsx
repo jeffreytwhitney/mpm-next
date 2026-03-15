@@ -23,7 +23,6 @@ export async function TaskDetailContent({ taskId }: TaskDetailContentProps) {
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         <div><span className="font-semibold">Task ID:</span> {task.ID}</div>
         <div><span className="font-semibold">Status ID:</span> {task.StatusID ?? '-'}</div>
-        <div><span className="font-semibold">Ticket Number:</span> {task.TicketNumber ?? '-'}</div>
         <div><span className="font-semibold">Task Name:</span> {task.TaskName ?? '-'}</div>
         <div><span className="font-semibold">Drawing Number:</span> {task.DrawingNumber ?? '-'}</div>
         <div><span className="font-semibold">Operation:</span> {task.Operation ?? '-'}</div>
