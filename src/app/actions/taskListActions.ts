@@ -74,7 +74,9 @@ const sortFieldMap: Record<string, keyof typeof taskListSelect> = {
     dueDate: 'DueDate',
     departmentName: 'DepartmentName',
     scheduledDueDate: 'ScheduledDueDate',
-    taskTypeID: 'TaskTypeID',
+    taskType: 'TaskType',
+    assignedToName: 'AssignedToName',
+    AssignedToName: 'AssignedToName',
 }
 
 // Export the return type for use in components

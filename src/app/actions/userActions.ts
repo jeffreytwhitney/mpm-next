@@ -147,6 +147,9 @@ export async function getMetrologyUsers(siteID: number): Promise<MPMUser[]> {
                 SiteID: siteID,
                 IsActive: 1,
                 UserTypeID: {in: [1, 2]},
+            },
+            orderBy: {
+                FullName: 'asc',
             }
         });
 
@@ -204,6 +207,9 @@ export async function getMetrologyProgrammerDropdownOptions(siteID: number): Pro
                 SiteID: siteID,
                 IsActive: 1,
                 UserTypeID: 1,
+            },
+            orderBy: {
+                FullName: 'asc',
             }
         });
 
@@ -227,21 +233,24 @@ export async function getMetrologyUserDropdownOptions(siteID: number): Promise<U
         const metrologyUsers = await prisma.tblUser.findMany({
             select: {
                 ID: true,
-                FullName: true,
+                DisplayName: true,
             },
             where: {
                 SiteID: siteID,
                 IsActive: 1,
                 UserTypeID: {in: [1, 2]},
+            },
+            orderBy: {
+                DisplayName: 'asc',
             }
         });
 
         return metrologyUsers
-            .filter((user): user is { ID: number; FullName: string } => typeof user.FullName === 'string'
-                && user.FullName.length > 0)
+            .filter((user): user is { ID: number; DisplayName: string } => typeof user.DisplayName === 'string'
+                && user.DisplayName.length > 0)
             .map((user) => ({
                 value: user.ID,
-                label: user.FullName,
+                label: user.DisplayName,
             }));
 
     }

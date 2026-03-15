@@ -30,7 +30,7 @@ export async function getTaskTypeDropdownOptions(): Promise<TaskTypeDropdownOpti
                 TaskType: true,
             },
             orderBy: {
-                ID: 'asc',
+                TaskType: 'asc',
             },
         })
 

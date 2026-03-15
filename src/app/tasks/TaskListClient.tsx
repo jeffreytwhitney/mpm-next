@@ -12,7 +12,7 @@ import {TaskTypeDropdownOption} from "@/app/actions/taskTypeActions";
 import {UserDropDownOption} from "@/app/actions/userActions";
 import {DepartmentDropdownOption} from '@/app/actions/departmentActions'
 
-const ROW_HIGHLIGHT_OPACITY = 0.1
+const ROW_HIGHLIGHT_OPACITY = 0.2
 
 function makeRowHighlight(red: number, green: number, blue: number): React.CSSProperties {
     return {
@@ -52,11 +52,29 @@ interface TaskListClientProps {
 }
 
 type TextFilterKey = 'ticketNumber' | 'taskName' | 'projectName'
+type FilterSelectOption = {value: number; label: string}
 
-const FILTER_CONTROL_CLASS = 'box-border h-[16.5px] w-full border rounded-sm text-[11px] leading-none bg-[#F1EB9C] font-semibold'
+const FILTER_CONTROL_CLASS = 'box-border h-[18px] w-full border rounded-sm text-[11px] leading-none bg-[#F1EB9C] font-semibold'
 const TEXT_FILTER_CLASS = `${FILTER_CONTROL_CLASS} px-0 py-0`
 const SELECT_FILTER_CLASS = `${FILTER_CONTROL_CLASS} px-2 py-0`
 const FILTER_RESET_TITLE = 'Double-click to reset this filter'
+
+function ensureSelectedOption<T extends FilterSelectOption>(
+    options: readonly T[],
+    selectedValue: number | undefined,
+    fallbackLabel: (id: number) => string,
+): T[] {
+    if (selectedValue === undefined) {
+        return [...options]
+    }
+
+    const hasSelected = options.some((option) => option.value === selectedValue)
+    if (hasSelected) {
+        return [...options]
+    }
+
+    return [...options, {value: selectedValue, label: fallbackLabel(selectedValue)} as T]
+}
 
 export function TaskListClient({initialTasks, initialFilters, initialStatusOptions, initialTaskTypeOptions, initialAssigneeOptions, initialDepartmentOptions}: TaskListClientProps) {
     const router = useRouter()
@@ -64,57 +82,29 @@ export function TaskListClient({initialTasks, initialFilters, initialStatusOptio
     const isInitialMount = React.useRef(true)
 
 
-    const statusOptions = React.useMemo(() => {
-        if (filters.statusID === undefined) {
-            return initialStatusOptions
-        }
+    const statusOptions = React.useMemo(() => ensureSelectedOption(
+        initialStatusOptions,
+        filters.statusID,
+        (id) => `Status ${id}`,
+    ), [initialStatusOptions, filters.statusID])
 
-        const hasSelected = initialStatusOptions.some((option) => option.value === filters.statusID)
-        if (hasSelected) {
-            return initialStatusOptions
-        }
+    const taskTypeOptions = React.useMemo(() => ensureSelectedOption(
+        initialTaskTypeOptions,
+        filters.taskTypeID,
+        (id) => `TaskType ${id}`,
+    ), [initialTaskTypeOptions, filters.taskTypeID])
 
-        return [...initialStatusOptions, {value: filters.statusID, label: `Status ${filters.statusID}`}]
-    }, [initialStatusOptions, filters.statusID])
+    const assignedToOptions = React.useMemo(() => ensureSelectedOption(
+        initialAssigneeOptions,
+        filters.assignedToID,
+        (id) => `AssignedTo ${id}`,
+    ), [initialAssigneeOptions, filters.assignedToID])
 
-    const taskTypeOptions = React.useMemo(() => {
-        if (filters.taskTypeID === undefined) {
-            return initialTaskTypeOptions
-        }
-
-        const hasSelected = initialTaskTypeOptions.some((option) => option.value === filters.taskTypeID)
-        if (hasSelected) {
-            return initialTaskTypeOptions
-        }
-
-        return [...initialTaskTypeOptions, {value: filters.taskTypeID, label: `TaskType ${filters.taskTypeID}`}]
-    }, [initialTaskTypeOptions, filters.taskTypeID])
-
-    const assignedToOptions = React.useMemo(() => {
-        if (filters.assignedToID === undefined) {
-            return initialAssigneeOptions
-        }
-
-        const hasSelected = initialAssigneeOptions.some((option) => option.value === filters.assignedToID)
-        if (hasSelected) {
-            return initialAssigneeOptions
-        }
-
-        return [...initialAssigneeOptions, {value: filters.assignedToID, label: `AssignedTo ${filters.assignedToID}`}]
-    }, [initialAssigneeOptions, filters.assignedToID])
-
-    const departmentOptions = React.useMemo(() => {
-        if (filters.departmentID === undefined) {
-            return initialDepartmentOptions
-        }
-
-        const hasSelected = initialDepartmentOptions.some((option) => option.value === filters.departmentID)
-        if (hasSelected) {
-            return initialDepartmentOptions
-        }
-
-        return [...initialDepartmentOptions, {value: filters.departmentID, label: `Department ${filters.departmentID}`}]
-    }, [initialDepartmentOptions, filters.departmentID])
+    const departmentOptions = React.useMemo(() => ensureSelectedOption(
+        initialDepartmentOptions,
+        filters.departmentID,
+        (id) => `Department ${id}`,
+    ), [initialDepartmentOptions, filters.departmentID])
 
 
     // Update URL when filters, sort, or page change (triggers server-side refetch)

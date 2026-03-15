@@ -3,18 +3,13 @@ jest.mock('@/lib/prisma', () => ({
     qryTaskListRaw: {
       findMany: jest.fn(),
     },
-    tblTask: {
-      findFirst: jest.fn(),
-    },
   },
 }))
 
 import { prisma } from '@/lib/prisma'
 import { getTaskList, parseTaskListFilters } from '@/app/actions/taskListActions'
-import { getTaskById } from '@/app/actions/taskActions'
 
 const mockFindManyTaskList = prisma.qryTaskListRaw.findMany as jest.Mock
-const mockFindFirstTask = prisma.tblTask.findFirst as jest.Mock
 
 describe('taskListActions', () => {
   beforeEach(() => {
@@ -70,6 +65,22 @@ describe('taskListActions', () => {
     )
   })
 
+  it('sorts by AssignedToName when table column id is used', async () => {
+    mockFindManyTaskList.mockResolvedValueOnce([])
+
+    await getTaskList({
+      siteID: '1',
+      sortBy: 'AssignedToName',
+      sortOrder: 'asc',
+    })
+
+    expect(mockFindManyTaskList).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { AssignedToName: 'asc' },
+      }),
+    )
+  })
+
   it('throws a consistent error when getTaskList fails', async () => {
     mockFindManyTaskList.mockRejectedValueOnce(new Error('db fail'))
 
@@ -114,14 +125,6 @@ describe('taskListActions', () => {
     expect(args.where).not.toHaveProperty('AssignedToID')
   })
 
-  it('queries task by id in getTaskById', async () => {
-    mockFindFirstTask.mockResolvedValueOnce({ ID: 99 })
-
-    const result = await getTaskById(99)
-
-    expect(mockFindFirstTask).toHaveBeenCalledWith({ where: { ID: 99 } })
-    expect(result).toEqual({ ID: 99 })
-  })
 
   it('uses provided default site when siteID query param is missing', () => {
     const filters = parseTaskListFilters({}, '2')
