@@ -3,6 +3,34 @@ import type {Prisma} from '@/generated/prisma/client'
 import {parseOptionalInt, parsePositiveIntOrDefault} from "@/app/actions/lib/common";
 import {resolveSiteID} from '@/lib/site'
 
+
+export interface TaskListFilters {
+    siteID: string
+    statusID?: number
+    statusPreset?: TaskStatusPreset
+    unassignedPreset?: UnassignedPreset
+    ticketNumber?: string
+    ticketName?: string
+    assignedToID?: number
+    taskName?: string
+    projectName?: string
+    departmentID?: number
+    taskTypeID?: number
+    submittedByName?: string
+    sortBy?: string
+    sortOrder?: 'asc' | 'desc'
+    page?: number
+    pageSize?: number
+}
+
+export interface TaskListByProjectIDFilters {
+    sortBy?: string
+    sortOrder?: 'asc' | 'desc'
+    showCompleted: boolean
+    assignedToID?: number
+    taskTypeID?: number
+}
+
 // Define the select object to be reused
 const taskListSelect = {
     ID: true,
@@ -33,34 +61,26 @@ const taskListSelect = {
     IsInSchedule: true,
 } satisfies Prisma.qryTaskListRawSelect
 
-// Export the return type for use in components
-export type TaskListItem = Prisma.qryTaskListRawGetPayload<{select: typeof taskListSelect}>
-
-
-
-
-export type TaskStatusPreset = 'activeNotWaiting'
-export type UnassignedPreset = 'unAssigned'
-
-export interface TaskListFilters {
-    siteID: string
-    statusID?: number
-    statusPreset?: TaskStatusPreset
-    unassignedPreset?: UnassignedPreset
-    ticketNumber?: string
-    ticketName?: string
-    assignedToID?: number
-    taskName?: string
-    projectName?: string
-    departmentID?: number
-    taskTypeID?: number
-    submittedByName?: string
-    sortBy?: string
-    sortOrder?: 'asc' | 'desc'
-    page?: number
-    pageSize?: number
+const sortFieldMap: Record<string, keyof typeof taskListSelect> = {
+    TicketNumber: 'TicketNumber',
+    TaskName: 'TaskName',
+    ProjectName: 'ProjectName',
+    Status: 'Status',
+    DepartmentName: 'DepartmentName',
+    ticketNumber: 'TicketNumber',
+    taskName: 'TaskName',
+    projectName: 'ProjectName',
+    status: 'Status',
+    dueDate: 'DueDate',
+    departmentName: 'DepartmentName',
+    scheduledDueDate: 'ScheduledDueDate',
+    taskTypeID: 'TaskTypeID',
 }
 
+// Export the return type for use in components
+export type TaskListItem = Prisma.qryTaskListRawGetPayload<{ select: typeof taskListSelect }>
+export type TaskStatusPreset = 'activeNotWaiting'
+export type UnassignedPreset = 'unAssigned'
 export type TaskListSearchParams = Partial<Record<keyof TaskListFilters, string>>
 
 /// Parses URL search parameters into TaskListFilters, handling type conversions and defaults
@@ -98,23 +118,6 @@ export async function getTaskList(filters?: Partial<TaskListFilters>): Promise<T
         const page = filters?.page ?? 1
         const skip = (page - 1) * pageSize
 
-        // Map sort column names to actual DB columns
-        const sortFieldMap: Record<string, keyof typeof taskListSelect> = {
-            'TicketNumber': 'TicketNumber',
-            'TaskName': 'TaskName',
-            'ProjectName': 'ProjectName',
-            'Status': 'Status',
-            'DepartmentName': 'DepartmentName',
-            'ticketNumber': 'TicketNumber',
-            'taskName': 'TaskName',
-            'projectName': 'ProjectName',
-            'status': 'Status',
-            'dueDate': 'DueDate',
-            'departmentName': 'DepartmentName',
-            'scheduledDueDate': 'ScheduledDueDate',
-            'taskTypeID': 'TaskTypeID',
-        }
-
         const sortField = filters?.sortBy ? (sortFieldMap[filters.sortBy] ?? 'DueDate') : 'DueDate'
         const sortOrder = filters?.sortOrder ?? 'asc'
         const statusFilter = filters?.statusID !== undefined
@@ -127,7 +130,7 @@ export async function getTaskList(filters?: Partial<TaskListFilters>): Promise<T
             : filters?.assignedToID !== undefined
                 ? filters.assignedToID
                 : undefined
-            
+
 
         return await prisma.qryTaskListRaw.findMany({
             select: taskListSelect,
@@ -154,3 +157,31 @@ export async function getTaskList(filters?: Partial<TaskListFilters>): Promise<T
     }
 }
 
+export async function getTaskListByProjectID(projectID: number, filters?: Partial<TaskListByProjectIDFilters>): Promise<TaskListItem[]> {
+    try {
+        const sortField = filters?.sortBy ? (sortFieldMap[filters.sortBy] ?? 'DueDate') : 'DueDate'
+        const sortOrder = filters?.sortOrder ?? 'asc'
+        const statusFilter = filters?.showCompleted ? {in: [4, 5]} : {notIn: [4, 5]}
+
+        const assigneeFilter = filters?.assignedToID !== undefined
+            ? filters.assignedToID
+            : undefined
+
+
+        return await prisma.qryTaskListRaw.findMany({
+            select: taskListSelect,
+            where: {
+                ProjectID: projectID,
+                StatusID: statusFilter,
+                ...(assigneeFilter !== undefined && {AssignedToID: assigneeFilter}),
+                ...(filters?.taskTypeID && {TaskTypeID: filters.taskTypeID}),
+            },
+            orderBy: {
+                [sortField]: sortOrder,
+            },
+        })
+    } catch (error) {
+        console.error('Error fetching tasks:', error)
+        throw new Error('Failed to fetch tasks')
+    }
+}
