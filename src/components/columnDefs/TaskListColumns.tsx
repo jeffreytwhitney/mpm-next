@@ -38,7 +38,7 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
                 </Link>
             )
         },
-        size: 50,
+        size: 30,
         meta: {
             align: 'left',
         },
@@ -55,7 +55,7 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
                 </Link>
             )
         },
-        size: 50,
+        size: 30,
         meta: {
             align: 'left',
         },
@@ -83,7 +83,13 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
                 <div>Rev</div>
             </div>
         ),
-        cell: ({row}) => <div>{row.getValue('ManufacturingRev') || ''}</div>,
+        cell: ({row}) => {
+            const revValue = row.getValue('ManufacturingRev') as string | null;
+            return (
+                <div>{revValue ? revValue.slice(0, 4) : ''}</div>
+                )
+
+        },
         size: 7,
         minSize: 7,
         meta: {
@@ -246,8 +252,8 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
         accessorKey: 'DepartmentName',
         header: 'Department',
         cell: ({row}) => <div>{row.getValue('DepartmentName') || ''}</div>,
-        size: 20,
-        minSize: 20,
+        size: 15,
+        minSize: 15,
         meta: {
             align: 'left',
         },
