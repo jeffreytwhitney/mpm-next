@@ -1,7 +1,10 @@
-import type {TaskListItem} from '@/app/actions/taskListActions'
 import {parseDateValue, startOfDay} from '@/lib/date'
 
-type TaskRowStateInput = Pick<TaskListItem, 'DueDate' | 'DateStarted' | 'StatusID'>
+type TaskRowStateInput = {
+  DueDate: unknown
+  DateStarted: unknown
+  StatusID: number | null | undefined
+}
 
 export interface TaskRowStateFlags {
   isOverdue: boolean

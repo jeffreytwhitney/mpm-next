@@ -170,8 +170,11 @@ export function useTaskListFilters({
     }, [])
 
     const resetStatusFilter = useCallback(() => handleStatusSelectChange(''), [handleStatusSelectChange])
+
     const resetTaskTypeFilter = useCallback(() => handleTaskTypeSelectChange(''), [handleTaskTypeSelectChange])
+
     const resetAssignedToFilter = useCallback(() => handleAssignedToSelectChange(''), [handleAssignedToSelectChange])
+
     const resetDepartmentFilter = useCallback(() => handleDepartmentSelectChange(''), [handleDepartmentSelectChange])
 
     return {
