@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
+import { AuthUserProvider } from "@/components/AuthUserProvider";
 import { SiteProvider } from "@/components/SiteProvider";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 import { resolveSiteID, SITE_COOKIE_NAME } from "@/lib/site";
 import "./globals.css";
 
@@ -25,6 +27,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const currentUser = await getCurrentUser();
   const cookieStore = await cookies();
   const cookieSiteID = cookieStore.get(SITE_COOKIE_NAME)?.value;
   const initialSiteID = resolveSiteID(undefined, cookieSiteID);
@@ -32,9 +35,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <SiteProvider initialSiteID={initialSiteID}>
+        <AuthUserProvider initialUser={currentUser}>
+          <SiteProvider initialSiteID={initialSiteID}>
             {children}
-        </SiteProvider>
+          </SiteProvider>
+        </AuthUserProvider>
       </body>
     </html>
   );

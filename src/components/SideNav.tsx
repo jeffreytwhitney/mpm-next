@@ -2,7 +2,7 @@
 
 import React from 'react'
 import {usePathname, useRouter, useSearchParams} from 'next/navigation'
-import {setCurrentSiteCookie} from '@/app/actions/siteActions'
+import {setCurrentSiteCookie} from '@/server/data/site'
 import {SITE_OPTIONS, parseSiteID} from '@/lib/site'
 import {useSite} from './SiteProvider'
 import NavLinks from './NavLinks'

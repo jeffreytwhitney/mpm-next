@@ -1,4 +1,4 @@
-export const ROW_HIGHLIGHT_OPACITY = 0.2
+export const ROW_HIGHLIGHT_OPACITY = .5
 export const PAGE_SIZE = 25
 
 export const FILTER_CONTROL_CLASS = 'box-border h-[18px] w-full border rounded-sm text-[11px] leading-none bg-[#F1EB9C] font-semibold'

@@ -34,7 +34,8 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 The app currently keeps page viewing public. Authentication is only being added as groundwork for future create/update flows.
 
 - JWT-backed session cookie utilities live in `src/lib/auth/session.ts`
-- Login/logout actions live in `src/app/actions/authActions.ts`
+- Login/logout handlers live in `src/server/data/auth.ts`
+- Route-scoped Server Action entrypoints live under `src/app/**/_actions` and delegate to `src/server/data/*`
 - User-type/permission helpers live in `src/lib/auth/permissions.ts`
 
 Current permission mapping based on `tblUser.UserTypeID`:
@@ -59,7 +60,7 @@ npm run password:hash -- Aw3s0me5auc3
 Run the focused auth tests with:
 
 ```bash
-npx jest tests/lib/auth/permissions.test.ts tests/lib/auth/session.test.ts tests/app/actions/authActions.test.ts --runInBand
+npx jest tests/lib/auth/permissions.test.ts tests/lib/auth/session.test.ts tests/app/data/auth.test.ts --runInBand
 ```
 
 ## Learn More

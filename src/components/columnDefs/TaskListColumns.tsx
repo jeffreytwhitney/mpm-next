@@ -1,6 +1,6 @@
 // Column definitions for the task list table
 import {ColumnDef} from "@tanstack/react-table";
-import type {TaskListItem} from "@/app/actions/taskListActions";
+import type {TaskListItem} from "@/server/data/taskList";
 import React from "react";
 import Link from 'next/link'
 

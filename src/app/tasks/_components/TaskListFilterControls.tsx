@@ -1,8 +1,8 @@
 import React from 'react'
-import {type TaskStatusDropdownOption} from '@/app/actions/taskStatusActions'
-import {type TaskTypeDropdownOption} from '@/app/actions/taskTypeActions'
-import {type UserDropDownOption} from '@/app/actions/userActions'
-import {type DepartmentDropdownOption} from '@/app/actions/departmentActions'
+import {type TaskStatusDropdownOption} from '@/server/data/taskStatus'
+import {type TaskTypeDropdownOption} from '@/server/data/taskType'
+import {type UserDropDownOption} from '@/server/data/user'
+import {type DepartmentDropdownOption} from '@/server/data/department'
 import {SELECT_FILTER_CLASS, FILTER_RESET_TITLE} from '../_constants'
 
 interface StatusFilterProps {

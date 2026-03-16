@@ -1,12 +1,12 @@
-import { getSessionUser } from '@/lib/auth/session'
+import { getCurrentUser } from '@/lib/auth/currentUser'
 import { HeaderAuthControls } from '@/components/HeaderAuthControls'
 
 export async function Header() {
-  const sessionUser = await getSessionUser()
-  const isAnonymous = !sessionUser
+  const currentUser = await getCurrentUser()
+  const isAnonymous = !currentUser
   const userLabel = isAnonymous
     ? 'Anonymous'
-    : sessionUser.fullName ?? sessionUser.displayName ?? sessionUser.networkUserName ?? sessionUser.employeeNumber ?? 'Signed in'
+    : currentUser.fullName ?? currentUser.displayName ?? currentUser.networkUserName ?? currentUser.employeeNumber ?? 'Signed in'
 
   return (
     <header className="border-b border-gray-200 bg-white">

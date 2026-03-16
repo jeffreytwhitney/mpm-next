@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { cookies } from 'next/headers'
-import type { MPMUser } from '@/app/actions/userActions'
+import type { MPMUser } from '@/server/data/user'
 import { isEffectiveAdmin } from '@/lib/auth/roles'
 
 export const SESSION_COOKIE_NAME = 'mpm_session'

@@ -1,10 +1,10 @@
 import React, {useState, useCallback} from 'react'
 import {useRouter} from 'next/navigation'
-import {type TaskListFilters} from '@/app/actions/taskListActions'
-import {type TaskStatusDropdownOption} from '@/app/actions/taskStatusActions'
-import {type TaskTypeDropdownOption} from '@/app/actions/taskTypeActions'
-import {type UserDropDownOption} from '@/app/actions/userActions'
-import {type DepartmentDropdownOption} from '@/app/actions/departmentActions'
+import {type TaskListFilters} from '@/server/data/taskList'
+import {type TaskStatusDropdownOption} from '@/server/data/taskStatus'
+import {type TaskTypeDropdownOption} from '@/server/data/taskType'
+import {type UserDropDownOption} from '@/server/data/user'
+import {type DepartmentDropdownOption} from '@/server/data/department'
 
 type FilterSelectOption = {value: number; label: string}
 
