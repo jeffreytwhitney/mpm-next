@@ -85,6 +85,11 @@ export type TaskStatusPreset = 'activeNotWaiting'
 export type UnassignedPreset = 'unAssigned'
 export type TaskListSearchParams = Partial<Record<keyof TaskListFilters, string>>
 
+export interface TaskListResult {
+    tasks: TaskListItem[]
+    totalCount: number
+}
+
 /// Parses URL search parameters into TaskListFilters, handling type conversions and defaults
 /// This is because URL search parameters are always strings, but our filters expect specific types (e.g. numbers, enums)
 export function parseTaskListFilters(searchParams: TaskListSearchParams, defaultSiteID = '1'): TaskListFilters {
@@ -113,10 +118,10 @@ export function parseTaskListFilters(searchParams: TaskListSearchParams, default
     }
 }
 
-export async function getTaskList(filters?: Partial<TaskListFilters>): Promise<TaskListItem[]> {
+export async function getTaskList(filters?: Partial<TaskListFilters>): Promise<TaskListResult> {
     try {
         const siteID = parseOptionalInt(filters?.siteID) ?? 1
-        const pageSize = filters?.pageSize ?? 50
+        const pageSize = filters?.pageSize ?? 25
         const page = filters?.page ?? 1
         const skip = (page - 1) * pageSize
 
@@ -133,26 +138,34 @@ export async function getTaskList(filters?: Partial<TaskListFilters>): Promise<T
                 ? filters.assignedToID
                 : undefined
 
+        const whereClause = {
+            SiteID: siteID,
+            StatusID: statusFilter,
+            ...(filters?.ticketNumber && {TicketNumber: {contains: filters.ticketNumber}}),
+            ...(assigneeFilter !== undefined && {AssignedToID: assigneeFilter}),
+            ...(filters?.taskName && {TaskName: {contains: filters.taskName}}),
+            ...(filters?.projectName && {ProjectName: {contains: filters.projectName}}),
+            ...(filters?.departmentID !== undefined && {DepartmentID: filters.departmentID}),
+            ...(filters?.submittedByName && {SubmittedByName: filters.submittedByName}),
+            ...(filters?.taskTypeID && {TaskTypeID: filters.taskTypeID}),
+        }
 
-        return await prisma.qryTaskListRaw.findMany({
-            select: taskListSelect,
-            where: {
-                SiteID: siteID,
-                StatusID: statusFilter,
-                ...(filters?.ticketNumber && {TicketNumber: {contains: filters.ticketNumber}}),
-                ...(assigneeFilter !== undefined && {AssignedToID: assigneeFilter}),
-                ...(filters?.taskName && {TaskName: {contains: filters.taskName}}),
-                ...(filters?.projectName && {ProjectName: {contains: filters.projectName}}),
-                ...(filters?.departmentID !== undefined && {DepartmentID: filters.departmentID}),
-                ...(filters?.submittedByName && {SubmittedByName: filters.submittedByName}),
-                ...(filters?.taskTypeID && {TaskTypeID: filters.taskTypeID}),
-            },
-            orderBy: {
-                [sortField]: sortOrder,
-            },
-            take: pageSize,
-            skip: skip,
-        })
+        const [tasks, totalCount] = await Promise.all([
+            prisma.qryTaskListRaw.findMany({
+                select: taskListSelect,
+                where: whereClause,
+                orderBy: {
+                    [sortField]: sortOrder,
+                },
+                take: pageSize,
+                skip: skip,
+            }),
+            prisma.qryTaskListRaw.count({
+                where: whereClause,
+            }),
+        ])
+
+        return {tasks, totalCount}
     } catch (error) {
         console.error('Error fetching tasks:', error)
         throw new Error('Failed to fetch tasks')

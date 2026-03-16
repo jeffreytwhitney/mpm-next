@@ -21,7 +21,7 @@ export default async function TaskListPage({searchParams}: TaskListPageProps) {
     const filters = parseTaskListFilters(params, defaultSiteID)
 
     // Fetch data on the server with filters from URL
-    const [tasks, statusOptions, taskTypeOptions, assigneeOptions, departmentOptions] = await Promise.all([
+    const [{tasks, totalCount}, statusOptions, taskTypeOptions, assigneeOptions, departmentOptions] = await Promise.all([
         getTaskList(filters),
         getTaskStatusDropdownOptions(),
         getTaskTypeDropdownOptions(),
@@ -38,6 +38,7 @@ export default async function TaskListPage({searchParams}: TaskListPageProps) {
             initialTaskTypeOptions={taskTypeOptions}
             initialAssigneeOptions={assigneeOptions}
             initialDepartmentOptions={departmentOptions}
+            totalCount={totalCount}
         />
     )
 }

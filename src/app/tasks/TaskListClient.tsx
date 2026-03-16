@@ -1,46 +1,21 @@
 'use client'
 
-import React, {useState, useCallback} from 'react'
-import {useRouter} from 'next/navigation'
+import React, {useCallback} from 'react'
 import {DataTable} from '@/components/DataTable'
 import {type TaskListFilters, type TaskListItem} from '@/app/actions/taskListActions'
 import DebouncedInput from '@/components/DebouncedInput'
-import {taskColumns} from "@/components/columnDefs/TaskListColumns"
-import {TaskStatusDropdownOption} from "@/app/actions/taskStatusActions";
-import {getTaskRowStateFlags} from '@/lib/taskRowState'
-import {TaskTypeDropdownOption} from "@/app/actions/taskTypeActions";
-import {UserDropDownOption} from "@/app/actions/userActions";
-import {DepartmentDropdownOption} from '@/app/actions/departmentActions'
+import {taskColumns} from '@/components/columnDefs/TaskListColumns'
+import {type TaskStatusDropdownOption} from '@/app/actions/taskStatusActions'
+import {type TaskTypeDropdownOption} from '@/app/actions/taskTypeActions'
+import {type UserDropDownOption} from '@/app/actions/userActions'
+import {type DepartmentDropdownOption} from '@/app/actions/departmentActions'
+import {ChevronLeftIcon, ChevronRightIcon, ChevronDoubleLeftIcon} from '@heroicons/react/24/solid'
+import {PAGE_SIZE, TEXT_FILTER_CLASS, FILTER_RESET_TITLE} from './_constants'
+import {getTaskRowStyle} from './_utils/taskRowStyle'
+import {useTaskListFilters} from './_hooks/useTaskListFilters'
+import {StatusFilter, TaskTypeFilter, AssignedToFilter, DepartmentFilter} from './_components/TaskListFilterControls'
 
-const ROW_HIGHLIGHT_OPACITY = 0.2
-
-function makeRowHighlight(red: number, green: number, blue: number): React.CSSProperties {
-    return {
-        backgroundColor: `rgba(${red}, ${green}, ${blue}, ${ROW_HIGHLIGHT_OPACITY})`,
-    }
-}
-
-function getTaskRowStyle(task: TaskListItem): React.CSSProperties | undefined {
-    const {isOverdue, isStarted, isWaiting, startedMoreThanMonthAgo} = getTaskRowStateFlags(task)
-
-    if (isOverdue) {
-        return makeRowHighlight(239, 68, 68)
-    }
-
-    if (isStarted && startedMoreThanMonthAgo) {
-        return makeRowHighlight(249, 115, 22)
-    }
-
-    if (isStarted) {
-        return makeRowHighlight(22, 163, 74)
-    }
-
-    if (isWaiting) {
-        return makeRowHighlight(37, 99, 235)
-    }
-
-    return undefined
-}
+type TextFilterKey = 'ticketNumber' | 'taskName' | 'projectName'
 
 interface TaskListClientProps {
     initialTasks: TaskListItem[]
@@ -49,114 +24,27 @@ interface TaskListClientProps {
     initialTaskTypeOptions: TaskTypeDropdownOption[]
     initialAssigneeOptions: UserDropDownOption[]
     initialDepartmentOptions: DepartmentDropdownOption[]
+    totalCount: number
 }
 
-type TextFilterKey = 'ticketNumber' | 'taskName' | 'projectName'
-type FilterSelectOption = {value: number; label: string}
-
-const FILTER_CONTROL_CLASS = 'box-border h-[18px] w-full border rounded-sm text-[11px] leading-none bg-[#F1EB9C] font-semibold'
-const TEXT_FILTER_CLASS = `${FILTER_CONTROL_CLASS} px-0 py-0`
-const SELECT_FILTER_CLASS = `${FILTER_CONTROL_CLASS} px-2 py-0`
-const FILTER_RESET_TITLE = 'Double-click to reset this filter'
-
-function ensureSelectedOption<T extends FilterSelectOption>(
-    options: readonly T[],
-    selectedValue: number | undefined,
-    fallbackLabel: (id: number) => string,
-): T[] {
-    if (selectedValue === undefined) {
-        return [...options]
-    }
-
-    const hasSelected = options.some((option) => option.value === selectedValue)
-    if (hasSelected) {
-        return [...options]
-    }
-
-    return [...options, {value: selectedValue, label: fallbackLabel(selectedValue)} as T]
-}
-
-export function TaskListClient({initialTasks, initialFilters, initialStatusOptions, initialTaskTypeOptions, initialAssigneeOptions, initialDepartmentOptions}: TaskListClientProps) {
-    const router = useRouter()
-    const [filters, setFilters] = useState<TaskListFilters>(initialFilters)
-    const isInitialMount = React.useRef(true)
-
-
-    const statusOptions = React.useMemo(() => ensureSelectedOption(
-        initialStatusOptions,
-        filters.statusID,
-        (id) => `Status ${id}`,
-    ), [initialStatusOptions, filters.statusID])
-
-    const taskTypeOptions = React.useMemo(() => ensureSelectedOption(
-        initialTaskTypeOptions,
-        filters.taskTypeID,
-        (id) => `TaskType ${id}`,
-    ), [initialTaskTypeOptions, filters.taskTypeID])
-
-    const assignedToOptions = React.useMemo(() => ensureSelectedOption(
-        initialAssigneeOptions,
-        filters.assignedToID,
-        (id) => `AssignedTo ${id}`,
-    ), [initialAssigneeOptions, filters.assignedToID])
-
-    const departmentOptions = React.useMemo(() => ensureSelectedOption(
-        initialDepartmentOptions,
-        filters.departmentID,
-        (id) => `Department ${id}`,
-    ), [initialDepartmentOptions, filters.departmentID])
-
-
-    // Update URL when filters, sort, or page change (triggers server-side refetch)
-    React.useEffect(() => {
-        // Skip pushing URL on initial mount (server already has correct URL)
-        if (isInitialMount.current) {
-            isInitialMount.current = false
-            return
-        }
-
-        const params = new URLSearchParams()
-
-        // Update URL params based on current filters
-        Object.entries(filters).forEach(([key, value]) => {
-            if (value !== undefined && value !== '') {
-                params.set(key, value.toString())
-            } else {
-                params.delete(key)
-            }
-        })
-
-        // Navigate to new URL (this triggers server component to re-render)
-        router.push(`/tasks?${params.toString()}`, {scroll: false})
-    }, [filters, router])
-
-    // Handle filter changes - update specific filter keys only
-    const handleFilterChange = useCallback((key: keyof TaskListFilters, value: string | number | undefined) => {
-        setFilters((prevFilters) => {
-            // Reset to page 1 when filters change
-            if (key !== 'page') {
-                return {
-                    ...prevFilters,
-                    [key]: value,
-                    page: 1, // Reset pagination
-                }
-            }
-            return {
-                ...prevFilters,
-                [key]: value as number | undefined,
-            }
-        })
-    }, [])
-
-    // Handle sort column click
-    const handleSortChange = useCallback((column: string, direction: 'asc' | 'desc') => {
-        setFilters((prevFilters) => ({
-            ...prevFilters,
-            sortBy: column,
-            sortOrder: direction,
-            page: 1, // Reset to first page
-        }))
-    }, [])
+export function TaskListClient({initialTasks, initialFilters, initialStatusOptions, initialTaskTypeOptions, initialAssigneeOptions, initialDepartmentOptions, totalCount}: TaskListClientProps) {
+    const {
+        filters,
+        statusOptions,
+        taskTypeOptions,
+        assignedToOptions,
+        departmentOptions,
+        handleFilterChange,
+        handleSortChange,
+        handleStatusSelectChange,
+        handleTaskTypeSelectChange,
+        handleAssignedToSelectChange,
+        handleDepartmentSelectChange,
+        resetStatusFilter,
+        resetTaskTypeFilter,
+        resetAssignedToFilter,
+        resetDepartmentFilter,
+    } = useTaskListFilters({initialFilters, initialStatusOptions, initialTaskTypeOptions, initialAssigneeOptions, initialDepartmentOptions})
 
     const textFilterColumns: Record<string, {filterKey: TextFilterKey; value: string | undefined}> = {
         TicketNumber: {filterKey: 'ticketNumber', value: filters.ticketNumber},
@@ -169,9 +57,7 @@ export function TaskListClient({initialTasks, initialFilters, initialStatusOptio
             type="text"
             placeholder="Filter..."
             value={value ?? ''}
-            onChange={(nextValue) =>
-                handleFilterChange(filterKey, nextValue ? nextValue.toString() : undefined)
-            }
+            onChange={(nextValue) => handleFilterChange(filterKey, nextValue ? nextValue.toString() : undefined)}
             className={TEXT_FILTER_CLASS}
             debounce={300}
             title={FILTER_RESET_TITLE}
@@ -179,232 +65,29 @@ export function TaskListClient({initialTasks, initialFilters, initialStatusOptio
         />
     ), [handleFilterChange])
 
-    const handleStatusSelectChange = useCallback((value: string) => {
-        if (value === 'activeNotWaiting') {
-            setFilters((prevFilters) => ({
-                ...prevFilters,
-                statusID: undefined,
-                statusPreset: 'activeNotWaiting',
-                page: 1,
-            }))
-            return
-        }
-
-        if (value === '') {
-            setFilters((prevFilters) => ({
-                ...prevFilters,
-                statusID: undefined,
-                statusPreset: undefined,
-                page: 1,
-            }))
-            return
-        }
-
-        const parsedStatusId = parseInt(value, 10)
-        setFilters((prevFilters) => ({
-            ...prevFilters,
-            statusID: Number.isNaN(parsedStatusId) ? undefined : parsedStatusId,
-            statusPreset: undefined,
-            page: 1,
-        }))
-    }, [])
-
-    const handleTaskTypeSelectChange = useCallback((value: string) => {
-        if (value === '') {
-            setFilters((prevFilters) => ({
-                ...prevFilters,
-                taskTypeID: undefined,
-                page: 1,
-            }))
-            return
-        }
-
-        const parsedTaskTypeId = parseInt(value, 10)
-        setFilters((prevFilters) => ({
-            ...prevFilters,
-            taskTypeID: Number.isNaN(parsedTaskTypeId) ? undefined : parsedTaskTypeId,
-            page: 1,
-        }))
-    }, [])
-
-    const handleAssignedToSelectChange = useCallback((value: string) => {
-        if (value === 'unAssigned') {
-            setFilters((prevFilters) => ({
-                ...prevFilters,
-                assignedToID: undefined,
-                unassignedPreset: 'unAssigned',
-                page: 1,
-            }))
-            return
-        }
-
-        if (value === '') {
-            setFilters((prevFilters) => ({
-                ...prevFilters,
-                assignedToID: undefined,
-                unassignedPreset: undefined,
-                page: 1,
-            }))
-            return
-        }
-
-        const parsedAssignedToId = parseInt(value, 10)
-        setFilters((prevFilters) => ({
-            ...prevFilters,
-            assignedToID: Number.isNaN(parsedAssignedToId) ? undefined : parsedAssignedToId,
-            unassignedPreset: undefined,
-            page: 1,
-        }))
-    }, [])
-
-    const handleDepartmentSelectChange = useCallback((value: string) => {
-        if (value === '') {
-            setFilters((prevFilters) => ({
-                ...prevFilters,
-                departmentID: undefined,
-                page: 1,
-            }))
-            return
-        }
-
-        const parsedDepartmentId = parseInt(value, 10)
-        setFilters((prevFilters) => ({
-            ...prevFilters,
-            departmentID: Number.isNaN(parsedDepartmentId) ? undefined : parsedDepartmentId,
-            page: 1,
-        }))
-    }, [])
-
-    const resetStatusFilter = useCallback(() => {
-        handleStatusSelectChange('')
-    }, [handleStatusSelectChange])
-
-    const resetTaskTypeFilter = useCallback(() => {
-        handleTaskTypeSelectChange('')
-    }, [handleTaskTypeSelectChange])
-
-    const resetAssignedToFilter = useCallback(() => {
-        handleAssignedToSelectChange('')
-    }, [handleAssignedToSelectChange])
-
-    const resetDepartmentFilter = useCallback(() => {
-        handleDepartmentSelectChange('')
-    }, [handleDepartmentSelectChange])
-
-    const renderStatusFilter = useCallback(() => {
-        const statusSelectValue = filters.statusID !== undefined
-            ? filters.statusID.toString()
-            : (filters.statusPreset ?? '')
-
-        return (
-            <select
-                value={statusSelectValue}
-                onChange={(event) => handleStatusSelectChange(event.target.value)}
-                className={SELECT_FILTER_CLASS}
-                title={FILTER_RESET_TITLE}
-                onDoubleClick={resetStatusFilter}
-            >
-                <option value="">Active</option>
-                <option value="activeNotWaiting">Not Waiting</option>
-                {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                        {option.label}
-                    </option>
-                ))}
-            </select>
-        )
-    }, [filters.statusID, filters.statusPreset, handleStatusSelectChange, resetStatusFilter, statusOptions])
-
-    const renderTaskTypeFilter = useCallback(() => {
-        const taskTypeSelectValue = filters.taskTypeID !== undefined
-            ? filters.taskTypeID.toString()
-            : ''
-
-        return (
-            <select
-                value={taskTypeSelectValue}
-                onChange={(event) => handleTaskTypeSelectChange(event.target.value)}
-                className={SELECT_FILTER_CLASS}
-                title={FILTER_RESET_TITLE}
-                onDoubleClick={resetTaskTypeFilter}
-            >
-                <option value="">All</option>
-                {taskTypeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                        {option.label}
-                    </option>
-                ))}
-            </select>
-        )
-    }, [filters.taskTypeID, handleTaskTypeSelectChange, resetTaskTypeFilter, taskTypeOptions])
-
-    const renderAssignedToFilter = useCallback(() => {
-        const assignedToSelectValue = filters.assignedToID !== undefined
-            ? filters.assignedToID.toString()
-            : (filters.unassignedPreset ?? '')
-
-        return (
-            <select
-                value={assignedToSelectValue}
-                onChange={(event) => handleAssignedToSelectChange(event.target.value)}
-                className={SELECT_FILTER_CLASS}
-                title={FILTER_RESET_TITLE}
-                onDoubleClick={resetAssignedToFilter}
-            >
-                <option value=""></option>
-                <option value="unAssigned">Unassigned</option>
-                {assignedToOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                        {option.label}
-                    </option>
-                ))}
-            </select>
-        )
-    }, [filters.assignedToID, filters.unassignedPreset, handleAssignedToSelectChange, resetAssignedToFilter, assignedToOptions])
-
-    const renderDepartmentFilter = useCallback(() => {
-        const departmentSelectValue = filters.departmentID !== undefined
-            ? filters.departmentID.toString()
-            : ''
-
-        return (
-            <select
-                value={departmentSelectValue}
-                onChange={(event) => handleDepartmentSelectChange(event.target.value)}
-                className={SELECT_FILTER_CLASS}
-                title={FILTER_RESET_TITLE}
-                onDoubleClick={resetDepartmentFilter}
-            >
-                <option value="">All</option>
-                {departmentOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                        {option.label}
-                    </option>
-                ))}
-            </select>
-        )
-    }, [filters.departmentID, handleDepartmentSelectChange, resetDepartmentFilter, departmentOptions])
-
     const renderHeaderFilter = (columnId: string) => {
         const textFilter = textFilterColumns[columnId]
-        if (textFilter) {
-            return renderTextFilter(textFilter.filterKey, textFilter.value)
-        }
+        if (textFilter) return renderTextFilter(textFilter.filterKey, textFilter.value)
 
-        const selectFilterRenderers: Record<string, () => React.ReactNode> = {
-            Status: renderStatusFilter,
-            TaskType: renderTaskTypeFilter,
-            AssignedToName: renderAssignedToFilter,
-            DepartmentName: renderDepartmentFilter,
+        switch (columnId) {
+            case 'Status':
+                return <StatusFilter statusID={filters.statusID} statusPreset={filters.statusPreset} options={statusOptions} onChange={handleStatusSelectChange} onReset={resetStatusFilter} />
+            case 'TaskType':
+                return <TaskTypeFilter taskTypeID={filters.taskTypeID} options={taskTypeOptions} onChange={handleTaskTypeSelectChange} onReset={resetTaskTypeFilter} />
+            case 'AssignedToName':
+                return <AssignedToFilter assignedToID={filters.assignedToID} unassignedPreset={filters.unassignedPreset} options={assignedToOptions} onChange={handleAssignedToSelectChange} onReset={resetAssignedToFilter} />
+            case 'DepartmentName':
+                return <DepartmentFilter departmentID={filters.departmentID} options={departmentOptions} onChange={handleDepartmentSelectChange} onReset={resetDepartmentFilter} />
+            default:
+                return null
         }
-
-        const selectFilterRenderer = selectFilterRenderers[columnId]
-        return selectFilterRenderer ? selectFilterRenderer() : null
     }
+
+    const currentPage = filters.page ?? 1
+    const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
     return (
         <div className="mx-auto py-4 px-3">
-            {/* Data Table */}
             <DataTable
                 columns={taskColumns}
                 data={initialTasks}
@@ -412,6 +95,36 @@ export function TaskListClient({initialTasks, initialFilters, initialStatusOptio
                 renderHeaderFilter={renderHeaderFilter}
                 getRowStyle={getTaskRowStyle}
             />
+            <div className="flex items-center justify-between mt-2 px-1 text-xs text-slate-600">
+                <span>{totalCount.toLocaleString()} results</span>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => handleFilterChange('page', 1)}
+                        disabled={currentPage <= 1}
+                        className="px-2 py-1 border rounded text-xs disabled:opacity-40 hover:bg-slate-100 disabled:cursor-not-allowed"
+                        title="First page"
+                    >
+                        <ChevronDoubleLeftIcon className="w-3 h-3" />
+                    </button>
+                    <button
+                        onClick={() => handleFilterChange('page', currentPage - 1)}
+                        disabled={currentPage <= 1}
+                        className="px-2 py-1 border rounded text-xs disabled:opacity-40 hover:bg-slate-100 disabled:cursor-not-allowed"
+                        title="Previous page"
+                    >
+                        <ChevronLeftIcon className="w-3 h-3" />
+                    </button>
+                    <span>Page {currentPage} of {totalPages}</span>
+                    <button
+                        onClick={() => handleFilterChange('page', currentPage + 1)}
+                        disabled={currentPage >= totalPages}
+                        className="px-2 py-1 border rounded text-xs disabled:opacity-40 hover:bg-slate-100 disabled:cursor-not-allowed"
+                        title="Next page"
+                    >
+                        <ChevronRightIcon className="w-3 h-3" />
+                    </button>
+                </div>
+            </div>
         </div>
     )
 }

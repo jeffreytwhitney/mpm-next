@@ -2,6 +2,7 @@ jest.mock('@/lib/prisma', () => ({
   prisma: {
     qryTaskListRaw: {
       findMany: jest.fn(),
+      count: jest.fn(),
     },
   },
 }))
@@ -10,10 +11,12 @@ import { prisma } from '@/lib/prisma'
 import { getTaskList, parseTaskListFilters } from '@/app/actions/taskListActions'
 
 const mockFindManyTaskList = prisma.qryTaskListRaw.findMany as jest.Mock
+const mockCountTaskList = prisma.qryTaskListRaw.count as jest.Mock
 
 describe('taskListActions', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockCountTaskList.mockResolvedValue(0)
   })
 
   it('builds default query for getTaskList', async () => {
@@ -25,7 +28,7 @@ describe('taskListActions', () => {
       expect.objectContaining({
         where: expect.objectContaining({ StatusID: { lt: 4 } }),
         orderBy: { DueDate: 'asc' },
-        take: 50,
+        take: 25,
         skip: 0,
       }),
     )
