@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 
 import {getTaskById} from "@/app/actions/taskActions";
+import {getProjectById} from "@/app/actions/projectActions";
 
 interface TaskDetailContentProps {
   taskId: number
@@ -17,6 +18,8 @@ export async function TaskDetailContent({ taskId }: TaskDetailContentProps) {
   if (!task) {
     notFound()
   }
+  const project = await getProjectById(task.ProjectID)
+
 
   return (
     <div className="space-y-3 text-sm">

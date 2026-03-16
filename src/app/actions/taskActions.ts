@@ -48,7 +48,7 @@ export async function getTasksByProjectId(projectId: number): Promise<TaskItem[]
 }
 
 export interface TaskCreateInput {
-    ProjectID?: number | null
+    ProjectID: number
     StatusID?: number | null
     TaskName?: string | null
     DrawingNumber?: string | null

@@ -216,8 +216,8 @@ model tblStatus {
 
 model tblTask {
   ID               Int       @id(map: "PK_tblTask") @default(autoincrement())
-  ProjectID        Int?
-  StatusID         Int?
+  ProjectID        Int
+  StatusID         Int
   TaskName         String?   @db.NVarChar(255)
   TicketNumber     String?   @db.NVarChar(255)
   DrawingNumber    String?   @db.NVarChar(255)
