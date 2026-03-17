@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { TaskDetailContent } from '@/app/tasks/_components/TaskDetailContent'
-import TaskDetailModalShell from '@/components/TaskDetailModalShell'
+import TaskDetailModalShell from '@/app/tasks/_components/TaskDetailModalShell'
 import {getTaskById} from "@/server/data/task";
 
 interface TaskModalPageProps {

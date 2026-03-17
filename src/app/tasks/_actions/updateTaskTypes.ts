@@ -1,5 +1,5 @@
 export type UpdateTaskFieldErrors = Partial<
-  Record<'taskName' | 'statusId' | 'opNumber' | 'dueDate' | 'scheduledDueDate' | 'assigneeID', string>
+  Record<'taskName' | 'statusId' | 'opNumber' | 'dueDate' | 'scheduledDueDate' | 'assigneeID' | 'manufacturingRev', string>
 >
 
 export interface UpdateTaskState {

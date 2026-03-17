@@ -1,22 +1,10 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { isRevertingToNotStarted } from '@/lib/taskStatusTransition'
+import { isRevertingToNotStarted, TASK_STATUS_NOT_STARTED_ID } from '@/lib/taskStatusTransition'
 import { getTaskById, updateTask as updateTaskRecord } from '@/server/data/task'
 import type { UpdateTaskFieldErrors, UpdateTaskState } from '@/app/tasks/_actions/updateTaskTypes'
-
-function parseDateInput(value: string): Date | null {
-  if (!value) {
-    return null
-  }
-
-  const parsedDate = new Date(value)
-  if (Number.isNaN(parsedDate.getTime())) {
-    return null
-  }
-
-  return parsedDate
-}
+import { parseDateValue } from '@/lib/date'
 
 export async function updateTask(
   taskId: number,
@@ -24,16 +12,22 @@ export async function updateTask(
   formData: FormData,
 ): Promise<UpdateTaskState> {
   const statusValue = String(formData.get('statusId') ?? '').trim()
+  const assigneeValue = String(formData.get('assigneeID') ?? '').trim()
   const dueDateValue = String(formData.get('dueDate') ?? '').trim()
   const scheduledDueDateValue = String(formData.get('scheduledDueDate') ?? '').trim()
   const taskNameValue = String(formData.get('taskName') ?? '').trim()
+  const manufacturingRevValue = String(formData.get('manufacturingRev') ?? '').trim()
   const drawingNumberValue = String(formData.get('drawingNumber') ?? '').trim()
   const opNumberValue = String(formData.get('opNumber') ?? '').trim()
+
 
   const fieldErrors: UpdateTaskFieldErrors = {}
 
   if (!taskNameValue) {
     fieldErrors.taskName = 'Task name is required.'
+  }
+  if (!manufacturingRevValue) {
+    fieldErrors.manufacturingRev = 'Rev is required.'
   }
   if (!statusValue) {
     fieldErrors.statusId = 'Status is required.'
@@ -65,8 +59,27 @@ export async function updateTask(
     }
   }
 
-  const parsedDueDate = parseDateInput(dueDateValue)
-  const parsedScheduledDueDate = parseDateInput(scheduledDueDateValue)
+  const parsedAssigneeId = assigneeValue.length > 0 ? Number(assigneeValue) : null
+  if (assigneeValue.length > 0 && (!Number.isInteger(parsedAssigneeId) || (parsedAssigneeId ?? 0) <= 0)) {
+    return {
+      success: false,
+      fieldErrors: {
+        assigneeID: 'Assignee is invalid.',
+      },
+    }
+  }
+
+  if (parsedStatusId !== TASK_STATUS_NOT_STARTED_ID && parsedAssigneeId == null) {
+    return {
+      success: false,
+      fieldErrors: {
+        assigneeID: 'Cannot have a status other than Not Started without an assignee.',
+      },
+    }
+  }
+
+  const parsedDueDate = parseDateValue(dueDateValue)
+  const parsedScheduledDueDate = parseDateValue(scheduledDueDateValue)
 
   if (!parsedDueDate || !parsedScheduledDueDate) {
     return {
@@ -97,11 +110,22 @@ export async function updateTask(
       }
     }
 
+    if (currentTask.AssignedToID && parsedAssigneeId == null) {
+      return {
+        success: false,
+        fieldErrors: {
+          assigneeID: 'Cannot remove assignee once assigned.',
+        },
+      }
+    }
+
     const update: Parameters<typeof updateTaskRecord>[1] = {
       StatusID: parsedStatusId,
+      AssignedToID: parsedAssigneeId,
       DueDate: parsedDueDate,
       ScheduledDueDate: parsedScheduledDueDate,
       TaskName: taskNameValue,
+      ManufacturingRev: manufacturingRevValue || null,
       DrawingNumber: drawingNumberValue || null,
       Operation: opNumberValue,
     }

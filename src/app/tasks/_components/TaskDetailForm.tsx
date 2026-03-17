@@ -1,11 +1,12 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 import { updateTask } from '@/app/tasks/_actions/updateTask'
 import {
     INITIAL_UPDATE_TASK_STATE,
     type UpdateTaskFieldErrors,
 } from '@/app/tasks/_actions/updateTaskTypes'
+import { TASK_DETAIL_SAVED_EVENT } from '@/lib/taskDetailEvents'
 import { isRevertingToNotStarted } from '@/lib/taskStatusTransition'
 import type { TaskItem } from '@/server/data/task'
 import type { ProjectItem } from '@/server/data/project'
@@ -37,7 +38,7 @@ function validateForm(
     const errors: FieldErrors = {}
     const submittedStatusRaw = formData.get('statusId')?.toString().trim() ?? ''
     const submittedStatusId = Number(submittedStatusRaw)
-    const submittedAssigneeRaw = formData.get('assigneeOptions')?.toString().trim() ?? ''
+    const submittedAssigneeRaw = formData.get('assigneeID')?.toString().trim() ?? ''
     const submittedAssigneeID = Number(submittedAssigneeRaw);
 
     if (!formData.get('taskName')?.toString().trim()) {
@@ -66,7 +67,9 @@ function validateForm(
             errors.assigneeID = 'Cannot remove assignee once assigned.'
         }
     }
-
+    if (!formData.get('manufacturingRev')?.toString().trim()) {
+        errors.manufacturingRev = 'Rev is required.'
+    }
     if (!formData.get('opNumber')?.toString().trim()) {
         errors.opNumber = 'Op number is required.'
     }
@@ -94,6 +97,14 @@ export function TaskDetailForm({
         updateTask.bind(null, taskId),
         INITIAL_UPDATE_TASK_STATE,
     )
+
+    useEffect(() => {
+        if (!serverState.success) {
+            return
+        }
+
+        window.dispatchEvent(new CustomEvent(TASK_DETAIL_SAVED_EVENT, { detail: { taskId } }))
+    }, [serverState.success, taskId])
 
     const selectedStatusValue = task.StatusID != null ? String(task.StatusID) : ''
     const selectedAssigneeValue = task.AssignedToID != null ? String(task.AssignedToID) : ''
@@ -138,6 +149,24 @@ export function TaskDetailForm({
                     />
                     {displayErrors.taskName && (
                         <p className="mt-0.5 text-xs text-red-600">{displayErrors.taskName}</p>
+                    )}
+                </div>
+
+                {/* Task Name */}
+                <label htmlFor="manufacturingRev" className="font-semibold pt-1">
+                    Rev {canSubmit && <span className="text-red-500">*</span>}
+                </label>
+                <div>
+                    <input
+                        id="manufacturingRev"
+                        name="manufacturingRev"
+                        defaultValue={task.ManufacturingRev ?? ''}
+                        disabled={!canSubmit}
+                        className="rounded border border-gray-300 bg-white px-2 py-1 w-52 disabled:bg-gray-100"
+                        suppressHydrationWarning
+                    />
+                    {displayErrors.manufacturingRev && (
+                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.manufacturingRev}</p>
                     )}
                 </div>
 
@@ -231,7 +260,7 @@ export function TaskDetailForm({
                             </span>
                         </>
                     )}
-                    {displayErrors.statusId && (
+                    {displayErrors.assigneeID && (
                         <p className="mt-0.5 text-xs text-red-600">{displayErrors.assigneeID}</p>
                     )}
                 </div>
