@@ -1,9 +1,28 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { updateTask as updateTaskRecord } from '@/server/data/task'
+import { isRevertingToNotStarted } from '@/lib/taskStatusTransition'
+import { getTaskById, updateTask as updateTaskRecord } from '@/server/data/task'
+import type { UpdateTaskFieldErrors, UpdateTaskState } from '@/app/tasks/_actions/updateTaskTypes'
 
-export async function updateTask(taskId: number, formData: FormData) {
+function parseDateInput(value: string): Date | null {
+  if (!value) {
+    return null
+  }
+
+  const parsedDate = new Date(value)
+  if (Number.isNaN(parsedDate.getTime())) {
+    return null
+  }
+
+  return parsedDate
+}
+
+export async function updateTask(
+  taskId: number,
+  _prevState: UpdateTaskState,
+  formData: FormData,
+): Promise<UpdateTaskState> {
   const statusValue = String(formData.get('statusId') ?? '').trim()
   const dueDateValue = String(formData.get('dueDate') ?? '').trim()
   const scheduledDueDateValue = String(formData.get('scheduledDueDate') ?? '').trim()
@@ -11,27 +30,104 @@ export async function updateTask(taskId: number, formData: FormData) {
   const drawingNumberValue = String(formData.get('drawingNumber') ?? '').trim()
   const opNumberValue = String(formData.get('opNumber') ?? '').trim()
 
-  const update: Parameters<typeof updateTaskRecord>[1] = {}
+  const fieldErrors: UpdateTaskFieldErrors = {}
 
-  if (statusValue.length === 0) {
-    update.StatusID = null
-  } else {
-    const parsedStatusId = Number(statusValue)
-    if (!Number.isInteger(parsedStatusId)) {
-      throw new Error('Invalid status value')
-    }
-    update.StatusID = parsedStatusId
+  if (!taskNameValue) {
+    fieldErrors.taskName = 'Task name is required.'
+  }
+  if (!statusValue) {
+    fieldErrors.statusId = 'Status is required.'
+  }
+  if (!opNumberValue) {
+    fieldErrors.opNumber = 'Op number is required.'
+  }
+  if (!dueDateValue) {
+    fieldErrors.dueDate = 'Due date is required.'
+  }
+  if (!scheduledDueDateValue) {
+    fieldErrors.scheduledDueDate = 'Scheduled due date is required.'
   }
 
-  update.DueDate = dueDateValue ? new Date(dueDateValue) : null
-  update.ScheduledDueDate = scheduledDueDateValue ? new Date(scheduledDueDateValue) : null
-  update.TaskName = taskNameValue || null
-  update.DrawingNumber = drawingNumberValue || null
-  update.Operation = opNumberValue || undefined
+  if (Object.keys(fieldErrors).length > 0) {
+    return {
+      success: false,
+      fieldErrors,
+    }
+  }
 
-  await updateTaskRecord(taskId, update)
+  const parsedStatusId = Number(statusValue)
+  if (!Number.isInteger(parsedStatusId)) {
+    return {
+      success: false,
+      fieldErrors: {
+        statusId: 'Status is invalid.',
+      },
+    }
+  }
 
-  revalidatePath('/tasks')
-  revalidatePath(`/tasks/${taskId}`)
+  const parsedDueDate = parseDateInput(dueDateValue)
+  const parsedScheduledDueDate = parseDateInput(scheduledDueDateValue)
+
+  if (!parsedDueDate || !parsedScheduledDueDate) {
+    return {
+      success: false,
+      fieldErrors: {
+        ...(parsedDueDate ? {} : { dueDate: 'Due date is invalid.' }),
+        ...(parsedScheduledDueDate ? {} : { scheduledDueDate: 'Scheduled due date is invalid.' }),
+      },
+    }
+  }
+
+  try {
+    const currentTask = await getTaskById(taskId)
+    if (!currentTask) {
+      return {
+        success: false,
+        fieldErrors: {},
+        formError: 'Task was not found.',
+      }
+    }
+
+    if (isRevertingToNotStarted(currentTask.StatusID, parsedStatusId)) {
+      return {
+        success: false,
+        fieldErrors: {
+          statusId: 'Cannot move a Started or Waiting task back to Not Started.',
+        },
+      }
+    }
+
+    const update: Parameters<typeof updateTaskRecord>[1] = {
+      StatusID: parsedStatusId,
+      DueDate: parsedDueDate,
+      ScheduledDueDate: parsedScheduledDueDate,
+      TaskName: taskNameValue,
+      DrawingNumber: drawingNumberValue || null,
+      Operation: opNumberValue,
+    }
+
+    const updatedTask = await updateTaskRecord(taskId, update)
+    if (!updatedTask) {
+      return {
+        success: false,
+        fieldErrors: {},
+        formError: 'Task was not found.',
+      }
+    }
+
+    revalidatePath('/tasks')
+    revalidatePath(`/tasks/${taskId}`)
+
+    return {
+      success: true,
+      fieldErrors: {},
+    }
+  } catch (error) {
+    console.error('Error updating task:', error)
+    return {
+      success: false,
+      fieldErrors: {},
+      formError: 'Unable to save task right now. Please try again.',
+    }
+  }
 }
-

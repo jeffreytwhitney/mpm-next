@@ -2,6 +2,7 @@ import {notFound} from 'next/navigation'
 import {getTaskById} from '@/server/data/task'
 import {getProjectById} from '@/server/data/project'
 import {getTaskStatusDropdownOptions} from '@/server/data/taskStatus'
+import {getMetrologyProgrammerDropdownOptions} from "@/server/data/user";
 import {getCurrentUser} from '@/lib/auth/currentUser'
 import {USER_TYPE_IDS} from '@/lib/auth/roles'
 import {TaskDetailForm} from '@/app/tasks/_components/TaskDetailForm'
@@ -18,9 +19,10 @@ export async function TaskDetailContent({taskId}: TaskDetailContentProps) {
         notFound()
     }
 
-    const [project, statusOptions] = await Promise.all([
+    const [project, statusOptions, assigneeOptions] = await Promise.all([
         task.ProjectID != null ? getProjectById(task.ProjectID) : null,
         getTaskStatusDropdownOptions(),
+        getMetrologyProgrammerDropdownOptions()
     ])
 
     if (!project) {
@@ -41,6 +43,7 @@ export async function TaskDetailContent({taskId}: TaskDetailContentProps) {
             task={task}
             project={project}
             statusOptions={statusOptions}
+            assigneeOptions={assigneeOptions}
             canSubmit={canSubmit}
             isMetrologyProgrammer={isMetrologyProgrammer}
         />

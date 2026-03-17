@@ -1,29 +1,44 @@
 'use client'
 
-import { useState } from 'react'
+import { useActionState, useState } from 'react'
 import { updateTask } from '@/app/tasks/_actions/updateTask'
+import {
+    INITIAL_UPDATE_TASK_STATE,
+    type UpdateTaskFieldErrors,
+} from '@/app/tasks/_actions/updateTaskTypes'
+import { isRevertingToNotStarted } from '@/lib/taskStatusTransition'
 import type { TaskItem } from '@/server/data/task'
 import type { ProjectItem } from '@/server/data/project'
 import type { TaskStatusDropdownOption } from '@/server/data/taskStatus'
+import type { UserDropDownOption} from '@/server/data/user'
 
 interface TaskDetailFormProps {
     taskId: number
     task: TaskItem
     project: ProjectItem
     statusOptions: TaskStatusDropdownOption[]
+    assigneeOptions: UserDropDownOption[]
     canSubmit: boolean
     isMetrologyProgrammer: boolean
 }
 
-type FieldErrors = Partial<Record<'taskName' | 'statusId' | 'opNumber' | 'dueDate' | 'scheduledDueDate', string>>
+type FieldErrors = UpdateTaskFieldErrors
 
 function toDateInputValue(value: Date | null | undefined) {
     if (!value) return ''
     return new Date(value).toISOString().split('T')[0]
 }
 
-function validateForm(formData: FormData, isMetrologyProgrammer: boolean): FieldErrors {
+function validateForm(
+    formData: FormData,
+    task: TaskItem,
+    isMetrologyProgrammer: boolean
+): FieldErrors {
     const errors: FieldErrors = {}
+    const submittedStatusRaw = formData.get('statusId')?.toString().trim() ?? ''
+    const submittedStatusId = Number(submittedStatusRaw)
+    const submittedAssigneeRaw = formData.get('assigneeOptions')?.toString().trim() ?? ''
+    const submittedAssigneeID = Number(submittedAssigneeRaw);
 
     if (!formData.get('taskName')?.toString().trim()) {
         errors.taskName = 'Task name is required.'
@@ -31,6 +46,27 @@ function validateForm(formData: FormData, isMetrologyProgrammer: boolean): Field
     if (isMetrologyProgrammer && !formData.get('statusId')?.toString().trim()) {
         errors.statusId = 'Status is required.'
     }
+
+    if (isMetrologyProgrammer && submittedStatusRaw.length > 0) {
+        if (!Number.isInteger(submittedStatusId)) {
+            errors.statusId = 'Status is invalid.'
+        } else if (isRevertingToNotStarted(task.StatusID, submittedStatusId)) {
+            errors.statusId = 'Cannot move a Started or Waiting task back to Not Started.'
+        }
+    }
+
+    if (isMetrologyProgrammer) {
+        if (submittedStatusId > 0 && !submittedAssigneeID) {
+            errors.assigneeID = 'Cannot have a status other than Not Started without an assignee.'
+        }
+        if (!Number.isInteger(submittedAssigneeID)) {
+            errors.assigneeID = 'Assignee is invalid.'
+        }
+        if (task.AssignedToID && !submittedAssigneeID){
+            errors.assigneeID = 'Cannot remove assignee once assigned.'
+        }
+    }
+
     if (!formData.get('opNumber')?.toString().trim()) {
         errors.opNumber = 'Op number is required.'
     }
@@ -49,17 +85,26 @@ export function TaskDetailForm({
     task,
     project,
     statusOptions,
+    assigneeOptions,
     canSubmit,
     isMetrologyProgrammer,
 }: TaskDetailFormProps) {
     const [errors, setErrors] = useState<FieldErrors>({})
-    const updateTaskAction = updateTask.bind(null, taskId)
+    const [serverState, updateTaskAction, isPending] = useActionState(
+        updateTask.bind(null, taskId),
+        INITIAL_UPDATE_TASK_STATE,
+    )
 
     const selectedStatusValue = task.StatusID != null ? String(task.StatusID) : ''
+    const selectedAssigneeValue = task.AssignedToID != null ? String(task.AssignedToID) : ''
+    const displayErrors: FieldErrors = {
+        ...serverState.fieldErrors,
+        ...errors,
+    }
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         const formData = new FormData(e.currentTarget)
-        const fieldErrors = validateForm(formData, isMetrologyProgrammer)
+        const fieldErrors = validateForm(formData, task, isMetrologyProgrammer)
 
         if (Object.keys(fieldErrors).length > 0) {
             e.preventDefault()
@@ -91,8 +136,37 @@ export function TaskDetailForm({
                         className="rounded border border-gray-300 bg-white px-2 py-1 w-52 disabled:bg-gray-100"
                         suppressHydrationWarning
                     />
-                    {errors.taskName && (
-                        <p className="mt-0.5 text-xs text-red-600">{errors.taskName}</p>
+                    {displayErrors.taskName && (
+                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.taskName}</p>
+                    )}
+                </div>
+
+                {/* Drawing Number */}
+                <label htmlFor="drawingNumber" className="font-semibold pt-1">DrawingNumber</label>
+                <input
+                    id="drawingNumber"
+                    name="drawingNumber"
+                    defaultValue={task.DrawingNumber ?? ''}
+                    disabled={!canSubmit}
+                    className="rounded border border-gray-300 bg-white px-2 py-1 w-52 disabled:bg-gray-100"
+                    suppressHydrationWarning
+                />
+
+                {/* Op Number */}
+                <label htmlFor="opNumber" className="font-semibold pt-1">
+                    Op Number {canSubmit && <span className="text-red-500">*</span>}
+                </label>
+                <div>
+                    <input
+                        id="opNumber"
+                        name="opNumber"
+                        defaultValue={task.Operation ?? ''}
+                        disabled={!canSubmit}
+                        className="rounded border border-gray-300 bg-white px-2 py-1 w-52 disabled:bg-gray-100"
+                        suppressHydrationWarning
+                    />
+                    {displayErrors.opNumber && (
+                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.opNumber}</p>
                     )}
                 </div>
 
@@ -124,37 +198,41 @@ export function TaskDetailForm({
                             </span>
                         </>
                     )}
-                    {errors.statusId && (
-                        <p className="mt-0.5 text-xs text-red-600">{errors.statusId}</p>
+                    {displayErrors.statusId && (
+                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.statusId}</p>
                     )}
                 </div>
 
-                {/* Drawing Number */}
-                <label htmlFor="drawingNumber" className="font-semibold pt-1">DrawingNumber</label>
-                <input
-                    id="drawingNumber"
-                    name="drawingNumber"
-                    defaultValue={task.DrawingNumber ?? ''}
-                    disabled={!canSubmit}
-                    className="rounded border border-gray-300 bg-white px-2 py-1 w-52 disabled:bg-gray-100"
-                    suppressHydrationWarning
-                />
-
-                {/* Op Number */}
-                <label htmlFor="opNumber" className="font-semibold pt-1">
-                    Op Number {canSubmit && <span className="text-red-500">*</span>}
+                {/* Assignee */}
+                <label htmlFor="assigneeId" className="font-semibold pt-1">
+                    Assignee
                 </label>
                 <div>
-                    <input
-                        id="opNumber"
-                        name="opNumber"
-                        defaultValue={task.Operation ?? ''}
-                        disabled={!canSubmit}
-                        className="rounded border border-gray-300 bg-white px-2 py-1 w-52 disabled:bg-gray-100"
-                        suppressHydrationWarning
-                    />
-                    {errors.opNumber && (
-                        <p className="mt-0.5 text-xs text-red-600">{errors.opNumber}</p>
+                    {isMetrologyProgrammer ? (
+                        <select
+                            id="assigneeID"
+                            name="assigneeID"
+                            defaultValue={selectedAssigneeValue}
+                            className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
+                            suppressHydrationWarning
+                        >
+                            {assigneeOptions.map((assignee) => (
+                                <option key={assignee.value} value={String(assignee.value)}>
+                                    {assignee.label}
+                                </option>
+                            ))}
+                        </select>
+                    ) : (
+                        <>
+                            {/* Preserve current status value for non-editable users */}
+                            <input type="hidden" name="assigneeID" value={selectedAssigneeValue} suppressHydrationWarning />
+                            <span className="pt-1">
+                                {assigneeOptions.find((s) => String(s.value) === selectedAssigneeValue)?.label ?? ''}
+                            </span>
+                        </>
+                    )}
+                    {displayErrors.statusId && (
+                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.assigneeID}</p>
                     )}
                 </div>
 
@@ -172,8 +250,8 @@ export function TaskDetailForm({
                         className="rounded border border-gray-300 bg-white px-2 py-1 w-52 disabled:bg-gray-100"
                         suppressHydrationWarning
                     />
-                    {errors.dueDate && (
-                        <p className="mt-0.5 text-xs text-red-600">{errors.dueDate}</p>
+                    {displayErrors.dueDate && (
+                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.dueDate}</p>
                     )}
                 </div>
 
@@ -191,19 +269,24 @@ export function TaskDetailForm({
                         className="rounded border border-gray-300 bg-white px-2 py-1 w-52 disabled:bg-gray-100"
                         suppressHydrationWarning
                     />
-                    {errors.scheduledDueDate && (
-                        <p className="mt-0.5 text-xs text-red-600">{errors.scheduledDueDate}</p>
+                    {displayErrors.scheduledDueDate && (
+                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.scheduledDueDate}</p>
                     )}
                 </div>
             </div>
+
+            {serverState.formError && (
+                <p className="text-sm text-red-600">{serverState.formError}</p>
+            )}
 
             {canSubmit && (
                 <div>
                     <button
                         type="submit"
-                        className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                        disabled={isPending}
+                        className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
                     >
-                        Save
+                        {isPending ? 'Saving...' : 'Save'}
                     </button>
                 </div>
             )}
