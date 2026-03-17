@@ -2,11 +2,13 @@ import { cache } from 'react'
 import { getUserById, type MPMUser } from '@/server/data/user'
 import { getSessionUser, type SessionUser } from '@/lib/auth/session'
 import type { CurrentUser } from '@/lib/auth/currentUserTypes'
+import { toKnownUserTypeID } from '@/lib/auth/roles'
 
 function toCurrentUser(record: MPMUser, sessionUser: SessionUser): CurrentUser {
   return {
     userId: record.ID,
     userTypeID: record.UserTypeID ?? null,
+    userType: toKnownUserTypeID(record.UserTypeID),
     isAdmin: sessionUser.isAdmin,
     siteID: record.SiteID ?? null,
     departmentID: record.DepartmentID ?? null,

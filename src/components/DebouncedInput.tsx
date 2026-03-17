@@ -8,6 +8,7 @@ function DebouncedInput({value: initialValue, onChange, debounce = 500, ...props
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) {
     const [value, setValue] = React.useState(initialValue)
     const onChangeRef = React.useRef(onChange)
+    const didMountRef = React.useRef(false)
 
     // Update ref when onChange changes, but don't trigger effect
     React.useEffect(() => {
@@ -17,6 +18,11 @@ function DebouncedInput({value: initialValue, onChange, debounce = 500, ...props
     React.useEffect(() => {setValue(initialValue)}, [initialValue])
 
     React.useEffect(() => {
+        if (!didMountRef.current) {
+            didMountRef.current = true
+            return
+        }
+
         const timeout = setTimeout(() => {onChangeRef.current(value)}, debounce)
         return () => clearTimeout(timeout)
     }, [value, debounce])

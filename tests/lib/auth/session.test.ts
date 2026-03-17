@@ -1,4 +1,5 @@
 import { createSessionToken, verifySessionToken } from '@/lib/auth/session'
+import { USER_TYPES } from '@/lib/auth/roles'
 
 describe('auth session utilities', () => {
   const originalJwtSecret = process.env.JWT_SECRET
@@ -15,6 +16,7 @@ describe('auth session utilities', () => {
     const token = await createSessionToken({
       userId: 10,
       userTypeID: 1,
+      userType: USER_TYPES.METROLOGY_PROGRAMMER,
       isAdmin: true,
       employeeNumber: '4404',
       networkUserName: 'jdoe',
@@ -25,6 +27,7 @@ describe('auth session utilities', () => {
     await expect(verifySessionToken(token)).resolves.toEqual({
       userId: 10,
       userTypeID: 1,
+      userType: USER_TYPES.METROLOGY_PROGRAMMER,
       isAdmin: true,
       employeeNumber: '4404',
       networkUserName: 'jdoe',
@@ -37,6 +40,7 @@ describe('auth session utilities', () => {
     const token = await createSessionToken({
       userId: 10,
       userTypeID: 1,
+      userType: USER_TYPES.METROLOGY_PROGRAMMER,
       isAdmin: false,
       employeeNumber: '4404',
       networkUserName: 'jdoe',

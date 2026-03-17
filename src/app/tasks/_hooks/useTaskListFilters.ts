@@ -1,5 +1,5 @@
 import React, {useState, useCallback} from 'react'
-import {useRouter} from 'next/navigation'
+import {usePathname, useRouter} from 'next/navigation'
 import {type TaskListFilters} from '@/server/data/taskList'
 import {type TaskStatusDropdownOption} from '@/server/data/taskStatus'
 import {type TaskTypeDropdownOption} from '@/server/data/taskType'
@@ -35,8 +35,10 @@ export function useTaskListFilters({
     initialDepartmentOptions,
 }: UseTaskListFiltersOptions) {
     const router = useRouter()
+    const pathname = usePathname()
     const [filters, setFilters] = useState<TaskListFilters>(initialFilters)
     const isInitialMount = React.useRef(true)
+    const lastNavigatedHrefRef = React.useRef<string | null>(null)
 
     const statusOptions = React.useMemo(() => ensureSelectedOption(
         initialStatusOptions,
@@ -70,6 +72,11 @@ export function useTaskListFilters({
             return
         }
 
+        // Do not rewrite URL while an intercepted task modal route is active.
+        if (pathname !== '/tasks') {
+            return
+        }
+
         const params = new URLSearchParams()
         Object.entries(filters).forEach(([key, value]) => {
             if (value !== undefined && value !== '') {
@@ -79,18 +86,35 @@ export function useTaskListFilters({
             }
         })
 
-        router.push(`/tasks?${params.toString()}`, {scroll: false})
-    }, [filters, router])
+        const queryString = params.toString()
+        const href = queryString ? `/tasks?${queryString}` : '/tasks'
+        if (lastNavigatedHrefRef.current === href) {
+            return
+        }
+
+        lastNavigatedHrefRef.current = href
+        router.replace(href, {scroll: false})
+    }, [filters, pathname, router])
 
     const handleFilterChange = useCallback((key: keyof TaskListFilters, value: string | number | undefined) => {
         setFilters((prevFilters) => {
             if (key !== 'page') {
+                const nextPage = 1
+                if (prevFilters[key] === value && prevFilters.page === nextPage) {
+                    return prevFilters
+                }
+
                 return {
                     ...prevFilters,
                     [key]: value,
-                    page: 1,
+                    page: nextPage,
                 }
             }
+
+            if (prevFilters[key] === value) {
+                return prevFilters
+            }
+
             return {
                 ...prevFilters,
                 [key]: value as number | undefined,

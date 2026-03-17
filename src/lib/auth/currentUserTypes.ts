@@ -1,6 +1,9 @@
+import type { KnownUserTypeID } from '@/lib/auth/roles'
+
 export interface CurrentUser {
   userId: number
   userTypeID: number | null
+  userType: KnownUserTypeID | null
   isAdmin: boolean
   siteID: number | null
   departmentID: number | null

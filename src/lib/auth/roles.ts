@@ -1,12 +1,24 @@
+export const USER_TYPES = {
+  METROLOGY_PROGRAMMER: 1,
+  METROLOGY_CALIBRATION_TECHNICIAN: 2,
+  QUALITY_ENGINEER: 3,
+  MANUFACTURING_ENGINEER: 4,
+  CELL_LEADER: 5,
+} as const
+
 export const USER_TYPE_IDS = {
-  metrologyProgrammer: 1,
-  metrologyCalibrationTechnician: 2,
-  qualityEngineer: 3,
-  manufacturingEngineer: 4,
-  cellLeader: 5,
+  metrologyProgrammer: USER_TYPES.METROLOGY_PROGRAMMER,
+  metrologyCalibrationTechnician: USER_TYPES.METROLOGY_CALIBRATION_TECHNICIAN,
+  qualityEngineer: USER_TYPES.QUALITY_ENGINEER,
+  manufacturingEngineer: USER_TYPES.MANUFACTURING_ENGINEER,
+  cellLeader: USER_TYPES.CELL_LEADER,
 } as const
 
 export type KnownUserTypeID = (typeof USER_TYPE_IDS)[keyof typeof USER_TYPE_IDS]
+
+export function toKnownUserTypeID(userTypeID: number | null | undefined): KnownUserTypeID | null {
+  return isKnownUserTypeID(userTypeID) ? userTypeID : null
+}
 
 export const ADMIN_ELIGIBLE_USER_TYPE_IDS = [
   USER_TYPE_IDS.metrologyProgrammer,

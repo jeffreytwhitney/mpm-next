@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { cookies } from 'next/headers'
 import type { MPMUser } from '@/server/data/user'
-import { isEffectiveAdmin } from '@/lib/auth/roles'
+import { isEffectiveAdmin, toKnownUserTypeID, type KnownUserTypeID } from '@/lib/auth/roles'
 
 export const SESSION_COOKIE_NAME = 'mpm_session'
 const SESSION_ISSUER = 'mpm-next'
@@ -11,6 +11,7 @@ const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 7
 export interface SessionUser {
   userId: number
   userTypeID: number | null
+  userType: KnownUserTypeID | null
   isAdmin: boolean
   employeeNumber: string | null
   networkUserName: string | null
@@ -51,6 +52,7 @@ export function toSessionUser(user: MPMUser): SessionUser {
   return {
     userId: user.ID,
     userTypeID: user.UserTypeID ?? null,
+    userType: toKnownUserTypeID(user.UserTypeID),
     isAdmin: isEffectiveAdmin({ UserTypeID: user.UserTypeID ?? null, IsAdmin: user.IsAdmin ?? null }),
     employeeNumber: user.EmployeeNumber ?? null,
     networkUserName: user.NetworkUserName ?? null,
@@ -116,9 +118,14 @@ export async function verifySessionToken(token: string): Promise<SessionUser | n
       return null
     }
 
+    const userTypeID = typeof parsedPayload.userTypeID === 'number' ? parsedPayload.userTypeID : null
+    // Backward compatibility: older tokens may not include userType.
+    const userType = toKnownUserTypeID(typeof parsedPayload.userType === 'number' ? parsedPayload.userType : userTypeID)
+
     return {
       userId: parsedPayload.userId,
-      userTypeID: typeof parsedPayload.userTypeID === 'number' ? parsedPayload.userTypeID : null,
+      userTypeID,
+      userType,
       isAdmin: parsedPayload.isAdmin === true,
       employeeNumber: typeof parsedPayload.employeeNumber === 'string' ? parsedPayload.employeeNumber : null,
       networkUserName: typeof parsedPayload.networkUserName === 'string' ? parsedPayload.networkUserName : null,
