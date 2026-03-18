@@ -266,6 +266,17 @@ model tblTaskType {
   RequiresModels         Int
 }
 
+model tblTaskTimeEntry {
+  ID               Int       @id(map: "PK_tblTaskTimeEntry") @default(autoincrement())
+  TaskID           Int
+  AssignedToID     Int
+  Hours            Float?
+  EntryDate        DateTime? @db.Date
+  CreatedTimestamp DateTime? @db.DateTime
+  UpdatedTimestamp DateTime? @db.DateTime
+  UpdateUserID     String?   @db.VarChar(255)
+}
+
 model tblTaskTypeGroup {
   ID                Int     @id(map: "PK_tblTaskTypeGroup") @default(autoincrement())
   TaskTypeGroupName String? @db.NVarChar(255)

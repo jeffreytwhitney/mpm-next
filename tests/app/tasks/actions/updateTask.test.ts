@@ -1,6 +1,8 @@
 const mockGetTaskById = jest.fn()
 const mockUpdateTaskRecord = jest.fn()
 const mockCreateTaskNote = jest.fn()
+const mockGetProjectById = jest.fn()
+const mockGetQualityEngineerByProjectID = jest.fn()
 const mockRevalidatePath = jest.fn()
 
 jest.mock('@/server/data/task', () => ({
@@ -10,6 +12,11 @@ jest.mock('@/server/data/task', () => ({
 
 jest.mock('@/server/data/taskNote', () => ({
   createTaskNote: (...args: unknown[]) => mockCreateTaskNote(...args),
+}))
+
+jest.mock('@/server/data/project', () => ({
+  getProjectById: (...args: unknown[]) => mockGetProjectById(...args),
+  getQualityEngineerByProjectID: (...args: unknown[]) => mockGetQualityEngineerByProjectID(...args),
 }))
 
 jest.mock('next/cache', () => ({
@@ -179,7 +186,7 @@ describe('updateTask action assignee behavior', () => {
     expect(mockCreateTaskNote).not.toHaveBeenCalled()
   })
 
-  it('requires waitingNote when status is Waiting', async () => {
+  it('requires waitingReason when status is set to Waiting', async () => {
     const formData = buildValidFormData({
       statusId: String(TASK_STATUS_WAITING_ID),
     })
@@ -194,7 +201,7 @@ describe('updateTask action assignee behavior', () => {
     await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
       success: false,
       fieldErrors: {
-        waitingNote: 'Waiting note is required when moving a task to Waiting.',
+        waitingReason: 'Please select a waiting reason.',
       },
     })
 
@@ -205,6 +212,7 @@ describe('updateTask action assignee behavior', () => {
   it('creates a task note when transitioning into Waiting with a note', async () => {
     const formData = buildValidFormData({
       statusId: String(TASK_STATUS_WAITING_ID),
+      waitingReason: 'other',
       waitingNote: 'Waiting on material from supplier.',
     })
 
