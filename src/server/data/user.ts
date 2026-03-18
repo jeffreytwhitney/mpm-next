@@ -47,8 +47,8 @@ export interface UserDropDownOption {
     label: string
 }
 
-
 export type MPMUser = Prisma.tblUserGetPayload<{select: typeof userSelect}>
+
 export type MPMAuthUser = Prisma.tblUserGetPayload<{select: typeof authUserSelect}>
 
 function normalizeIdentifier(identifier: string): string {
@@ -59,6 +59,7 @@ function toSafeUser(user: MPMAuthUser): MPMUser {
     const { Password: _password, ...safeUser } = user
     return safeUser
 }
+
 
 export async function getUserById(id: number): Promise<MPMUser | null> {
     try {
@@ -72,6 +73,7 @@ export async function getUserById(id: number): Promise<MPMUser | null> {
     }
 }
 
+
 export async function getUserByEmployeeNumber(empNum: string): Promise<MPMUser | null> {
     try {
         return await prisma.tblUser.findFirst({
@@ -83,6 +85,7 @@ export async function getUserByEmployeeNumber(empNum: string): Promise<MPMUser |
         throw new Error('Failed to fetch user')
     }
 }
+
 
 export async function getActiveUserForAuth(identifier: string): Promise<MPMAuthUser | null> {
     try {
@@ -108,6 +111,7 @@ export async function getActiveUserForAuth(identifier: string): Promise<MPMAuthU
     }
 }
 
+
 export async function verifyUserCredentials(identifier: string, password: string): Promise<MPMUser | null> {
     const user = await getActiveUserForAuth(identifier)
 
@@ -123,6 +127,7 @@ export async function verifyUserCredentials(identifier: string, password: string
 
     return toSafeUser(user)
 }
+
 
 export async function getMetrologyProgrammerUsers(siteID: number): Promise<MPMUser[]> {
     try {
@@ -140,6 +145,7 @@ export async function getMetrologyProgrammerUsers(siteID: number): Promise<MPMUs
         throw new Error('Failed to fetch user')
     }
 }
+
 
 export async function getMetrologyUsers(siteID: number): Promise<MPMUser[]> {
     try {
@@ -162,6 +168,7 @@ export async function getMetrologyUsers(siteID: number): Promise<MPMUser[]> {
     }
 }
 
+
 export async function getUsersByDepartmentAndUserTypeID(departmentID: number, userTypeID: number): Promise<MPMUser[]> {
     try{
         return await prisma.tblUser.findMany({
@@ -177,6 +184,7 @@ export async function getUsersByDepartmentAndUserTypeID(departmentID: number, us
         throw new Error('Failed to fetch usersByDepartmentAndUserTypeID');
     }
 }
+
 
 export async function getUsersBySiteIDAndUserTypeID(siteID: number, userTypeID: number): Promise<MPMUser[]> {
     try{
@@ -197,8 +205,10 @@ export async function getUsersBySiteIDAndUserTypeID(siteID: number, userTypeID: 
     }
 }
 
+
 //These are all for dropdowns
 const configuredSiteIDs = SITE_OPTIONS.map((site) => Number(site.id)).filter(Number.isInteger)
+
 
 export async function getMetrologyProgrammerDropdownOptions(): Promise<UserDropDownOption[]> {
     try {
@@ -232,6 +242,7 @@ export async function getMetrologyProgrammerDropdownOptions(): Promise<UserDropD
     }
 }
 
+
 export async function getMetrologyUserDropdownOptions(siteID: number): Promise<UserDropDownOption[]> {
     try {
         const metrologyUsers = await prisma.tblUser.findMany({
@@ -264,6 +275,7 @@ export async function getMetrologyUserDropdownOptions(siteID: number): Promise<U
     }
 }
 
+
 export async function getQualityEngineerDropdownOptions(departmentID: number): Promise<UserDropDownOption[]> {
     try {
         const qeUsers = await prisma.tblUser.findMany({
@@ -293,6 +305,7 @@ export async function getQualityEngineerDropdownOptions(departmentID: number): P
     }
 }
 
+
 export async function getManufacturingEngineerDropdownOptions(departmentID: number): Promise<UserDropDownOption[]> {
     try {
         const meUsers = await prisma.tblUser.findMany({
@@ -321,6 +334,7 @@ export async function getManufacturingEngineerDropdownOptions(departmentID: numb
         throw new Error('Failed to fetch user')
     }
 }
+
 
 export async function getCellLeadDropdownOptions(departmentID: number): Promise<UserDropDownOption[]> {
     try {

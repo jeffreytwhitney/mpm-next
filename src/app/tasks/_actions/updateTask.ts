@@ -1,16 +1,30 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { isRevertingToNotStarted, TASK_STATUS_NOT_STARTED_ID } from '@/lib/taskStatusTransition'
+import {
+  isRevertingToNotStarted,
+  shouldSetDateStartedForTransition,
+  TASK_STATUS_NOT_STARTED_ID,
+} from '@/lib/taskStatusTransition'
 import { getTaskById, updateTask as updateTaskRecord } from '@/server/data/task'
 import type { UpdateTaskFieldErrors, UpdateTaskState } from '@/app/tasks/_actions/updateTaskTypes'
 import { parseDateValue } from '@/lib/date'
 
-export async function updateTask(
-  taskId: number,
-  _prevState: UpdateTaskState,
-  formData: FormData,
-): Promise<UpdateTaskState> {
+interface ParsedUpdateTaskForm {
+  statusId: number
+  assigneeId: number | null
+  dueDate: Date
+  scheduledDueDate: Date
+  taskName: string
+  manufacturingRev: string
+  drawingNumber: string
+  operation: string
+  manualDueDate: 0 | 1
+}
+
+function validateAndParseUpdateTaskForm(formData: FormData):
+  | { parsed: ParsedUpdateTaskForm }
+  | { errorState: UpdateTaskState } {
   const statusValue = String(formData.get('statusId') ?? '').trim()
   const assigneeValue = String(formData.get('assigneeID') ?? '').trim()
   const dueDateValue = String(formData.get('dueDate') ?? '').trim()
@@ -19,7 +33,7 @@ export async function updateTask(
   const manufacturingRevValue = String(formData.get('manufacturingRev') ?? '').trim()
   const drawingNumberValue = String(formData.get('drawingNumber') ?? '').trim()
   const opNumberValue = String(formData.get('opNumber') ?? '').trim()
-
+  const manualDueDateValue: 0 | 1 = formData.get('manualDueDate') === 'on' ? 1 : 0
 
   const fieldErrors: UpdateTaskFieldErrors = {}
 
@@ -44,17 +58,21 @@ export async function updateTask(
 
   if (Object.keys(fieldErrors).length > 0) {
     return {
-      success: false,
-      fieldErrors,
+      errorState: {
+        success: false,
+        fieldErrors,
+      },
     }
   }
 
   const parsedStatusId = Number(statusValue)
   if (!Number.isInteger(parsedStatusId)) {
     return {
-      success: false,
-      fieldErrors: {
-        statusId: 'Status is invalid.',
+      errorState: {
+        success: false,
+        fieldErrors: {
+          statusId: 'Status is invalid.',
+        },
       },
     }
   }
@@ -62,18 +80,22 @@ export async function updateTask(
   const parsedAssigneeId = assigneeValue.length > 0 ? Number(assigneeValue) : null
   if (assigneeValue.length > 0 && (!Number.isInteger(parsedAssigneeId) || (parsedAssigneeId ?? 0) <= 0)) {
     return {
-      success: false,
-      fieldErrors: {
-        assigneeID: 'Assignee is invalid.',
+      errorState: {
+        success: false,
+        fieldErrors: {
+          assigneeID: 'Assignee is invalid.',
+        },
       },
     }
   }
 
   if (parsedStatusId !== TASK_STATUS_NOT_STARTED_ID && parsedAssigneeId == null) {
     return {
-      success: false,
-      fieldErrors: {
-        assigneeID: 'Cannot have a status other than Not Started without an assignee.',
+      errorState: {
+        success: false,
+        fieldErrors: {
+          assigneeID: 'Cannot have a status other than Not Started without an assignee.',
+        },
       },
     }
   }
@@ -83,13 +105,52 @@ export async function updateTask(
 
   if (!parsedDueDate || !parsedScheduledDueDate) {
     return {
-      success: false,
-      fieldErrors: {
-        ...(parsedDueDate ? {} : { dueDate: 'Due date is invalid.' }),
-        ...(parsedScheduledDueDate ? {} : { scheduledDueDate: 'Scheduled due date is invalid.' }),
+      errorState: {
+        success: false,
+        fieldErrors: {
+          ...(parsedDueDate ? {} : { dueDate: 'Due date is invalid.' }),
+          ...(parsedScheduledDueDate ? {} : { scheduledDueDate: 'Scheduled due date is invalid.' }),
+        },
       },
     }
   }
+
+  return {
+    parsed: {
+      statusId: parsedStatusId,
+      assigneeId: parsedAssigneeId,
+      dueDate: parsedDueDate,
+      scheduledDueDate: parsedScheduledDueDate,
+      taskName: taskNameValue,
+      manufacturingRev: manufacturingRevValue,
+      drawingNumber: drawingNumberValue,
+      operation: opNumberValue,
+      manualDueDate: manualDueDateValue,
+    },
+  }
+}
+
+export async function updateTask(
+  taskId: number,
+  _prevState: UpdateTaskState,
+  formData: FormData,
+): Promise<UpdateTaskState> {
+  const validationResult = validateAndParseUpdateTaskForm(formData)
+  if ('errorState' in validationResult) {
+    return validationResult.errorState
+  }
+
+  const {
+    statusId,
+    assigneeId,
+    dueDate,
+    scheduledDueDate,
+    taskName,
+    manufacturingRev,
+    drawingNumber,
+    operation,
+    manualDueDate,
+  } = validationResult.parsed
 
   try {
     const currentTask = await getTaskById(taskId)
@@ -101,7 +162,7 @@ export async function updateTask(
       }
     }
 
-    if (isRevertingToNotStarted(currentTask.StatusID, parsedStatusId)) {
+    if (isRevertingToNotStarted(currentTask.StatusID, statusId)) {
       return {
         success: false,
         fieldErrors: {
@@ -110,7 +171,7 @@ export async function updateTask(
       }
     }
 
-    if (currentTask.AssignedToID && parsedAssigneeId == null) {
+    if (currentTask.AssignedToID && assigneeId == null) {
       return {
         success: false,
         fieldErrors: {
@@ -119,15 +180,20 @@ export async function updateTask(
       }
     }
 
+    const shouldSetDateStarted =
+      currentTask.DateStarted == null && shouldSetDateStartedForTransition(currentTask.StatusID, statusId)
+
     const update: Parameters<typeof updateTaskRecord>[1] = {
-      StatusID: parsedStatusId,
-      AssignedToID: parsedAssigneeId,
-      DueDate: parsedDueDate,
-      ScheduledDueDate: parsedScheduledDueDate,
-      TaskName: taskNameValue,
-      ManufacturingRev: manufacturingRevValue || null,
-      DrawingNumber: drawingNumberValue || null,
-      Operation: opNumberValue,
+      StatusID: statusId,
+      AssignedToID: assigneeId,
+      DueDate: dueDate,
+      ScheduledDueDate: scheduledDueDate,
+      TaskName: taskName,
+      ManufacturingRev: manufacturingRev || null,
+      DrawingNumber: drawingNumber || null,
+      Operation: operation,
+      ManualDueDate: manualDueDate,
+      ...(shouldSetDateStarted ? { DateStarted: new Date() } : {}),
     }
 
     const updatedTask = await updateTaskRecord(taskId, update)

@@ -1,6 +1,7 @@
 import {prisma} from "@/lib/prisma";
 import type {Prisma} from "@/generated/prisma/client";
 import {Prisma as PrismaNamespace} from "@/generated/prisma/client";
+import {getUserById, type MPMUser} from "@/server/data/user";
 
 const projectSelect = {
     ID: true,
@@ -38,6 +39,42 @@ export async function getProjectById(id: number): Promise<ProjectItem> {
     } catch (error) {
         console.error('Error fetching project:', error)
         throw new Error('Failed to fetch project')
+    }
+}
+
+export async function getQualityEngineerByProjectID(projectID: number): Promise<MPMUser | null> {
+    try {
+        const project = await prisma.tblProject.findFirst({
+            select: {SecondaryProjectOwnerID: true},
+            where: {ID: projectID},
+        })
+
+        if (!project || project.SecondaryProjectOwnerID == null) {
+            return null
+        }
+
+        return await getUserById(project.SecondaryProjectOwnerID)
+    } catch (error) {
+        console.error('Error fetching quality engineer by project ID:', error)
+        throw new Error('Failed to fetch quality engineer by project ID')
+    }
+}
+
+export async function getManufacturingEngineerByProjectID(projectID: number): Promise<MPMUser | null> {
+    try {
+        const project = await prisma.tblProject.findFirst({
+            select: {PrimaryProjectOwnerID: true},
+            where: {ID: projectID},
+        })
+
+        if (!project || project.PrimaryProjectOwnerID == null) {
+            return null
+        }
+
+        return await getUserById(project.PrimaryProjectOwnerID)
+    } catch (error) {
+        console.error('Error fetching manufacturing engineer by project ID:', error)
+        throw new Error('Failed to fetch manufacturing engineer by project ID')
     }
 }
 

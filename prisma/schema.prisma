@@ -80,7 +80,7 @@ model tblProject {
   SiteID                  Int?
   ProjectName             String?   @db.NVarChar(255)
   ProjectDescription      String?   @db.NText
-  DepartmentID            Int?
+  DepartmentID            Int
   PrimaryProjectOwnerID   Int?
   SecondaryProjectOwnerID Int?
   TertiaryProjectOwnerID  Int?

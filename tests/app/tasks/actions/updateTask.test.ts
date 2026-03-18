@@ -11,7 +11,12 @@ jest.mock('next/cache', () => ({
   revalidatePath: (...args: unknown[]) => mockRevalidatePath(...args),
 }))
 
-import { TASK_STATUS_NOT_STARTED_ID, TASK_STATUS_STARTED_ID } from '@/lib/taskStatusTransition'
+import {
+  TASK_STATUS_NOT_SCHEDULED_ID,
+  TASK_STATUS_NOT_STARTED_ID,
+  TASK_STATUS_STARTED_ID,
+  TASK_STATUS_WAITING_ID,
+} from '@/lib/taskStatusTransition'
 import { updateTask } from '@/app/tasks/_actions/updateTask'
 
 function buildValidFormData(overrides?: Record<string, string>): FormData {
@@ -23,6 +28,7 @@ function buildValidFormData(overrides?: Record<string, string>): FormData {
   formData.set('opNumber', '20')
   formData.set('dueDate', '2026-03-20')
   formData.set('scheduledDueDate', '2026-03-19')
+  formData.set('manufacturingRev', 'A')
   formData.set('drawingNumber', 'DWG-2001')
 
   if (overrides) {
@@ -138,6 +144,90 @@ describe('updateTask action assignee behavior', () => {
         AssignedToID: null,
       }),
     )
+  })
+
+  it('sets DateStarted when moving from Not Started to Started and DateStarted is blank', async () => {
+    const formData = buildValidFormData({ statusId: String(TASK_STATUS_STARTED_ID) })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_NOT_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+
+    await updateTask(100, { success: false, fieldErrors: {} }, formData)
+
+    expect(mockUpdateTaskRecord).toHaveBeenCalledWith(
+      100,
+      expect.objectContaining({
+        StatusID: TASK_STATUS_STARTED_ID,
+        DateStarted: expect.any(Date),
+      }),
+    )
+  })
+
+  it('sets DateStarted when moving from Waiting to Started and DateStarted is blank', async () => {
+    const formData = buildValidFormData({ statusId: String(TASK_STATUS_STARTED_ID) })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_WAITING_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+
+    await updateTask(100, { success: false, fieldErrors: {} }, formData)
+
+    expect(mockUpdateTaskRecord).toHaveBeenCalledWith(
+      100,
+      expect.objectContaining({
+        StatusID: TASK_STATUS_STARTED_ID,
+        DateStarted: expect.any(Date),
+      }),
+    )
+  })
+
+  it('sets DateStarted when moving from Not Scheduled to Started and DateStarted is blank', async () => {
+    const formData = buildValidFormData({ statusId: String(TASK_STATUS_STARTED_ID) })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_NOT_SCHEDULED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+
+    await updateTask(100, { success: false, fieldErrors: {} }, formData)
+
+    expect(mockUpdateTaskRecord).toHaveBeenCalledWith(
+      100,
+      expect.objectContaining({
+        StatusID: TASK_STATUS_STARTED_ID,
+        DateStarted: expect.any(Date),
+      }),
+    )
+  })
+
+  it('does not overwrite existing DateStarted', async () => {
+    const formData = buildValidFormData({ statusId: String(TASK_STATUS_STARTED_ID) })
+    const existingDate = new Date('2026-03-01T00:00:00.000Z')
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_NOT_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: existingDate,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+
+    await updateTask(100, { success: false, fieldErrors: {} }, formData)
+
+    const updatePayload = mockUpdateTaskRecord.mock.calls[0][1]
+    expect(updatePayload).not.toHaveProperty('DateStarted')
   })
 })
 

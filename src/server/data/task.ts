@@ -51,7 +51,7 @@ export async function getTasksByProjectId(projectId: number): Promise<TaskItem[]
 
 export interface TaskCreateInput {
     ProjectID: number
-    StatusID?: number | null
+    StatusID: number
     TaskName?: string | null
     DrawingNumber?: string | null
     DueDate?: Date | null
@@ -66,6 +66,7 @@ export interface TaskCreateInput {
     ManualDueDate?: number | null
     UpdateUserID?: string | null
     CurrentlyRunning?: number
+    JobNumber?: string | null
 }
 
 export type TaskUpdateInput = Partial<TaskCreateInput>

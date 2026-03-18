@@ -25,10 +25,18 @@ jest.mock('@/generated/prisma/client', () => {
   }
 })
 
+const mockGetUserById = jest.fn()
+
+jest.mock('@/server/data/user', () => ({
+  getUserById: (...args: unknown[]) => mockGetUserById(...args),
+}))
+
 import {prisma} from '@/lib/prisma'
 import {Prisma as PrismaNamespace} from '@/generated/prisma/client'
 import {
   createProject,
+  getManufacturingEngineerByProjectID,
+  getQualityEngineerByProjectID,
   getProjectById,
   updateProject,
   type ProjectCreateInput,
@@ -96,6 +104,69 @@ describe('projectActions', () => {
     mockFindFirstProject.mockRejectedValueOnce(new Error('db fail'))
 
     await expect(getProjectById(1)).rejects.toThrow('Failed to fetch project')
+  })
+
+  it('loads the quality engineer by SecondaryProjectOwnerID', async () => {
+    mockFindFirstProject.mockResolvedValueOnce({ SecondaryProjectOwnerID: 50 })
+    mockGetUserById.mockResolvedValueOnce({ ID: 50 })
+
+    const result = await getQualityEngineerByProjectID(8)
+
+    expect(mockFindFirstProject).toHaveBeenCalledWith({
+      select: { SecondaryProjectOwnerID: true },
+      where: { ID: 8 },
+    })
+    expect(mockGetUserById).toHaveBeenCalledWith(50)
+    expect(result).toEqual({ ID: 50 })
+  })
+
+  it('returns null when project does not exist for quality engineer lookup', async () => {
+    mockFindFirstProject.mockResolvedValueOnce(null)
+
+    await expect(getQualityEngineerByProjectID(999_999)).resolves.toBeNull()
+    expect(mockGetUserById).not.toHaveBeenCalled()
+  })
+
+  it('returns null when SecondaryProjectOwnerID is null for quality engineer lookup', async () => {
+    mockFindFirstProject.mockResolvedValueOnce({ SecondaryProjectOwnerID: null })
+
+    await expect(getQualityEngineerByProjectID(7)).resolves.toBeNull()
+    expect(mockGetUserById).not.toHaveBeenCalled()
+  })
+
+  it('throws a consistent error when quality engineer lookup fails', async () => {
+    mockFindFirstProject.mockResolvedValueOnce({ SecondaryProjectOwnerID: 2 })
+    mockGetUserById.mockRejectedValueOnce(new Error('db fail'))
+
+    await expect(getQualityEngineerByProjectID(44)).rejects.toThrow('Failed to fetch quality engineer by project ID')
+  })
+
+  it('loads the manufacturing engineer by PrimaryProjectOwnerID', async () => {
+    mockFindFirstProject.mockResolvedValueOnce({ PrimaryProjectOwnerID: 88 })
+    mockGetUserById.mockResolvedValueOnce({ ID: 88 })
+
+    const result = await getManufacturingEngineerByProjectID(10)
+
+    expect(mockFindFirstProject).toHaveBeenCalledWith({
+      select: { PrimaryProjectOwnerID: true },
+      where: { ID: 10 },
+    })
+    expect(mockGetUserById).toHaveBeenCalledWith(88)
+    expect(result).toEqual({ ID: 88 })
+  })
+
+  it('returns null when PrimaryProjectOwnerID is null for manufacturing engineer lookup', async () => {
+    mockFindFirstProject.mockResolvedValueOnce({ PrimaryProjectOwnerID: null })
+
+    await expect(getManufacturingEngineerByProjectID(10)).resolves.toBeNull()
+    expect(mockGetUserById).not.toHaveBeenCalled()
+  })
+
+  it('throws a consistent error when manufacturing engineer lookup fails', async () => {
+    mockFindFirstProject.mockResolvedValueOnce({ PrimaryProjectOwnerID: 9 })
+    mockGetUserById.mockRejectedValueOnce(new Error('db fail'))
+
+    await expect(getManufacturingEngineerByProjectID(10)).rejects.toThrow('Failed to fetch manufacturing engineer by project ID')
   })
 
   it('creates a project with CreatedTimestamp and UpdatedTimestamp set to now', async () => {

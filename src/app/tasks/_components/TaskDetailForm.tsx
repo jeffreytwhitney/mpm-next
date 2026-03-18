@@ -8,15 +8,13 @@ import {
 } from '@/app/tasks/_actions/updateTaskTypes'
 import { TASK_DETAIL_SAVED_EVENT } from '@/lib/taskDetailEvents'
 import { isRevertingToNotStarted } from '@/lib/taskStatusTransition'
-import type { TaskItem } from '@/server/data/task'
-import type { ProjectItem } from '@/server/data/project'
+import type { TaskDetailModel } from '@/server/data/taskDetail'
 import type { TaskStatusDropdownOption } from '@/server/data/taskStatus'
-import type { UserDropDownOption} from '@/server/data/user'
+import type { UserDropDownOption } from '@/server/data/user'
 
 interface TaskDetailFormProps {
     taskId: number
-    task: TaskItem
-    project: ProjectItem
+    taskDetail: TaskDetailModel
     statusOptions: TaskStatusDropdownOption[]
     assigneeOptions: UserDropDownOption[]
     canSubmit: boolean
@@ -32,7 +30,7 @@ function toDateInputValue(value: Date | null | undefined) {
 
 function validateForm(
     formData: FormData,
-    task: TaskItem,
+    task: TaskDetailModel['task'],
     isMetrologyProgrammer: boolean
 ): FieldErrors {
     const errors: FieldErrors = {}
@@ -85,13 +83,13 @@ function validateForm(
 
 export function TaskDetailForm({
     taskId,
-    task,
-    project,
+    taskDetail,
     statusOptions,
     assigneeOptions,
     canSubmit,
     isMetrologyProgrammer,
 }: TaskDetailFormProps) {
+    const { task, project } = taskDetail
     const [errors, setErrors] = useState<FieldErrors>({})
     const [serverState, updateTaskAction, isPending] = useActionState(
         updateTask.bind(null, taskId),
@@ -130,6 +128,9 @@ export function TaskDetailForm({
             <div className="grid grid-cols-[12rem_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
                 <span className="font-semibold pt-1">Ticket Number</span>
                 <span className="pt-1">{project.TicketNumber ?? ''}</span>
+
+                <span className="font-semibold pt-1">Ticket Name</span>
+                <span className="pt-1">{project.ProjectName ?? ''}</span>
 
                 <span className="font-semibold pt-1">Ticket Description:</span>
                 <span className="pt-1">{project.ProjectDescription ?? ''}</span>
@@ -198,6 +199,9 @@ export function TaskDetailForm({
                         <p className="mt-0.5 text-xs text-red-600">{displayErrors.opNumber}</p>
                     )}
                 </div>
+
+                <span className="font-semibold pt-1">Job Number</span>
+                <span className="pt-1">{taskDetail.jobNumber ?? ''}</span>
 
                 {/* Status */}
                 <label htmlFor="statusId" className="font-semibold pt-1">
@@ -302,7 +306,52 @@ export function TaskDetailForm({
                         <p className="mt-0.5 text-xs text-red-600">{displayErrors.scheduledDueDate}</p>
                     )}
                 </div>
+
+                {/* Manual Due Date */}
+                <label htmlFor="manualDueDate" className="font-semibold pt-1">
+                    Manual Due Date
+                </label>
+                <div className="pt-1">
+                    <input
+                        type="checkbox"
+                        id="manualDueDate"
+                        name="manualDueDate"
+                        defaultChecked={(task.ManualDueDate ?? 0) === 1}
+                        disabled={!canSubmit}
+                        className="h-4 w-4 rounded border-gray-300 disabled:opacity-50"
+                        suppressHydrationWarning
+                    />
+                </div>
+                
+                <span className="font-semibold pt-1">Date Started</span>
+                <span className="pt-1">
+                    {task.DateStarted ? new Date(task.DateStarted).toLocaleDateString('en-US') : ''}
+                </span>
+
+                {(task.StatusID === 4 || task.StatusID === 5) && (
+                    <>
+                        <span className="font-semibold pt-1">Date Completed</span>
+                        <span className="pt-1">
+                            {task.DateCompleted ? new Date(task.DateCompleted).toLocaleDateString('en-US') : ''}
+                        </span>
+                    </>
+                )}
+
+                <span className="font-semibold pt-1">Total Tracked Hours</span>
+                <span className="pt-1">{taskDetail.totalTrackedHours ?? '0'}</span>
+
+                <span className="font-semibold pt-1">Department</span>
+                <span className="pt-1">{taskDetail.departmentName ?? ''}</span>
+
+                <span className="font-semibold pt-1">Quality Engineer</span>
+                <span className="pt-1">{taskDetail.qualityEngineerName ?? ''}</span>
+
+                <span className="font-semibold pt-1">Manufacturing Engineer</span>
+                <span className="pt-1">{taskDetail.manufacturingEngineerName ?? ''}</span>
+
             </div>
+
+
 
             {serverState.formError && (
                 <p className="text-sm text-red-600">{serverState.formError}</p>
