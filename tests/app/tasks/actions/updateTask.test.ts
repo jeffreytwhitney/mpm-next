@@ -1,5 +1,6 @@
 const mockGetTaskById = jest.fn()
 const mockUpdateTaskRecord = jest.fn()
+const mockCreateTaskNote = jest.fn()
 const mockRevalidatePath = jest.fn()
 
 jest.mock('@/server/data/task', () => ({
@@ -7,11 +8,17 @@ jest.mock('@/server/data/task', () => ({
   updateTask: (...args: unknown[]) => mockUpdateTaskRecord(...args),
 }))
 
+jest.mock('@/server/data/taskNote', () => ({
+  createTaskNote: (...args: unknown[]) => mockCreateTaskNote(...args),
+}))
+
 jest.mock('next/cache', () => ({
   revalidatePath: (...args: unknown[]) => mockRevalidatePath(...args),
 }))
 
 import {
+  TASK_STATUS_CANCELLED_ID,
+  TASK_STATUS_COMPLETED_ID,
   TASK_STATUS_NOT_SCHEDULED_ID,
   TASK_STATUS_NOT_STARTED_ID,
   TASK_STATUS_STARTED_ID,
@@ -118,6 +125,7 @@ describe('updateTask action assignee behavior', () => {
     )
     expect(mockRevalidatePath).toHaveBeenCalledWith('/tasks')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/tasks/100')
+    expect(mockCreateTaskNote).not.toHaveBeenCalled()
   })
 
   it('allows null assignee for Not Started when task was previously unassigned', async () => {
@@ -144,6 +152,242 @@ describe('updateTask action assignee behavior', () => {
         AssignedToID: null,
       }),
     )
+    expect(mockCreateTaskNote).not.toHaveBeenCalled()
+  })
+
+  it('blocks moving Waiting back to Not Started', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_NOT_STARTED_ID),
+      assigneeID: '',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_WAITING_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {
+        statusId: 'Cannot move a Started or Waiting task back to Not Started.',
+      },
+    })
+
+    expect(mockUpdateTaskRecord).not.toHaveBeenCalled()
+    expect(mockCreateTaskNote).not.toHaveBeenCalled()
+  })
+
+  it('requires waitingNote when status is Waiting', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_WAITING_ID),
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {
+        waitingNote: 'Waiting note is required when moving a task to Waiting.',
+      },
+    })
+
+    expect(mockUpdateTaskRecord).not.toHaveBeenCalled()
+    expect(mockCreateTaskNote).not.toHaveBeenCalled()
+  })
+
+  it('creates a task note when transitioning into Waiting with a note', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_WAITING_ID),
+      waitingNote: 'Waiting on material from supplier.',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+    mockCreateTaskNote.mockResolvedValueOnce({ ID: 1 })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: true,
+      fieldErrors: {},
+    })
+
+    expect(mockCreateTaskNote).toHaveBeenCalledWith({
+      TaskID: 100,
+      TaskNote: 'Waiting on material from supplier.',
+    })
+  })
+
+  it('does not require waitingNote when status remains Waiting', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_WAITING_ID),
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_WAITING_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: true,
+      fieldErrors: {},
+    })
+
+    expect(mockUpdateTaskRecord).toHaveBeenCalled()
+    expect(mockCreateTaskNote).not.toHaveBeenCalled()
+  })
+
+  it('does not create a note when status remains Waiting and note is provided', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_WAITING_ID),
+      waitingNote: 'Still waiting on customer response.',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_WAITING_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+    mockCreateTaskNote.mockResolvedValueOnce({ ID: 2 })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: true,
+      fieldErrors: {},
+    })
+
+    expect(mockCreateTaskNote).not.toHaveBeenCalled()
+  })
+
+  it('requires cancelledNote when moving active task to Cancelled', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_CANCELLED_ID),
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {
+        cancelledNote: 'Cancelled note is required when setting status to Cancelled.',
+      },
+    })
+
+    expect(mockUpdateTaskRecord).not.toHaveBeenCalled()
+    expect(mockCreateTaskNote).not.toHaveBeenCalled()
+  })
+
+  it('creates a note when moving active task to Cancelled with note', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_CANCELLED_ID),
+      cancelledNote: 'Cancelled due to customer request.',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_WAITING_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+    mockCreateTaskNote.mockResolvedValueOnce({ ID: 3 })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: true,
+      fieldErrors: {},
+    })
+
+    expect(mockCreateTaskNote).toHaveBeenCalledWith({
+      TaskID: 100,
+      TaskNote: 'Cancelled due to customer request.',
+    })
+  })
+
+  it('does not require or create a note when task is already Cancelled', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_CANCELLED_ID),
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_CANCELLED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: true,
+      fieldErrors: {},
+    })
+
+    expect(mockCreateTaskNote).not.toHaveBeenCalled()
+  })
+
+  it('does not require completedNote when moving active task to Completed', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_COMPLETED_ID),
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: true,
+      fieldErrors: {},
+    })
+
+    expect(mockCreateTaskNote).not.toHaveBeenCalled()
+  })
+
+  it('creates a note when moving active task to Completed with note text', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_COMPLETED_ID),
+      completedNote: 'Completed after final inspection.',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_WAITING_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+    mockCreateTaskNote.mockResolvedValueOnce({ ID: 4 })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: true,
+      fieldErrors: {},
+    })
+
+    expect(mockCreateTaskNote).toHaveBeenCalledWith({
+      TaskID: 100,
+      TaskNote: 'Completed after final inspection.',
+    })
   })
 
   it('sets DateStarted when moving from Not Started to Started and DateStarted is blank', async () => {

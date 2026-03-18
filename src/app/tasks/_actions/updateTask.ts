@@ -2,11 +2,16 @@
 
 import { revalidatePath } from 'next/cache'
 import {
+  isActiveTaskStatus,
+  TASK_STATUS_CANCELLED_ID,
+  TASK_STATUS_COMPLETED_ID,
   isRevertingToNotStarted,
   shouldSetDateStartedForTransition,
   TASK_STATUS_NOT_STARTED_ID,
+  TASK_STATUS_WAITING_ID,
 } from '@/lib/taskStatusTransition'
 import { getTaskById, updateTask as updateTaskRecord } from '@/server/data/task'
+import { createTaskNote } from '@/server/data/taskNote'
 import type { UpdateTaskFieldErrors, UpdateTaskState } from '@/app/tasks/_actions/updateTaskTypes'
 import { parseDateValue } from '@/lib/date'
 
@@ -20,6 +25,9 @@ interface ParsedUpdateTaskForm {
   drawingNumber: string
   operation: string
   manualDueDate: 0 | 1
+  waitingNote: string
+  cancelledNote: string
+  completedNote: string
 }
 
 function validateAndParseUpdateTaskForm(formData: FormData):
@@ -34,6 +42,9 @@ function validateAndParseUpdateTaskForm(formData: FormData):
   const drawingNumberValue = String(formData.get('drawingNumber') ?? '').trim()
   const opNumberValue = String(formData.get('opNumber') ?? '').trim()
   const manualDueDateValue: 0 | 1 = formData.get('manualDueDate') === 'on' ? 1 : 0
+  const waitingNoteValue = String(formData.get('waitingNote') ?? '').trim()
+  const cancelledNoteValue = String(formData.get('cancelledNote') ?? '').trim()
+  const completedNoteValue = String(formData.get('completedNote') ?? '').trim()
 
   const fieldErrors: UpdateTaskFieldErrors = {}
 
@@ -126,6 +137,9 @@ function validateAndParseUpdateTaskForm(formData: FormData):
       drawingNumber: drawingNumberValue,
       operation: opNumberValue,
       manualDueDate: manualDueDateValue,
+      waitingNote: waitingNoteValue,
+      cancelledNote: cancelledNoteValue,
+      completedNote: completedNoteValue,
     },
   }
 }
@@ -150,6 +164,9 @@ export async function updateTask(
     drawingNumber,
     operation,
     manualDueDate,
+    waitingNote,
+    cancelledNote,
+    completedNote,
   } = validationResult.parsed
 
   try {
@@ -180,6 +197,29 @@ export async function updateTask(
       }
     }
 
+    const isTaskCurrentlyActive = isActiveTaskStatus(currentTask.StatusID)
+    const isMarkingWaiting = statusId === TASK_STATUS_WAITING_ID && currentTask.StatusID !== TASK_STATUS_WAITING_ID
+    const isMarkingCancelled = isTaskCurrentlyActive && statusId === TASK_STATUS_CANCELLED_ID
+    const isMarkingCompleted = isTaskCurrentlyActive && statusId === TASK_STATUS_COMPLETED_ID
+
+    if (isMarkingWaiting && !waitingNote) {
+      return {
+        success: false,
+        fieldErrors: {
+          waitingNote: 'Waiting note is required when moving a task to Waiting.',
+        },
+      }
+    }
+
+    if (isMarkingCancelled && !cancelledNote) {
+      return {
+        success: false,
+        fieldErrors: {
+          cancelledNote: 'Cancelled note is required when setting status to Cancelled.',
+        },
+      }
+    }
+
     const shouldSetDateStarted =
       currentTask.DateStarted == null && shouldSetDateStartedForTransition(currentTask.StatusID, statusId)
 
@@ -203,6 +243,27 @@ export async function updateTask(
         fieldErrors: {},
         formError: 'Task was not found.',
       }
+    }
+
+    if (isMarkingWaiting && waitingNote) {
+      await createTaskNote({
+        TaskID: taskId,
+        TaskNote: waitingNote,
+      })
+    }
+
+    if (isMarkingCancelled && cancelledNote) {
+      await createTaskNote({
+        TaskID: taskId,
+        TaskNote: cancelledNote,
+      })
+    }
+
+    if (isMarkingCompleted && completedNote) {
+      await createTaskNote({
+        TaskID: taskId,
+        TaskNote: completedNote,
+      })
     }
 
     revalidatePath('/tasks')

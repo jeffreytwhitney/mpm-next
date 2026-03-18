@@ -7,7 +7,13 @@ import {
     type UpdateTaskFieldErrors,
 } from '@/app/tasks/_actions/updateTaskTypes'
 import { TASK_DETAIL_SAVED_EVENT } from '@/lib/taskDetailEvents'
-import { isRevertingToNotStarted } from '@/lib/taskStatusTransition'
+import {
+    isActiveTaskStatus,
+    isRevertingToNotStarted,
+    TASK_STATUS_CANCELLED_ID,
+    TASK_STATUS_COMPLETED_ID,
+    TASK_STATUS_WAITING_ID,
+} from '@/lib/taskStatusTransition'
 import type { TaskDetailModel } from '@/server/data/taskDetail'
 import type { TaskStatusDropdownOption } from '@/server/data/taskStatus'
 import type { UserDropDownOption } from '@/server/data/user'
@@ -52,6 +58,17 @@ function validateForm(
         } else if (isRevertingToNotStarted(task.StatusID, submittedStatusId)) {
             errors.statusId = 'Cannot move a Started or Waiting task back to Not Started.'
         }
+
+        const isTaskCurrentlyActive = isActiveTaskStatus(task.StatusID)
+        const isMarkingWaiting = submittedStatusId === TASK_STATUS_WAITING_ID && task.StatusID !== TASK_STATUS_WAITING_ID
+        const isMarkingCancelled = isTaskCurrentlyActive && submittedStatusId === TASK_STATUS_CANCELLED_ID
+
+        if (isMarkingWaiting && !formData.get('waitingNote')?.toString().trim()) {
+            errors.waitingNote = 'Waiting note is required when moving a task to Waiting.'
+        }
+        if (isMarkingCancelled && !formData.get('cancelledNote')?.toString().trim()) {
+            errors.cancelledNote = 'Cancelled note is required when setting status to Cancelled.'
+        }
     }
 
     if (isMetrologyProgrammer) {
@@ -90,6 +107,7 @@ export function TaskDetailForm({
     isMetrologyProgrammer,
 }: TaskDetailFormProps) {
     const { task, project } = taskDetail
+    const [selectedStatusId, setSelectedStatusId] = useState<number>(task.StatusID)
     const [errors, setErrors] = useState<FieldErrors>({})
     const [serverState, updateTaskAction, isPending] = useActionState(
         updateTask.bind(null, taskId),
@@ -106,6 +124,10 @@ export function TaskDetailForm({
 
     const selectedStatusValue = task.StatusID != null ? String(task.StatusID) : ''
     const selectedAssigneeValue = task.AssignedToID != null ? String(task.AssignedToID) : ''
+    const isTaskCurrentlyActive = isActiveTaskStatus(task.StatusID)
+    const isMarkingWaiting = isMetrologyProgrammer && selectedStatusId === TASK_STATUS_WAITING_ID && task.StatusID !== TASK_STATUS_WAITING_ID
+    const isMarkingCancelled = isMetrologyProgrammer && isTaskCurrentlyActive && selectedStatusId === TASK_STATUS_CANCELLED_ID
+    const isMarkingCompleted = isMetrologyProgrammer && isTaskCurrentlyActive && selectedStatusId === TASK_STATUS_COMPLETED_ID
     const displayErrors: FieldErrors = {
         ...serverState.fieldErrors,
         ...errors,
@@ -213,6 +235,7 @@ export function TaskDetailForm({
                             id="statusId"
                             name="statusId"
                             defaultValue={selectedStatusValue}
+                            onChange={(event) => setSelectedStatusId(Number(event.target.value))}
                             className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
                             suppressHydrationWarning
                         >
@@ -235,6 +258,68 @@ export function TaskDetailForm({
                         <p className="mt-0.5 text-xs text-red-600">{displayErrors.statusId}</p>
                     )}
                 </div>
+
+                {isMarkingWaiting && (
+                    <>
+                        <label htmlFor="waitingNote" className="font-semibold pt-1">
+                            Waiting Note <span className="text-red-500">*</span>
+                        </label>
+                        <div>
+                            <textarea
+                                id="waitingNote"
+                                name="waitingNote"
+                                rows={3}
+                                required
+                                className="rounded border border-gray-300 bg-white px-2 py-1 w-72"
+                                suppressHydrationWarning
+                            />
+                            {displayErrors.waitingNote && (
+                                <p className="mt-0.5 text-xs text-red-600">{displayErrors.waitingNote}</p>
+                            )}
+                        </div>
+                    </>
+                )}
+
+                {isMarkingCancelled && (
+                    <>
+                        <label htmlFor="cancelledNote" className="font-semibold pt-1">
+                            Cancelled Note <span className="text-red-500">*</span>
+                        </label>
+                        <div>
+                            <textarea
+                                id="cancelledNote"
+                                name="cancelledNote"
+                                rows={3}
+                                required
+                                className="rounded border border-gray-300 bg-white px-2 py-1 w-72"
+                                suppressHydrationWarning
+                            />
+                            {displayErrors.cancelledNote && (
+                                <p className="mt-0.5 text-xs text-red-600">{displayErrors.cancelledNote}</p>
+                            )}
+                        </div>
+                    </>
+                )}
+
+                {isMarkingCompleted && (
+                    <>
+                        <label htmlFor="completedNote" className="font-semibold pt-1">
+                            Completed Note
+                        </label>
+                        <div>
+                            <textarea
+                                id="completedNote"
+                                name="completedNote"
+                                rows={3}
+                                className="rounded border border-gray-300 bg-white px-2 py-1 w-72"
+                                suppressHydrationWarning
+                            />
+                            {displayErrors.completedNote && (
+                                <p className="mt-0.5 text-xs text-red-600">{displayErrors.completedNote}</p>
+                            )}
+                        </div>
+                    </>
+                )}
 
                 {/* Assignee */}
                 <label htmlFor="assigneeId" className="font-semibold pt-1">
