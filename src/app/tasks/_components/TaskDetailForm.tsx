@@ -63,8 +63,11 @@ function validateForm(
         const isMarkingWaiting = submittedStatusId === TASK_STATUS_WAITING_ID && task.StatusID !== TASK_STATUS_WAITING_ID
         const isMarkingCancelled = isTaskCurrentlyActive && submittedStatusId === TASK_STATUS_CANCELLED_ID
 
-        if (isMarkingWaiting && !formData.get('waitingNote')?.toString().trim()) {
-            errors.waitingNote = 'Waiting note is required when moving a task to Waiting.'
+        if (isMarkingWaiting && !formData.get('waitingReason')?.toString().trim()) {
+            errors.waitingReason = 'Please select a waiting reason.'
+        }
+        if (isMarkingWaiting && formData.get('waitingReason')?.toString() === 'other' && !formData.get('waitingNote')?.toString().trim()) {
+            errors.waitingNote = 'Waiting note is required when selecting "Other".'
         }
         if (isMarkingCancelled && !formData.get('cancelledNote')?.toString().trim()) {
             errors.cancelledNote = 'Cancelled note is required when setting status to Cancelled.'
@@ -108,6 +111,7 @@ export function TaskDetailForm({
 }: TaskDetailFormProps) {
     const { task, project } = taskDetail
     const [selectedStatusId, setSelectedStatusId] = useState<number>(task.StatusID)
+    const [waitingReason, setWaitingReason] = useState<string>('')
     const [errors, setErrors] = useState<FieldErrors>({})
     const [serverState, updateTaskAction, isPending] = useActionState(
         updateTask.bind(null, taskId),
@@ -261,22 +265,49 @@ export function TaskDetailForm({
 
                 {isMarkingWaiting && (
                     <>
-                        <label htmlFor="waitingNote" className="font-semibold pt-1">
-                            Waiting Note <span className="text-red-500">*</span>
+                        <label htmlFor="waitingReason" className="font-semibold pt-1">
+                            Waiting Reason <span className="text-red-500">*</span>
                         </label>
                         <div>
-                            <textarea
-                                id="waitingNote"
-                                name="waitingNote"
-                                rows={3}
-                                required
+                            <select
+                                id="waitingReason"
+                                name="waitingReason"
+                                value={waitingReason}
+                                onChange={(event) => setWaitingReason(event.target.value)}
                                 className="rounded border border-gray-300 bg-white px-2 py-1 w-72"
+                                required
                                 suppressHydrationWarning
-                            />
-                            {displayErrors.waitingNote && (
-                                <p className="mt-0.5 text-xs text-red-600">{displayErrors.waitingNote}</p>
+                            >
+                                <option value="">-- Select a reason --</option>
+                                <option value="waiting-for-part">Waiting For Part</option>
+                                <option value="waiting-for-permission">Waiting For Permission to Release</option>
+                                <option value="other">Other</option>
+                            </select>
+                            {displayErrors.waitingReason && (
+                                <p className="mt-0.5 text-xs text-red-600">{displayErrors.waitingReason}</p>
                             )}
                         </div>
+
+                        {waitingReason === 'other' && (
+                            <>
+                                <label htmlFor="waitingNote" className="font-semibold pt-1">
+                                    Additional Note <span className="text-red-500">*</span>
+                                </label>
+                                <div>
+                                    <textarea
+                                        id="waitingNote"
+                                        name="waitingNote"
+                                        rows={3}
+                                        required
+                                        className="rounded border border-gray-300 bg-white px-2 py-1 w-72"
+                                        suppressHydrationWarning
+                                    />
+                                    {displayErrors.waitingNote && (
+                                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.waitingNote}</p>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </>
                 )}
 

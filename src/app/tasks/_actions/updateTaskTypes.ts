@@ -6,6 +6,7 @@ export type UpdateTaskFieldErrors = Partial<Record<
   | 'scheduledDueDate'
   | 'assigneeID'
   | 'manufacturingRev'
+  | 'waitingReason'
   | 'waitingNote'
   | 'cancelledNote'
   | 'completedNote',
