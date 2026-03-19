@@ -246,6 +246,8 @@ export async function updateTask(
         const shouldSetDateStarted =
             currentTask.DateStarted == null && shouldSetDateStartedForTransition(currentTask.StatusID, statusId)
 
+        const shouldSetDateCompleted = (isMarkingCompleted || isMarkingCancelled) && !currentTask.DateCompleted
+
         const update: Parameters<typeof updateTaskRecord>[1] = {
             StatusID: statusId,
             AssignedToID: assigneeId,
@@ -257,6 +259,7 @@ export async function updateTask(
             Operation: operation,
             ManualDueDate: manualDueDate,
             ...(shouldSetDateStarted ? {DateStarted: new Date()} : {}),
+            ...(shouldSetDateCompleted ? {DateCompleted: new Date()} : {}),
         }
 
         const updatedTask = await updateTaskRecord(taskId, update)
