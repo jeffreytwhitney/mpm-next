@@ -344,3 +344,29 @@ model qryTaskListRaw {
 
   @@id([ID])
 }
+
+model qryProjectList {
+  ID                          Int
+  SiteID                      Int
+  ProjectName                 String    @db.NVarChar(255)
+  ProjectDescription          String?   @db.NText
+  DepartmentID                Int
+  DepartmentName              String    @db.NVarChar(255)
+  PrimaryOwnerName            String?   @db.NVarChar(255)
+  SecondaryOwnerName          String?   @db.NVarChar(255)
+  InitiatorName               String?   @db.NVarChar(255)
+  QualityEngineerEmailAddress String?   @db.VarChar(255)
+  PrimaryProjectOwnerID       Int?
+  SecondaryProjectOwnerID     Int
+  TertiaryProjectOwnerID      Int?
+  InitiatorEmployeeID         Int?
+  CountOfActiveTasks          Int?
+  CreatedTimestamp            DateTime? @db.DateTime
+  UpdatedTimestamp            DateTime? @db.DateTime
+  UpdateUserID                String?   @db.NVarChar(255)
+  TicketNumber                String?   @db.VarChar(50)
+  CarbonCopyEmailList         String?   @db.VarChar(2000)
+  RequiresModels              Int
+
+  @@id([ID])
+}
