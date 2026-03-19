@@ -4,18 +4,20 @@ import {getTaskStatusDropdownOptions} from '@/server/data/taskStatus'
 import {getMetrologyProgrammerDropdownOptions} from '@/server/data/user'
 import {getCurrentUser} from '@/lib/auth/currentUser'
 import {USER_TYPE_IDS} from '@/lib/auth/roles'
-import {TaskDetailForm} from '@/app/tasks/_components/TaskDetailForm'
+import {TaskDetailForm} from '@/features/tasks/components/TaskDetailForm'
+import { getTaskNotesByTaskID } from '@/server/data/taskNote'
 
 interface TaskDetailContentProps {
     taskId: number
 }
 
 export async function TaskDetailContent({taskId}: TaskDetailContentProps) {
-    const [taskDetail, currentUser, statusOptions, assigneeOptions] = await Promise.all([
+    const [taskDetail, currentUser, statusOptions, assigneeOptions, taskNotes] = await Promise.all([
         getTaskDetailById(taskId),
         getCurrentUser(),
         getTaskStatusDropdownOptions(),
-        getMetrologyProgrammerDropdownOptions()
+        getMetrologyProgrammerDropdownOptions(),
+        getTaskNotesByTaskID(taskId),
     ])
 
     if (!taskDetail) {
@@ -37,6 +39,8 @@ export async function TaskDetailContent({taskId}: TaskDetailContentProps) {
             assigneeOptions={assigneeOptions}
             canSubmit={canSubmit}
             isMetrologyProgrammer={isMetrologyProgrammer}
+            taskNotes={taskNotes}
         />
     )
 }
+

@@ -9,7 +9,9 @@ export type UpdateTaskFieldErrors = Partial<Record<
   | 'waitingReason'
   | 'waitingNote'
   | 'cancelledNote'
-  | 'completedNote',
+  | 'completedNote'
+  | 'entryDate'
+  | 'hours',
   string
 >>
 
@@ -23,4 +25,5 @@ export const INITIAL_UPDATE_TASK_STATE: UpdateTaskState = {
   success: false,
   fieldErrors: {},
 }
+
 

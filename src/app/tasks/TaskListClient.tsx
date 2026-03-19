@@ -9,8 +9,8 @@ import {type TaskStatusDropdownOption} from '@/server/data/taskStatus'
 import {type TaskTypeDropdownOption} from '@/server/data/taskType'
 import {type UserDropDownOption} from '@/server/data/user'
 import {type DepartmentDropdownOption} from '@/server/data/department'
-import {ChevronLeftIcon, ChevronRightIcon, ChevronDoubleLeftIcon} from '@heroicons/react/24/solid'
-import {PAGE_SIZE, TEXT_FILTER_CLASS, FILTER_RESET_TITLE} from './_constants'
+import {PAGE_SIZE, TEXT_FILTER_CLASS, FILTER_RESET_TITLE} from '@/features/tasks/constants'
+import {Pagination} from '@/components/Pagination'
 import {getTaskRowStyle} from './_utils/taskRowStyle'
 import {useTaskListFilters} from './_hooks/useTaskListFilters'
 import {StatusFilter, TaskTypeFilter, AssignedToFilter, DepartmentFilter} from './_components/TaskListFilterControls'
@@ -95,36 +95,12 @@ export function TaskListClient({initialTasks, initialFilters, initialStatusOptio
                 renderHeaderFilter={renderHeaderFilter}
                 getRowStyle={getTaskRowStyle}
             />
-            <div className="flex items-center justify-between mt-2 px-1 text-xs text-slate-600">
-                <span>{totalCount.toLocaleString()} results</span>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => handleFilterChange('page', 1)}
-                        disabled={currentPage <= 1}
-                        className="px-2 py-1 border rounded text-xs disabled:opacity-40 hover:bg-slate-100 disabled:cursor-not-allowed"
-                        title="First page"
-                    >
-                        <ChevronDoubleLeftIcon className="w-3 h-3" />
-                    </button>
-                    <button
-                        onClick={() => handleFilterChange('page', currentPage - 1)}
-                        disabled={currentPage <= 1}
-                        className="px-2 py-1 border rounded text-xs disabled:opacity-40 hover:bg-slate-100 disabled:cursor-not-allowed"
-                        title="Previous page"
-                    >
-                        <ChevronLeftIcon className="w-3 h-3" />
-                    </button>
-                    <span>Page {currentPage} of {totalPages}</span>
-                    <button
-                        onClick={() => handleFilterChange('page', currentPage + 1)}
-                        disabled={currentPage >= totalPages}
-                        className="px-2 py-1 border rounded text-xs disabled:opacity-40 hover:bg-slate-100 disabled:cursor-not-allowed"
-                        title="Next page"
-                    >
-                        <ChevronRightIcon className="w-3 h-3" />
-                    </button>
-                </div>
-            </div>
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                onPageChange={(page) => handleFilterChange('page', page)}
+            />
         </div>
     )
 }

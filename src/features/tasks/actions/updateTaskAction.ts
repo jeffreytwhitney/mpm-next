@@ -9,12 +9,13 @@ import {
     shouldSetDateStartedForTransition,
     TASK_STATUS_NOT_STARTED_ID,
     TASK_STATUS_WAITING_ID,
-} from '@/lib/taskStatusTransition'
+} from '@/features/tasks/taskStatusTransition'
 import {getTaskById, updateTask as updateTaskRecord} from '@/server/data/task'
-import {createTaskNote} from '@/server/data/taskNote'
 import {getProjectById, getQualityEngineerByProjectID} from '@/server/data/project'
-import type {UpdateTaskFieldErrors, UpdateTaskState} from '@/app/tasks/_actions/updateTaskTypes'
+import type {UpdateTaskFieldErrors, UpdateTaskState} from '@/features/tasks/actions/updateTaskActionTypes'
 import {parseDateValue} from '@/lib/date'
+import { addTaskNote } from '@/features/tasks/server/taskNoteMutations'
+import { addTaskTimeEntry } from '@/features/tasks/server/taskTimeMutations'
 
 interface ParsedUpdateTaskForm {
     statusId: number
@@ -30,6 +31,8 @@ interface ParsedUpdateTaskForm {
     waitingNote: string
     cancelledNote: string
     completedNote: string
+    entryDate: Date | null
+    hours: number | null
 }
 
 function validateAndParseUpdateTaskForm(formData: FormData):
@@ -48,6 +51,8 @@ function validateAndParseUpdateTaskForm(formData: FormData):
     const waitingNoteValue = String(formData.get('waitingNote') ?? '').trim()
     const cancelledNoteValue = String(formData.get('cancelledNote') ?? '').trim()
     const completedNoteValue = String(formData.get('completedNote') ?? '').trim()
+    const entryDateValue = String(formData.get('entryDate') ?? '').trim()
+    const hoursValue = String(formData.get('hours') ?? '').trim()
 
     const fieldErrors: UpdateTaskFieldErrors = {}
 
@@ -144,6 +149,8 @@ function validateAndParseUpdateTaskForm(formData: FormData):
             waitingNote: waitingNoteValue,
             cancelledNote: cancelledNoteValue,
             completedNote: completedNoteValue,
+            entryDate: entryDateValue ? parseDateValue(entryDateValue) : null,
+            hours: hoursValue ? Number(hoursValue) : null,
         },
     }
 }
@@ -172,6 +179,8 @@ export async function updateTask(
         waitingNote,
         cancelledNote,
         completedNote,
+        entryDate,
+        hours,
     } = validationResult.parsed
 
     try {
@@ -277,24 +286,33 @@ export async function updateTask(
             }
             
             if (noteText) {
-                await createTaskNote({
-                    TaskID: taskId,
-                    TaskNote: noteText,
+                await addTaskNote({
+                    taskId,
+                    note: noteText,
                 })
             }
         }
 
         if (isMarkingCancelled && cancelledNote) {
-            await createTaskNote({
-                TaskID: taskId,
-                TaskNote: cancelledNote,
+            await addTaskNote({
+                taskId,
+                note: cancelledNote,
             })
         }
 
         if (isMarkingCompleted && completedNote) {
-            await createTaskNote({
-                TaskID: taskId,
-                TaskNote: completedNote,
+            await addTaskNote({
+                taskId,
+                note: completedNote,
+            })
+        }
+
+        if (isMarkingCompleted && entryDate && hours && assigneeId) {
+            await addTaskTimeEntry({
+                taskId,
+                assigneeId,
+                entryDate,
+                hours,
             })
         }
 
@@ -314,3 +332,4 @@ export async function updateTask(
         }
     }
 }
+

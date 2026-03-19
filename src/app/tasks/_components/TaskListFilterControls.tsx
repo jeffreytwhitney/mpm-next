@@ -3,7 +3,7 @@ import {type TaskStatusDropdownOption} from '@/server/data/taskStatus'
 import {type TaskTypeDropdownOption} from '@/server/data/taskType'
 import {type UserDropDownOption} from '@/server/data/user'
 import {type DepartmentDropdownOption} from '@/server/data/department'
-import {SELECT_FILTER_CLASS, FILTER_RESET_TITLE} from '../_constants'
+import {SELECT_FILTER_CLASS, FILTER_RESET_TITLE} from '@/features/tasks/constants'
 
 interface StatusFilterProps {
     statusID: number | undefined

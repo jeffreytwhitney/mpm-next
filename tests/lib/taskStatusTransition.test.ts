@@ -5,7 +5,7 @@ import {
   TASK_STATUS_STARTED_ID,
   TASK_STATUS_WAITING_ID,
   isRevertingToNotStarted,
-} from '@/lib/taskStatusTransition'
+} from '@/features/tasks/taskStatusTransition'
 
 describe('status ID constants', () => {
   it('keeps Completed and Cancelled IDs mapped to the expected values', () => {

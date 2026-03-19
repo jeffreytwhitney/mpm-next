@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { TaskDetailContent } from '@/app/tasks/_components/TaskDetailContent'
+import { TaskDetailContent } from '@/features/tasks/components/TaskDetailContent'
 import TaskDetailModalShell from '@/app/tasks/_components/TaskDetailModalShell'
 import {getTaskById} from "@/server/data/task";
 

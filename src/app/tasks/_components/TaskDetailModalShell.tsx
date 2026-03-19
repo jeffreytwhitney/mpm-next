@@ -3,7 +3,7 @@
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect } from 'react'
-import { TASK_DETAIL_SAVED_EVENT } from '@/lib/taskDetailEvents'
+import { TASK_DETAIL_REFRESH_EVENT, TASK_DETAIL_SAVED_EVENT } from '@/features/tasks/taskDetailEvents'
 
 interface TaskDetailModalShellProps {
   children: React.ReactNode
@@ -27,12 +27,18 @@ export default function TaskDetailModalShell({ children, title }: TaskDetailModa
       closeModal()
     }
 
+    const handleTaskRefresh = () => {
+      router.refresh()
+    }
+
     window.addEventListener(TASK_DETAIL_SAVED_EVENT, handleTaskSaved)
+    window.addEventListener(TASK_DETAIL_REFRESH_EVENT, handleTaskRefresh)
 
     return () => {
       window.removeEventListener(TASK_DETAIL_SAVED_EVENT, handleTaskSaved)
+      window.removeEventListener(TASK_DETAIL_REFRESH_EVENT, handleTaskRefresh)
     }
-  }, [closeModal])
+  }, [closeModal, router])
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-end bg-black/40" role="dialog" aria-modal="true" aria-label={title}>

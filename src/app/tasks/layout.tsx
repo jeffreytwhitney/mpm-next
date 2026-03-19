@@ -6,10 +6,11 @@ import {getSessionUser} from '@/lib/auth/session'
 interface TasksLayoutProps {
   children: React.ReactNode
   modal: React.ReactNode
+  child?: React.ReactNode
   params: Promise<Record<string, never>>
 }
 
-export default async function TasksLayout({ children, modal }: TasksLayoutProps) {
+export default async function TasksLayout({ children, modal, child }: TasksLayoutProps) {
   const sessionUser = await getSessionUser()
   const isAdmin = sessionUser?.isAdmin === true
 
@@ -23,6 +24,7 @@ export default async function TasksLayout({ children, modal }: TasksLayoutProps)
         </main>
       </div>
       {modal}
+      {child}
     </div>
   )
 }

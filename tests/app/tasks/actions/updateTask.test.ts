@@ -30,8 +30,9 @@ import {
   TASK_STATUS_NOT_STARTED_ID,
   TASK_STATUS_STARTED_ID,
   TASK_STATUS_WAITING_ID,
-} from '@/lib/taskStatusTransition'
-import { updateTask } from '@/app/tasks/_actions/updateTask'
+} from '@/features/tasks/taskStatusTransition'
+
+import { updateTask } from '@/features/tasks/actions/updateTaskAction'
 
 function buildValidFormData(overrides?: Record<string, string>): FormData {
   const formData = new FormData()

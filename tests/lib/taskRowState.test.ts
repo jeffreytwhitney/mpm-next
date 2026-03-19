@@ -1,4 +1,4 @@
-import {getTaskRowStateFlags} from '@/lib/taskRowState'
+import {getTaskRowStateFlags} from '@/features/tasks/taskRowState'
 
 describe('task row state flags', () => {
   const referenceDate = new Date(2026, 2, 15, 12, 0, 0, 0)
