@@ -1,6 +1,7 @@
 import {prisma} from "@/lib/prisma";
 import type {Prisma} from "@/generated/prisma/client";
 import {Prisma as PrismaNamespace} from "@/generated/prisma/client";
+import {withErrorHandling} from "@/server/data/lib/errorHandling";
 
 const taskSelect = {
     ID: true,
@@ -26,27 +27,25 @@ const taskSelect = {
 export type TaskItem = Prisma.tblTaskGetPayload<{select: typeof taskSelect}>
 
 export async function getTaskById(id: number): Promise<TaskItem | null> {
-    try {
-        return await prisma.tblTask.findFirst({
+    return withErrorHandling(
+        () => prisma.tblTask.findFirst({
             select: taskSelect,
             where: {ID: id},
-        })
-    } catch (error) {
-        console.error('Error fetching task:', error)
-        throw new Error('Failed to fetch task')
-    }
+        }),
+        'fetching task',
+        'Failed to fetch task'
+    )
 }
 
 export async function getTasksByProjectId(projectId: number): Promise<TaskItem[]> {
-    try {
-        return await prisma.tblTask.findMany({
+    return withErrorHandling(
+        () => prisma.tblTask.findMany({
             select: taskSelect,
             where: {ProjectID: projectId},
-        })
-    } catch (error) {
-        console.error('Error fetching task:', error)
-        throw new Error('Failed to fetch task')
-    }
+        }),
+        'fetching tasks by project',
+        'Failed to fetch tasks'
+    )
 }
 
 export interface TaskCreateInput {
@@ -72,10 +71,10 @@ export interface TaskCreateInput {
 export type TaskUpdateInput = Partial<TaskCreateInput>
 
 export async function createTask(data: TaskCreateInput): Promise<TaskItem> {
-    try {
-        const now = new Date()
-        const currentlyRunning = data.CurrentlyRunning ?? 0
-        return await prisma.tblTask.create({
+    const now = new Date()
+    const currentlyRunning = data.CurrentlyRunning ?? 0
+    return withErrorHandling(
+        () => prisma.tblTask.create({
             select: taskSelect,
             data: {
                 ...data,
@@ -83,11 +82,10 @@ export async function createTask(data: TaskCreateInput): Promise<TaskItem> {
                 CreatedTimestamp: now,
                 UpdatedTimestamp: now,
             },
-        })
-    } catch (error) {
-        console.error('Error creating task:', error)
-        throw new Error('Failed to create task')
-    }
+        }),
+        'creating task',
+        'Failed to create task'
+    )
 }
 
 export async function updateTask(id: number, data: TaskUpdateInput): Promise<TaskItem | null> {
@@ -104,7 +102,6 @@ export async function updateTask(id: number, data: TaskUpdateInput): Promise<Tas
         if (error instanceof PrismaNamespace.PrismaClientKnownRequestError && error.code === 'P2025') {
             return null
         }
-        console.error('Error updating task:', error)
-        throw new Error('Failed to update task')
+        throw error
     }
 }

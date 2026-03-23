@@ -1,7 +1,7 @@
 import React from 'react'
 import {type TaskListItem} from '@/server/data/taskList'
 import {getTaskRowStateFlags} from '@/features/tasks/taskRowState'
-import {ROW_HIGHLIGHT_OPACITY} from '@/features/tasks/constants'
+import {ROW_HIGHLIGHT_OPACITY} from '@/lib/filterConstants'
 
 function makeRowHighlight(red: number, green: number, blue: number): React.CSSProperties {
     return {

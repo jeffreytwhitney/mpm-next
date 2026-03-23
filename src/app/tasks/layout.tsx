@@ -1,7 +1,4 @@
-import React from 'react'
-import {Header} from '@/components/Header'
-import {SideNav} from '@/components/SideNav'
-import {getSessionUser} from '@/lib/auth/session'
+import AppShellLayout from '@/components/AppShellLayout'
 
 interface TasksLayoutProps {
   children: React.ReactNode
@@ -11,20 +8,5 @@ interface TasksLayoutProps {
 }
 
 export default async function TasksLayout({ children, modal, child }: TasksLayoutProps) {
-  const sessionUser = await getSessionUser()
-  const isAdmin = sessionUser?.isAdmin === true
-
-  return (
-    <div className="min-h-screen bg-white">
-      <Header />
-      <div className="flex min-h-[calc(100vh-57px)]">
-        <SideNav isAdmin={isAdmin} />
-        <main className="min-w-0 flex-1">
-          {children}
-        </main>
-      </div>
-      {modal}
-      {child}
-    </div>
-  )
+  return <AppShellLayout modal={modal} child={child}>{children}</AppShellLayout>
 }

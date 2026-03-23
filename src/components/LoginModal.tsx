@@ -3,6 +3,7 @@
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { loginFromFormState, type LoginResult } from '@/server/data/auth'
+import { BUTTON_PRIMARY_CLASS, BUTTON_SECONDARY_CLASS } from '@/components/ui/classTokens'
 
 interface LoginModalProps {
   isOpen: boolean
@@ -71,7 +72,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="rounded border border-gray-300 px-2 py-1 text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className={BUTTON_SECONDARY_CLASS}
             aria-label="Close login dialog"
           >
             X
@@ -118,14 +119,14 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className={BUTTON_SECONDARY_CLASS}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
+              className={BUTTON_PRIMARY_CLASS}
             >
               {isPending ? 'Logging in...' : 'Login'}
             </button>

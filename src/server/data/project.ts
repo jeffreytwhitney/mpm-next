@@ -2,6 +2,9 @@ import {prisma} from "@/lib/prisma";
 import type {Prisma} from "@/generated/prisma/client";
 import {Prisma as PrismaNamespace} from "@/generated/prisma/client";
 import {getUserById, type MPMUser} from "@/server/data/user";
+import {withErrorHandling} from "@/server/data/lib/errorHandling";
+
+// ...existing code...
 
 const projectSelect = {
     ID: true,
@@ -25,57 +28,52 @@ const projectSelect = {
 export type ProjectItem = Prisma.tblProjectGetPayload<{select: typeof projectSelect}>
 
 export async function getProjectById(id: number): Promise<ProjectItem> {
-    try {
-
-        const project = await prisma.tblProject.findFirst({
+    const project = await withErrorHandling(
+        () => prisma.tblProject.findFirst({
             select: projectSelect,
             where: {ID: id},
-        })
-        if (!project) {
-            throw new Error('Failed to fetch project')
-        }
-        return project;
-
-    } catch (error) {
-        console.error('Error fetching project:', error)
+        }),
+        'fetching project',
+        'Failed to fetch project'
+    )
+    if (!project) {
         throw new Error('Failed to fetch project')
     }
+    return project
 }
 
 export async function getQualityEngineerByProjectID(projectID: number): Promise<MPMUser | null> {
-    try {
-        const project = await prisma.tblProject.findFirst({
+    const project = await withErrorHandling(
+        () => prisma.tblProject.findFirst({
             select: {SecondaryProjectOwnerID: true},
             where: {ID: projectID},
-        })
+        }),
+        'fetching quality engineer project',
+        'Failed to fetch quality engineer by project ID'
+    )
 
-        if (!project || project.SecondaryProjectOwnerID == null) {
-            return null
-        }
-
-        return await getUserById(project.SecondaryProjectOwnerID)
-    } catch (error) {
-        console.error('Error fetching quality engineer by project ID:', error)
-        throw new Error('Failed to fetch quality engineer by project ID')
+    if (!project || project.SecondaryProjectOwnerID == null) {
+        return null
     }
+
+    return await getUserById(project.SecondaryProjectOwnerID)
 }
 
 export async function getManufacturingEngineerByProjectID(projectID: number): Promise<MPMUser | null> {
-    try {
-        const project = await prisma.tblProject.findFirst({
+    const project = await withErrorHandling(
+        () => prisma.tblProject.findFirst({
             select: {PrimaryProjectOwnerID: true},
             where: {ID: projectID},
-        })
+        }),
+        'fetching manufacturing engineer project',
+        'Failed to fetch manufacturing engineer by project ID'
+    )
 
-        if (!project || project.PrimaryProjectOwnerID == null) {
-            return null
-        }
-
-        return await getUserById(project.PrimaryProjectOwnerID)
-    } catch (error) {
-        console.error('Error fetching manufacturing engineer by project ID:', error)
-        throw new Error('Failed to fetch manufacturing engineer by project ID')
+    if (!project || project.PrimaryProjectOwnerID == null) {
+        return null
     }
+
+    return await getUserById(project.PrimaryProjectOwnerID)
 }
 
 
@@ -97,21 +95,20 @@ export type ProjectUpdateInput = Partial<ProjectCreateInput>
 
 
 export async function createProject(data: ProjectCreateInput): Promise<ProjectItem> {
-    try {
-        const now = new Date()
+    const now = new Date()
 
-        return await prisma.tblProject.create({
+    return withErrorHandling(
+        () => prisma.tblProject.create({
             select: projectSelect,
             data: {
                 ...data,
                 CreatedTimestamp: now,
                 UpdatedTimestamp: now,
             },
-        })
-    } catch (error) {
-        console.error('Error creating task:', error)
-        throw new Error('Failed to create task')
-    }
+        }),
+        'creating project',
+        'Failed to create project'
+    )
 }
 
 export async function updateProject(id: number, data: ProjectUpdateInput): Promise<ProjectItem | null> {
@@ -128,7 +125,6 @@ export async function updateProject(id: number, data: ProjectUpdateInput): Promi
         if (error instanceof PrismaNamespace.PrismaClientKnownRequestError && error.code === 'P2025') {
             return null
         }
-        console.error('Error updating task:', error)
-        throw new Error('Failed to update task')
+        throw error
     }
 }

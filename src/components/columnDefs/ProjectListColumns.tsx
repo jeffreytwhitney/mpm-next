@@ -73,19 +73,21 @@ export const taskColumns: ColumnDef<ProjectListItem>[] = [
         },
     },
     {
-        accessorKey: 'AssignedToName',
-        header: 'Assigned To',
-        cell: ({row}) => <div>{row.getValue('AssignedToName') || ''}</div>,
+        accessorKey: 'PrimaryOwnerName',
+        header: 'Manf. Engineer',
+        cell: ({row}) => <div>{row.getValue('PrimaryOwnerName') || ''}</div>,
         size: 20,
+        minSize: 20,
         meta: {
             align: 'left',
         },
     },
     {
-        accessorKey: 'JobNumber',
-        header: 'Job Nbr',
-        cell: ({row}) => <div>{row.getValue('JobNumber') || ''}</div>,
+        accessorKey: 'SecondaryOwnerName',
+        header: 'Quality Engineer',
+        cell: ({row}) => <div>{row.getValue('SecondaryOwnerName') || ''}</div>,
         size: 20,
+        minSize: 20,
         meta: {
             align: 'left',
         },

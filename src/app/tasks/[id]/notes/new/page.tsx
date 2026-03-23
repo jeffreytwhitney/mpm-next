@@ -1,17 +1,12 @@
-import { notFound } from 'next/navigation'
 import { TaskNoteEntryForm } from '@/features/tasks/components/TaskNoteEntryForm'
+import { parseTaskIdOrNotFound } from '@/app/tasks/_utils/parseParams'
 
 interface TaskNotePageProps {
   params: Promise<{ id: string }>
 }
 
 export default async function TaskNotePage({ params }: TaskNotePageProps) {
-  const { id } = await params
-  const taskId = Number(id)
-
-  if (!Number.isInteger(taskId) || taskId <= 0) {
-    notFound()
-  }
+  const taskId = await parseTaskIdOrNotFound(params)
 
   return (
     <div className="container mx-auto py-10">

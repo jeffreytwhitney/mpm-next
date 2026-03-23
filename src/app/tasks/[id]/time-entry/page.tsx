@@ -1,17 +1,12 @@
-import { notFound } from 'next/navigation'
 import { TaskTimeEntryForm } from '@/features/tasks/components/TaskTimeEntryForm'
+import { parseTaskIdOrNotFound } from '@/app/tasks/_utils/parseParams'
 
 interface TaskTimeEntryPageProps {
   params: Promise<{ id: string }>
 }
 
 export default async function TaskTimeEntryPage({ params }: TaskTimeEntryPageProps) {
-  const { id } = await params
-  const taskId = Number(id)
-
-  if (!Number.isInteger(taskId) || taskId <= 0) {
-    notFound()
-  }
+  const taskId = await parseTaskIdOrNotFound(params)
 
   return (
     <div className="container mx-auto py-10">

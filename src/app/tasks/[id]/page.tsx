@@ -1,17 +1,12 @@
-import { notFound } from 'next/navigation'
 import { TaskDetailContent } from '@/features/tasks/components/TaskDetailContent'
+import { parseTaskIdOrNotFound } from '@/app/tasks/_utils/parseParams'
 
 interface TaskDetailPageProps {
   params: Promise<{ id: string }>
 }
 
 export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
-  const { id } = await params
-  const taskId = Number(id)
-
-  if (!Number.isInteger(taskId) || taskId <= 0) {
-    notFound()
-  }
+  const taskId = await parseTaskIdOrNotFound(params)
 
   return (
     <div className="container mx-auto py-10">

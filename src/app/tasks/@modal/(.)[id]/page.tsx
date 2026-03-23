@@ -1,22 +1,16 @@
-import { notFound } from 'next/navigation'
 import { TaskDetailContent } from '@/features/tasks/components/TaskDetailContent'
 import TaskDetailModalShell from '@/app/tasks/_components/TaskDetailModalShell'
-import {getTaskById} from "@/server/data/task";
+import {getTaskById} from "@/server/data/task"
+import { parseTaskIdOrNotFound } from '@/app/tasks/_utils/parseParams'
 
 interface TaskModalPageProps {
   params: Promise<{ id: string }>
 }
 
 export default async function TaskModalPage({ params }: TaskModalPageProps) {
-  const { id } = await params
-  const taskId = Number(id)
-
+  const taskId = await parseTaskIdOrNotFound(params)
   const task = await getTaskById(taskId)
 
-
-  if (!Number.isInteger(taskId) || taskId <= 0) {
-    notFound()
-  }
 
   return (
     <TaskDetailModalShell title={`Task '${task?.TaskName}' Details`}>
