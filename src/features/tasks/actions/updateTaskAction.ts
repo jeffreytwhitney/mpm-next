@@ -10,9 +10,9 @@ import {
     TASK_STATUS_NOT_STARTED_ID,
     TASK_STATUS_WAITING_ID,
 } from '@/features/tasks/taskStatusTransition'
-import {getTaskById, updateTask as updateTaskRecord} from '@/server/data/task'
-import {getTicketById, getQualityEngineerByTicketID} from '@/server/data/ticket'
-import type {UpdateTaskFieldErrors, UpdateTaskState} from '@/features/tasks/actions/updateTaskActionTypes'
+import {getTaskById, updateTask as updateTaskRecord, countActiveTasksByProjectId} from '@/server/data/task'
+import {getTicketById, getQualityEngineerByTicketID, updateTicket} from '@/server/data/ticket'
+import type {UpdateTaskFieldErrors, UpdateTaskState} from '@/features/tasks/actions/taskActionTypes'
 import {parseDateValue} from '@/lib/date'
 import { addTaskNote } from '@/features/tasks/mutations/taskNoteMutations'
 import { addTaskTimeEntry } from '@/features/tasks/mutations/taskTimeMutations'
@@ -270,6 +270,16 @@ export async function updateTask(
                 formError: 'Task was not found.',
             }
         }
+        
+        // Update ticket/project active task count if status = complete or canceled
+        if ((isMarkingCompleted || isMarkingCancelled) && currentTask.ProjectID != null) {
+            const activeTaskCount = await countActiveTasksByProjectId(currentTask.ProjectID)
+            await updateTicket(currentTask.ProjectID, {
+                CountOfActiveTasks: activeTaskCount,
+            })
+        }
+        
+        
 
         if (isMarkingWaiting && waitingReason) {
             let noteText = ''

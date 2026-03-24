@@ -6,6 +6,14 @@ jest.mock('@/lib/prisma', () => ({
   },
 }))
 
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 const mockGetTaskById = jest.fn()
 const mockGetTicketById = jest.fn()
 const mockGetDepartmentById = jest.fn()

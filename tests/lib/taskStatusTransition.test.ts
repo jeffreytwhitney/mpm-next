@@ -1,3 +1,11 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 import {
   TASK_STATUS_CANCELLED_ID,
   TASK_STATUS_COMPLETED_ID,

@@ -1,3 +1,11 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 import {getTaskRowStateFlags} from '@/features/tasks/taskRowState'
 
 describe('task row state flags', () => {

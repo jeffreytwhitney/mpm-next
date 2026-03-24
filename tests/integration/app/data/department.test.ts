@@ -1,3 +1,12 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(async () => {
+  jest.restoreAllMocks()
+  await prisma.$disconnect()
+})
+
 import {
     getDepartments,
     getDepartmentById, getDepartmentDropdownOptions, getTopLevelDepartmentDropdownOptions, getTopLevelDepartments
@@ -7,9 +16,6 @@ import {prisma} from '@/lib/prisma'
 
 
 describe('Department Actions', () => {
-    afterAll(async () => {
-        await prisma.$disconnect()
-    });
 
     it('gets Department by ID', async () => {
         const result = await getDepartmentById(1)

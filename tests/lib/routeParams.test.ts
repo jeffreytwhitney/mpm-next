@@ -1,3 +1,11 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 import { notFound } from 'next/navigation'
 

@@ -1,3 +1,11 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 import {parseSiteID, resolveSiteID} from '@/lib/site'
 
 describe('site helpers', () => {

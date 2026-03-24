@@ -1,3 +1,11 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 const mockFindFirstUser = jest.fn()
 const mockFindManyUser = jest.fn()
 const mockVerifyPassword = jest.fn()

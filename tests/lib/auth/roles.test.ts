@@ -1,3 +1,11 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 import { isEffectiveAdmin, USER_TYPE_IDS } from '@/lib/auth/roles'
 
 describe('auth roles admin eligibility', () => {

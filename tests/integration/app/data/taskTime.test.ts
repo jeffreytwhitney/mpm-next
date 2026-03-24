@@ -1,3 +1,12 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(async () => {
+  jest.restoreAllMocks()
+  await prisma.$disconnect()
+})
+
 import { prisma } from '@/lib/prisma'
 import {
   getTaskTimeEntryByDateAndAssigneeId,
@@ -7,9 +16,6 @@ import {
 } from '@/server/data/taskTime'
 
 describe('taskTime integration', () => {
-  afterAll(async () => {
-    await prisma.$disconnect()
-  })
 
   // ---------------------------------------------------------------------------
   // getTaskTimeEntryByDateAndAssigneeId

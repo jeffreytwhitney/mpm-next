@@ -6,7 +6,7 @@ import {updateTask} from '@/features/tasks/actions/updateTaskAction'
 import {
     INITIAL_UPDATE_TASK_STATE,
     type UpdateTaskFieldErrors,
-} from '@/features/tasks/actions/updateTaskActionTypes'
+} from '@/features/tasks/actions/taskActionTypes'
 import {
     isActiveTaskStatus,
     isRevertingToNotStarted,

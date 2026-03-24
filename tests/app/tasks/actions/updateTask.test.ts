@@ -1,3 +1,11 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 const mockGetTaskById = jest.fn()
 const mockUpdateTaskRecord = jest.fn()
 const mockCreateTaskNote = jest.fn()

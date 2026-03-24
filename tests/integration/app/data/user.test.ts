@@ -1,3 +1,12 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(async () => {
+  jest.restoreAllMocks()
+  await prisma.$disconnect()
+})
+
 import {
     getActiveUserForAuth,
     getMetrologyProgrammerUsers,
@@ -11,9 +20,6 @@ import { prisma } from '@/lib/prisma'
 
 
 describe('userActions', () => {
-    afterAll(async () => {
-        await prisma.$disconnect()
-    })
 
     it('gets user by ID', async () => {
         const result = await getUserById(10)

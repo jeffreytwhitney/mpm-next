@@ -1,3 +1,12 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(async () => {
+  jest.restoreAllMocks()
+  await prisma.$disconnect()
+})
+
 import {
   getTicketById
 } from '@/server/data/ticket'

@@ -1,3 +1,12 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(async () => {
+  jest.restoreAllMocks()
+  await prisma.$disconnect()
+})
+
 import {
   getTicketById
 } from '@/server/data/ticket'
@@ -5,9 +14,6 @@ import {prisma} from '@/lib/prisma'
 
 describe('Ticket Actions', () => {
 
-  afterAll(async () => {
-    await prisma.$disconnect()
-  })
 
   it('gets an existing ticket by ID and throws for a missing ID', async () => {
     const firstProject = await prisma.tblProject.findFirst({

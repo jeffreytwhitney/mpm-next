@@ -1,3 +1,11 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 const mockFindManyDepartment = jest.fn()
 const mockFindFirstDepartment = jest.fn()
 

@@ -1,3 +1,11 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 const mockVerifyUserCredentials = jest.fn()
 const mockSetSessionCookie = jest.fn()
 const mockClearSessionCookie = jest.fn()

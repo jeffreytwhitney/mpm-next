@@ -1,11 +1,17 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(async () => {
+  jest.restoreAllMocks()
+  await prisma.$disconnect()
+})
+
 import { getTaskList } from '@/server/data/taskList'
 import { prisma } from '@/lib/prisma'
 import {getTaskById} from "@/server/data/task";
 
 describe('Task List Actions', () => {
-    afterAll(async () => {
-        await prisma.$disconnect()
-    })
 
     it('gets default active task list with the default 25 row cap', async () => {
         const results = await getTaskList()

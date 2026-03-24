@@ -1,3 +1,11 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 import { hashPassword, verifyPassword } from '@/lib/hash'
 
 describe('password hashing utilities', () => {

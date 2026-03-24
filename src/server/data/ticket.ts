@@ -90,14 +90,14 @@ export async function getManufacturingEngineerByTicketID(ticketID: number): Prom
 
 export interface TicketCreateInput {
     SiteID: number
-    TicketNumber: string
+    TicketNumber?: string | null
     ProjectName: string
     ProjectDescription?: string | null
     DepartmentID: number
     PrimaryProjectOwnerID?: number | null
     SecondaryProjectOwnerID: number
     InitiatorEmployeeID: number
-    CountOfActiveTasks: number
+    CountOfActiveTasks?: number
     CarbonCopyEmailList?: string | null
     RequiresModels: number
 }

@@ -1,3 +1,11 @@
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 import { createSessionToken, verifySessionToken } from '@/lib/auth/session'
 import { USER_TYPES } from '@/lib/auth/roles'
 

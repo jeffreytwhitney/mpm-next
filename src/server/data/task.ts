@@ -2,6 +2,7 @@ import {prisma} from "@/lib/prisma";
 import type {Prisma} from "@/generated/prisma/client";
 import {Prisma as PrismaNamespace} from "@/generated/prisma/client";
 import {withErrorHandling} from "@/server/data/lib/errorHandling";
+import {updateTicket} from "@/server/data/ticket";
 
 const taskSelect = {
     ID: true,
@@ -73,7 +74,7 @@ export type TaskUpdateInput = Partial<TaskCreateInput>
 export async function createTask(data: TaskCreateInput): Promise<TaskItem> {
     const now = new Date()
     const currentlyRunning = data.CurrentlyRunning ?? 0
-    return withErrorHandling(
+    const task = await withErrorHandling(
         () => prisma.tblTask.create({
             select: taskSelect,
             data: {
@@ -86,6 +87,14 @@ export async function createTask(data: TaskCreateInput): Promise<TaskItem> {
         'creating task',
         'Failed to create task'
     )
+
+    // Update ticket/project active task count
+    const activeTaskCount = await countActiveTasksByProjectId(data.ProjectID)
+    await updateTicket(data.ProjectID, {
+        CountOfActiveTasks: activeTaskCount,
+    })
+
+    return task
 }
 
 export async function updateTask(id: number, data: TaskUpdateInput): Promise<TaskItem | null> {
@@ -104,4 +113,31 @@ export async function updateTask(id: number, data: TaskUpdateInput): Promise<Tas
         }
         throw error
     }
+}
+
+export async function checkExistingTask(taskName: string, operationNumber: string, taskTypeID:number): Promise<boolean> {
+    const task = await prisma.tblTask.findFirst({
+        select: { ID: true },
+        where: {
+            TaskName: taskName,
+            Operation: operationNumber,
+            TaskTypeID: taskTypeID,
+        },
+    })
+    return (task != null)
+}
+
+export async function countActiveTasksByProjectId(projectId: number): Promise<number> {
+    return withErrorHandling(
+        () => prisma.tblTask.count({
+            where: {
+                ProjectID: projectId,
+                StatusID: {
+                    notIn: [4, 5], // Exclude Completed (4) and Canceled (5)
+                },
+            },
+        }),
+        'counting active tasks',
+        'Failed to count active tasks'
+    )
 }

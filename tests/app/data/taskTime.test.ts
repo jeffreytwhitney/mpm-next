@@ -10,6 +10,14 @@ jest.mock('@/lib/prisma', () => ({
   },
 }))
 
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  jest.restoreAllMocks()
+})
+
 import { prisma } from '@/lib/prisma'
 import {
   createTaskTimeEntry,
