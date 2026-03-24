@@ -27,7 +27,7 @@ export async function TaskDetailContent({taskId}: TaskDetailContentProps) {
     const isMetrologyProgrammer = currentUser?.userType === USER_TYPE_IDS.metrologyProgrammer
     const isProjectQualityEngineer =
         currentUser?.userType === USER_TYPE_IDS.qualityEngineer &&
-        currentUser.userId === taskDetail.project.SecondaryProjectOwnerID
+        currentUser.userId === taskDetail.ticket.SecondaryProjectOwnerID
     const isClosedStatus = taskDetail.task.StatusID === 4 || taskDetail.task.StatusID === 5
     const canSubmit = (isMetrologyProgrammer || isProjectQualityEngineer) && !isClosedStatus
 

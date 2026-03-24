@@ -3,7 +3,9 @@
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect } from 'react'
-import { TASK_DETAIL_REFRESH_EVENT, TASK_DETAIL_SAVED_EVENT } from '@/features/tasks/taskDetailEvents'
+
+const TASK_DETAIL_SAVED_EVENT = 'task-detail:saved'
+const TASK_DETAIL_REFRESH_EVENT = 'task-detail:refresh'
 
 interface TaskDetailModalShellProps {
   children: React.ReactNode

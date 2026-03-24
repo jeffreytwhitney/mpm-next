@@ -1,13 +1,13 @@
 import TaskChildModalShell from '@/app/tasks/_components/TaskChildModalShell'
 import { TaskTimeEntryForm } from '@/features/tasks/components/TaskTimeEntryForm'
-import { parseTaskIdOrNotFound } from '@/app/tasks/_utils/parseParams'
+import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 
 interface TaskTimeEntryChildModalPageProps {
   params: Promise<{ id: string }>
 }
 
 export default async function TaskTimeEntryChildModalPage({ params }: TaskTimeEntryChildModalPageProps) {
-  const taskId = await parseTaskIdOrNotFound(params)
+  const taskId = await parsePositiveIntParamOrNotFound(params)
 
   return (
     <TaskChildModalShell title="Add Time Entry">

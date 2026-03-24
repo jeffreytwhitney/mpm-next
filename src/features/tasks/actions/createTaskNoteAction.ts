@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireCurrentUser } from '@/lib/auth/currentUser'
 import type { CreateTaskNoteState } from '@/features/tasks/actions/taskEntryActionTypes'
-import { addTaskNote } from '@/features/tasks/server/taskNoteMutations'
+import { addTaskNote } from '@/features/tasks/mutations/taskNoteMutations'
 
 export async function createTaskNoteAction(
   taskId: number,

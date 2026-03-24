@@ -1,8 +1,8 @@
 const mockGetTaskById = jest.fn()
 const mockUpdateTaskRecord = jest.fn()
 const mockCreateTaskNote = jest.fn()
-const mockGetProjectById = jest.fn()
-const mockGetQualityEngineerByProjectID = jest.fn()
+const mockGetTicketById = jest.fn()
+const mockGetQualityEngineerByTicketID = jest.fn()
 const mockRevalidatePath = jest.fn()
 
 jest.mock('@/server/data/task', () => ({
@@ -14,9 +14,9 @@ jest.mock('@/server/data/taskNote', () => ({
   createTaskNote: (...args: unknown[]) => mockCreateTaskNote(...args),
 }))
 
-jest.mock('@/server/data/project', () => ({
-  getProjectById: (...args: unknown[]) => mockGetProjectById(...args),
-  getQualityEngineerByProjectID: (...args: unknown[]) => mockGetQualityEngineerByProjectID(...args),
+jest.mock('@/server/data/ticket', () => ({
+  getTicketById: (...args: unknown[]) => mockGetTicketById(...args),
+  getQualityEngineerByTicketID: (...args: unknown[]) => mockGetQualityEngineerByTicketID(...args),
 }))
 
 jest.mock('next/cache', () => ({

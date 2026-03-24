@@ -8,7 +8,7 @@ jest.mock('@/lib/prisma', () => ({
 }))
 
 import { prisma } from '@/lib/prisma'
-import { getTaskList, parseTaskListFilters } from '@/server/data/taskList'
+import { getTaskList, getTaskListByProjectID, parseTaskListFilters } from '@/server/data/taskList'
 
 const mockFindManyTaskList = prisma.qryTaskListRaw.findMany as jest.Mock
 const mockCountTaskList = prisma.qryTaskListRaw.count as jest.Mock
@@ -88,6 +88,39 @@ describe('taskListActions', () => {
     mockFindManyTaskList.mockRejectedValueOnce(new Error('db fail'))
 
     await expect(getTaskList()).rejects.toThrow('Failed to fetch tasks')
+  })
+
+  it('returns all project tasks when no completion filter is provided', async () => {
+    mockFindManyTaskList.mockResolvedValueOnce([])
+
+    await getTaskListByProjectID(44)
+
+    expect(mockFindManyTaskList).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          ProjectID: 44,
+        }),
+        orderBy: { DueDate: 'asc' },
+      }),
+    )
+
+    const args = mockFindManyTaskList.mock.calls[0][0]
+    expect(args.where).not.toHaveProperty('StatusID')
+  })
+
+  it('filters project tasks to completed items when requested', async () => {
+    mockFindManyTaskList.mockResolvedValueOnce([])
+
+    await getTaskListByProjectID(44, { showCompleted: true })
+
+    expect(mockFindManyTaskList).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          ProjectID: 44,
+          StatusID: { in: [4, 5] },
+        }),
+      }),
+    )
   })
 
 

@@ -26,7 +26,7 @@ export interface TaskListFilters {
 export interface TaskListByProjectIDFilters {
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
-    showCompleted: boolean
+    showCompleted?: boolean
     assignedToID?: number
     taskTypeID?: number
 }
@@ -176,7 +176,11 @@ export async function getTaskListByProjectID(projectID: number, filters?: Partia
     try {
         const sortField = filters?.sortBy ? (sortFieldMap[filters.sortBy] ?? 'DueDate') : 'DueDate'
         const sortOrder = filters?.sortOrder ?? 'asc'
-        const statusFilter = filters?.showCompleted ? {in: [4, 5]} : {notIn: [4, 5]}
+        const statusFilter = filters?.showCompleted === undefined
+            ? undefined
+            : filters.showCompleted
+                ? {in: [4, 5]}
+                : {notIn: [4, 5]}
 
         const assigneeFilter = filters?.assignedToID !== undefined
             ? filters.assignedToID
@@ -187,7 +191,7 @@ export async function getTaskListByProjectID(projectID: number, filters?: Partia
             select: taskListSelect,
             where: {
                 ProjectID: projectID,
-                StatusID: statusFilter,
+                ...(statusFilter && {StatusID: statusFilter}),
                 ...(assigneeFilter !== undefined && {AssignedToID: assigneeFilter}),
                 ...(filters?.taskTypeID && {TaskTypeID: filters.taskTypeID}),
             },

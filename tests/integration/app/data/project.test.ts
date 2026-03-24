@@ -1,15 +1,15 @@
 import {
-  getProjectById
-} from '@/server/data/project'
+  getTicketById
+} from '@/server/data/ticket'
 import {prisma} from '@/lib/prisma'
 
-describe('Project Actions', () => {
+describe('Ticket Actions', () => {
 
   afterAll(async () => {
     await prisma.$disconnect()
   })
 
-  it('gets an existing project by ID and returns null for a missing ID', async () => {
+  it('gets an existing ticket by ID and throws for a missing ID', async () => {
     const firstProject = await prisma.tblProject.findFirst({
       select: {ID: true},
       orderBy: {ID: 'asc'},
@@ -23,15 +23,13 @@ describe('Project Actions', () => {
     expect(maxProject).not.toBeNull()
 
     if (!firstProject || !maxProject) {
-      throw new Error('Expected at least one project in seeded integration database')
+      throw new Error('Expected at least one ticket in seeded integration database')
     }
 
-    const existing = await getProjectById(firstProject.ID)
-    const missing = await getProjectById(maxProject.ID + 1_000_000)
+    const existing = await getTicketById(firstProject.ID)
+    await expect(getTicketById(maxProject.ID + 1_000_000)).rejects.toThrow('Failed to fetch ticket')
 
-    expect(existing).toEqual(expect.objectContaining({ ID: firstProject.ID }))
-    expect(missing).toBeNull()
+    expect(existing.ticket).toEqual(expect.objectContaining({ ID: firstProject.ID }))
   })
 
 })
-

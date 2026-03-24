@@ -4,8 +4,9 @@ import { useActionState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createTaskTimeEntryAction } from '@/features/tasks/actions/createTaskTimeEntryAction'
 import { INITIAL_CREATE_TASK_TIME_ENTRY_STATE } from '@/features/tasks/actions/taskEntryActionTypes'
-import { TASK_DETAIL_REFRESH_EVENT } from '@/features/tasks/taskDetailEvents'
 import { BUTTON_PRIMARY_CLASS, LABEL_CLASS, INPUT_CLASS, ERROR_TEXT_CLASS, FORM_ERROR_CLASS } from '@/components/ui/classTokens'
+
+const TASK_DETAIL_REFRESH_EVENT = 'task-detail:refresh'
 
 interface TaskTimeEntryFormProps {
   taskId: number

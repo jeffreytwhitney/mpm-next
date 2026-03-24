@@ -1,12 +1,12 @@
 import { TaskNoteEntryForm } from '@/features/tasks/components/TaskNoteEntryForm'
-import { parseTaskIdOrNotFound } from '@/app/tasks/_utils/parseParams'
+import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 
 interface TaskNotePageProps {
   params: Promise<{ id: string }>
 }
 
 export default async function TaskNotePage({ params }: TaskNotePageProps) {
-  const taskId = await parseTaskIdOrNotFound(params)
+  const taskId = await parsePositiveIntParamOrNotFound(params)
 
   return (
     <div className="container mx-auto py-10">

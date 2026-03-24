@@ -4,8 +4,9 @@ import { useActionState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createTaskNoteAction } from '@/features/tasks/actions/createTaskNoteAction'
 import { INITIAL_CREATE_TASK_NOTE_STATE } from '@/features/tasks/actions/taskEntryActionTypes'
-import { TASK_DETAIL_REFRESH_EVENT } from '@/features/tasks/taskDetailEvents'
 import { BUTTON_PRIMARY_CLASS, LABEL_CLASS, TEXTAREA_CLASS, ERROR_TEXT_CLASS, FORM_ERROR_CLASS } from '@/components/ui/classTokens'
+
+const TASK_DETAIL_REFRESH_EVENT = 'task-detail:refresh'
 
 interface TaskNoteEntryFormProps {
   taskId: number

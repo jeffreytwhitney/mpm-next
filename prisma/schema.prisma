@@ -29,6 +29,15 @@ model tblDepartment {
   UpdatedTimestamp    DateTime? @db.DateTime
   UpdateUserID        String?   @db.NVarChar(255)
   CMMFilePath         String?   @db.VarChar(1000)
+
+  Site       tblSite? @relation(fields: [SiteID], references: [ID])
+  UpdateUser tblUser? @relation("tblDepartment_UpdateUserID", fields: [UpdateUserID], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
+  Parent     tblDepartment?  @relation("tblDepartment_ParentID", fields: [ParentID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+
+  children          tblDepartment[]    @relation("tblDepartment_ParentID")
+  tblProjects       tblProject[]
+  tblServiceTickets tblServiceTicket[]
+  tblUsers          tblUser[]
 }
 
 model tblEMailMessageTemplate {
@@ -42,6 +51,8 @@ model tblIgnoreScheduleByTask {
   TaskID             Int?
   TaskName           String? @db.NVarChar(255)
   ScheduleIDToIgnore Int?
+
+  Task tblTask? @relation(fields: [TaskID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tblMetrologyMachine {
@@ -50,12 +61,22 @@ model tblMetrologyMachine {
   MetrologyMachineName   String @db.VarChar(50)
   IsActive               Int    @db.SmallInt
   MetrologyMachineTypeID Int
+
+  Site        tblSite              @relation(fields: [SiteID], references: [ID])
+  MachineType tblMetrologyMachineType @relation(fields: [MetrologyMachineTypeID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+
+  cmmDownServiceTickets tblServiceTicket[] @relation("tblServiceTicket_CMMDownID")
 }
 
 model tblMetrologyMachineType {
   ID                   Int    @id(map: "PK_tblMetrologyMachineType") @default(autoincrement())
   MetrologyMachineType String @db.VarChar(50)
   ServiceTypeID        Int?
+
+  ServiceType tblServiceType? @relation(fields: [ServiceTypeID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+
+  tblMetrologyMachines            tblMetrologyMachine[]
+  tblMetrologyMachineTypeProbeXREFs tblMetrologyMachineTypeProbeXREF[]
 }
 
 model tblMetrologyMachineTypeProbeXREF {
@@ -63,6 +84,10 @@ model tblMetrologyMachineTypeProbeXREF {
   SiteID                 Int
   MetrologyMachineTypeID Int
   MetrologyProbeID       Int
+
+  Site        tblSite                @relation(fields: [SiteID], references: [ID])
+  MachineType tblMetrologyMachineType @relation(fields: [MetrologyMachineTypeID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  Probe       tblMetrologyProbes      @relation(fields: [MetrologyProbeID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tblMetrologyProbes {
@@ -73,6 +98,11 @@ model tblMetrologyProbes {
   CurrentQuantity Int
   ReorderQuantity Int
   IsOrdered       Int    @db.SmallInt
+
+  Site tblSite @relation(fields: [SiteID], references: [ID])
+
+  cmmDownServiceTickets             tblServiceTicket[]               @relation("tblServiceTicket_CMMDownBrokenProbeID")
+  tblMetrologyMachineTypeProbeXREFs tblMetrologyMachineTypeProbeXREF[]
 }
 
 model tblProject {
@@ -92,6 +122,15 @@ model tblProject {
   TicketNumber            String?   @db.VarChar(50)
   CarbonCopyEmailList     String?   @db.VarChar(2000)
   RequiresModels          Int
+
+  Site           tblSite?      @relation(fields: [SiteID], references: [ID])
+  UpdateUser     tblUser?      @relation("tblProject_UpdateUserID", fields: [UpdateUserID], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
+  tblTasks       tblTask[]
+  Department     tblDepartment @relation(fields: [DepartmentID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  PrimaryOwner   tblUser?      @relation("tblProject_PrimaryProjectOwnerID", fields: [PrimaryProjectOwnerID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  SecondaryOwner tblUser?      @relation("tblProject_SecondaryProjectOwnerID", fields: [SecondaryProjectOwnerID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  TertiaryOwner  tblUser?      @relation("tblProject_TertiaryProjectOwnerID", fields: [TertiaryProjectOwnerID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  Initiator      tblUser?      @relation("tblProject_InitiatorEmployeeID", fields: [InitiatorEmployeeID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tblPurchaseOrder {
@@ -105,6 +144,13 @@ model tblPurchaseOrder {
   DateCreated           DateTime @db.DateTime
   LastUpdated           DateTime @db.DateTime
   UpdateUserID          String   @db.VarChar(10)
+
+  Site       tblSite                    @relation(fields: [SiteID], references: [ID])
+  UpdateUser tblUser                    @relation("tblPurchaseOrder_UpdateUserID", fields: [UpdateUserID], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
+  Status     tblPurchaseOrderStatus     @relation(fields: [PurchaseOrderStatusID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  Requestor  tblUser                    @relation("tblPurchaseOrder_RequestorID", fields: [RequestorID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  LineItems  tblPurchaseOrderLineItem[]
+  Notes      tblPurchaseOrderNotes[]
 }
 
 model tblPurchaseOrderLineItem {
@@ -124,11 +170,18 @@ model tblPurchaseOrderLineItem {
   PerUnitCost         Float
   ReceivedQuantity    Int
   OutstandingQuantity Int?
+
+  PurchaseOrder  tblPurchaseOrder                @relation(fields: [PurchaseOrderID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  LineItemStatus tblPurchaseOrderLineItemStatus? @relation(fields: [LineItemStatusID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  LineItemType   tblPurchaseOrderType            @relation(fields: [LineItemTypeID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  UpdatedByUser  tblUser                         @relation("tblPurchaseOrderLineItem_UpdatedBy", fields: [UpdatedBy], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tblPurchaseOrderLineItemStatus {
   ID     Int    @id(map: "PK_tblPurchaseOrderLineItemStatus") @default(autoincrement())
   Status String @db.VarChar(50)
+
+  tblPurchaseOrderLineItems tblPurchaseOrderLineItem[]
 }
 
 model tblPurchaseOrderNotes {
@@ -137,16 +190,23 @@ model tblPurchaseOrderNotes {
   poNote           String   @db.VarChar(Max)
   CreatedTimestamp DateTime @db.DateTime
   UpdateUserID     String   @db.VarChar(255)
+
+  PurchaseOrder tblPurchaseOrder @relation(fields: [poID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  UpdateUser    tblUser          @relation("tblPurchaseOrderNotes_UpdateUserID", fields: [UpdateUserID], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tblPurchaseOrderStatus {
   ID                  Int    @id(map: "PK_tblPurchaseOrderStatus") @default(autoincrement())
   PurchaseOrderStatus String @db.VarChar(50)
+
+  tblPurchaseOrders tblPurchaseOrder[]
 }
 
 model tblPurchaseOrderType {
   ID                Int    @id(map: "PK_tblPurchaseOrderType") @default(autoincrement())
   PurchaseOrderType String @db.VarChar(50)
+
+  tblPurchaseOrderLineItems tblPurchaseOrderLineItem[]
 }
 
 model tblPurchaseOrderVendors {
@@ -160,12 +220,17 @@ model tblServiceNotes {
   TaskNote         String?   @db.VarChar(Max)
   CreatedTimestamp DateTime? @db.DateTime
   UpdateUserID     String?   @db.NVarChar(255)
+
+  ServiceTicket tblServiceTicket? @relation(fields: [ServiceTicketID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  UpdateUser    tblUser?          @relation("tblServiceNotes_UpdateUserID", fields: [UpdateUserID], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tblServiceStatus {
   ID            Int    @id(map: "PK_tblServiceStatus") @default(autoincrement())
   ServiceStatus String @db.VarChar(50)
   IsActive      Int    @db.SmallInt
+
+  tblServiceTickets tblServiceTicket[]
 }
 
 model tblServiceTicket {
@@ -173,7 +238,7 @@ model tblServiceTicket {
   SiteID               Int
   TicketNumber         String?  @db.VarChar(50)
   TicketName           String   @db.VarChar(500)
-  TicketDetails        String?  @db.VarChar(2000)
+  TicketDetails        String?   @db.VarChar(2000)
   InitiatorID          Int
   DepartmentID         Int
   TicketTypeID         Int
@@ -189,12 +254,27 @@ model tblServiceTicket {
   UpdateTimestamp      DateTime @db.DateTime
   UpdatedBy            String?  @db.VarChar(10)
   CarbonCopyEmailList  String?  @db.VarChar(2000)
+
+  Site           tblSite              @relation(fields: [SiteID], references: [ID])
+  Assignee       tblUser?             @relation("tblServiceTicket_AssignedToID", fields: [AssignedToID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  Status         tblServiceStatus     @relation(fields: [StatusID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  TicketType     tblServiceType       @relation(fields: [TicketTypeID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  Initiator      tblUser              @relation("tblServiceTicket_InitiatorID", fields: [InitiatorID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  Department     tblDepartment        @relation(fields: [DepartmentID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  CMMDownProbe   tblMetrologyProbes?  @relation("tblServiceTicket_CMMDownBrokenProbeID", fields: [CMMDownBrokenProbeID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  CMMDownMachine tblMetrologyMachine? @relation("tblServiceTicket_CMMDownID", fields: [CMMDownID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  UpdatedByUser  tblUser?             @relation("tblServiceTicket_UpdatedBy", fields: [UpdatedBy], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
+
+  tblServiceNotes tblServiceNotes[]
 }
 
 model tblServiceType {
   ID          Int    @id(map: "PK_tblServiceType") @default(autoincrement())
   ServiceType String @db.VarChar(50)
   IsActive    Int    @db.SmallInt
+
+  tblServiceTickets         tblServiceTicket[]
+  tblMetrologyMachineTypes  tblMetrologyMachineType[]
 }
 
 model tblSite {
@@ -202,6 +282,15 @@ model tblSite {
   SiteName              String? @db.NVarChar(255)
   EmailAddressCCList    String? @db.VarChar(1000)
   MetrologyEmailAddress String? @db.VarChar(320)
+
+  departments                    tblDepartment[]
+  metrologyMachines              tblMetrologyMachine[]
+  metrologyMachineTypeProbeXREFs tblMetrologyMachineTypeProbeXREF[]
+  metrologyProbes                tblMetrologyProbes[]
+  projects                       tblProject[]
+  purchaseOrders                 tblPurchaseOrder[]
+  serviceTickets                 tblServiceTicket[]
+  users                          tblUser[]
 }
 
 model tblStatus {
@@ -212,6 +301,9 @@ model tblStatus {
   CreatedTimestamp      DateTime? @db.DateTime
   UpdatedTimestamp      DateTime? @db.DateTime
   UpdateUserID          String?   @db.VarChar(255)
+
+  UpdateUser tblUser?  @relation("tblStatus_UpdateUserID", fields: [UpdateUserID], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
+  tblTasks   tblTask[]
 }
 
 model tblTask {
@@ -239,6 +331,15 @@ model tblTask {
   UpdateUserID     String?   @db.NVarChar(255)
   CurrentlyRunning Int       @db.SmallInt
 
+  Project            tblProject         @relation(fields: [ProjectID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  Status             tblStatus          @relation(fields: [StatusID], references: [ID])
+  TaskType           tblTaskType?       @relation(fields: [TaskTypeID], references: [ID])
+  Assignee           tblUser?           @relation("tblTask_AssignedToID", fields: [AssignedToID], references: [ID])
+  UpdateUser         tblUser?           @relation("tblTask_UpdateUserID", fields: [UpdateUserID], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
+  tblTaskNotes       tblTaskNotes[]
+  tblTaskTimeEntries tblTaskTimeEntry[]
+  tblIgnoreScheduleByTasks tblIgnoreScheduleByTask[]
+
   @@index([AssignedToID], map: "IDX_tblTask_Assignee")
   @@index([TaskName], map: "Idx_tblTask_TaskName")
 }
@@ -251,6 +352,9 @@ model tblTaskNotes {
   UpdatedTimestamp DateTime? @db.DateTime
   UpdateUserID     String?   @db.NVarChar(255)
   IsNoteAutomated  Int?      @db.SmallInt
+
+  Task       tblTask? @relation(fields: [TaskID], references: [ID])
+  UpdateUser tblUser? @relation("tblTaskNotes_UpdateUserID", fields: [UpdateUserID], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tblTaskType {
@@ -264,6 +368,10 @@ model tblTaskType {
   UpdatedTimestamp       DateTime? @db.DateTime
   UpdateUserID           String?   @db.VarChar(255)
   RequiresModels         Int
+
+  TaskTypeGroup tblTaskTypeGroup? @relation(fields: [TaskTypeGroupID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  UpdateUser    tblUser?          @relation("tblTaskType_UpdateUserID", fields: [UpdateUserID], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
+  tblTasks      tblTask[]
 }
 
 model tblTaskTimeEntry {
@@ -275,11 +383,17 @@ model tblTaskTimeEntry {
   CreatedTimestamp DateTime? @db.DateTime
   UpdatedTimestamp DateTime? @db.DateTime
   UpdateUserID     String?   @db.VarChar(255)
+
+  UpdateUser tblUser? @relation("tblTaskTimeEntry_UpdateUserID", fields: [UpdateUserID], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
+  Task       tblTask  @relation(fields: [TaskID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  Assignee   tblUser  @relation("tblTaskTimeEntry_AssignedToID", fields: [AssignedToID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tblTaskTypeGroup {
   ID                Int     @id(map: "PK_tblTaskTypeGroup") @default(autoincrement())
   TaskTypeGroupName String? @db.NVarChar(255)
+
+  tblTaskTypes tblTaskType[]
 }
 
 model tblUser {
@@ -290,7 +404,7 @@ model tblUser {
   IsActive         Int?      @db.SmallInt
   FName            String?   @db.NVarChar(255)
   LName            String?   @db.NVarChar(255)
-  EmployeeNumber   String?   @db.NVarChar(255)
+  EmployeeNumber   String?   @unique(map: "UQ_tblUser_EmployeeNumber") @db.NVarChar(255)
   EMailAddress     String?   @db.NVarChar(255)
   NetworkUserName  String?   @db.NVarChar(255)
   Password         String?   @db.VarChar(255)
@@ -301,11 +415,44 @@ model tblUser {
   FullName         String?   @db.NVarChar(511)
   ShortName        String?   @db.NVarChar(258)
   DisplayName      String?   @db.NVarChar(512)
+
+  Site       tblSite?      @relation(fields: [SiteID], references: [ID])
+  Department tblDepartment? @relation(fields: [DepartmentID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  UserType   tblUserType?   @relation(fields: [UserTypeID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  UpdateUser tblUser?       @relation("tblUser_UpdateUserID", fields: [UpdateUserID], references: [EmployeeNumber], onDelete: NoAction, onUpdate: NoAction)
+
+  updatedDepartments        tblDepartment[]         @relation("tblDepartment_UpdateUserID")
+  updatedProjects           tblProject[]            @relation("tblProject_UpdateUserID")
+  updatedPurchaseOrders     tblPurchaseOrder[]      @relation("tblPurchaseOrder_UpdateUserID")
+  requestedPurchaseOrders   tblPurchaseOrder[]      @relation("tblPurchaseOrder_RequestorID")
+  updatedPurchaseOrderNotes tblPurchaseOrderNotes[] @relation("tblPurchaseOrderNotes_UpdateUserID")
+  updatedServiceNotes       tblServiceNotes[]       @relation("tblServiceNotes_UpdateUserID")
+  updatedStatuses           tblStatus[]             @relation("tblStatus_UpdateUserID")
+  assignedTasks             tblTask[]               @relation("tblTask_AssignedToID")
+  updatedTasks              tblTask[]               @relation("tblTask_UpdateUserID")
+  updatedTaskNotes          tblTaskNotes[]          @relation("tblTaskNotes_UpdateUserID")
+  updatedTaskTypes          tblTaskType[]           @relation("tblTaskType_UpdateUserID")
+  updatedTaskTimeEntries    tblTaskTimeEntry[]      @relation("tblTaskTimeEntry_UpdateUserID")
+  assignedTaskTimeEntries   tblTaskTimeEntry[]      @relation("tblTaskTimeEntry_AssignedToID")
+  updatedUsers              tblUser[]               @relation("tblUser_UpdateUserID")
+
+  tblPrimaryOwnerProjects    tblProject[] @relation("tblProject_PrimaryProjectOwnerID")
+  tblSecondaryOwnerProjects  tblProject[] @relation("tblProject_SecondaryProjectOwnerID")
+  tblTertiaryOwnerProjects   tblProject[] @relation("tblProject_TertiaryProjectOwnerID")
+  tblInitiatorProjects       tblProject[] @relation("tblProject_InitiatorEmployeeID")
+
+  assignedServiceTickets  tblServiceTicket[] @relation("tblServiceTicket_AssignedToID")
+  initiatedServiceTickets tblServiceTicket[] @relation("tblServiceTicket_InitiatorID")
+  updatedServiceTickets   tblServiceTicket[] @relation("tblServiceTicket_UpdatedBy")
+
+  updatedPurchaseOrderLineItems tblPurchaseOrderLineItem[] @relation("tblPurchaseOrderLineItem_UpdatedBy")
 }
 
 model tblUserType {
   ID       Int    @id(map: "PK_tblUserType") @default(autoincrement())
   UserType String @db.VarChar(255)
+
+  tblUsers tblUser[]
 }
 
 /// View qryTaskList - using @@id since views don't have named primary key constraints

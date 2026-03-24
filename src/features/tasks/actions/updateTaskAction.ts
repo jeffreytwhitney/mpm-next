@@ -11,11 +11,11 @@ import {
     TASK_STATUS_WAITING_ID,
 } from '@/features/tasks/taskStatusTransition'
 import {getTaskById, updateTask as updateTaskRecord} from '@/server/data/task'
-import {getProjectById, getQualityEngineerByProjectID} from '@/server/data/project'
+import {getTicketById, getQualityEngineerByTicketID} from '@/server/data/ticket'
 import type {UpdateTaskFieldErrors, UpdateTaskState} from '@/features/tasks/actions/updateTaskActionTypes'
 import {parseDateValue} from '@/lib/date'
-import { addTaskNote } from '@/features/tasks/server/taskNoteMutations'
-import { addTaskTimeEntry } from '@/features/tasks/server/taskTimeMutations'
+import { addTaskNote } from '@/features/tasks/mutations/taskNoteMutations'
+import { addTaskTimeEntry } from '@/features/tasks/mutations/taskTimeMutations'
 
 interface ParsedUpdateTaskForm {
     statusId: number
@@ -277,10 +277,10 @@ export async function updateTask(
             if (waitingReason === 'waiting-for-part') {
                 noteText = 'Waiting for part in order to complete the program.'
             } else if (waitingReason === 'waiting-for-permission') {
-                // Get the project and quality engineer name for the template
-                const project = await getProjectById(currentTask.ProjectID)
-                if (project) {
-                    const qe = await getQualityEngineerByProjectID(project.ID)
+                // Get the ticket and quality engineer name for the template
+                if (currentTask.ProjectID != null) {
+                    const { ticket } = await getTicketById(currentTask.ProjectID)
+                    const qe = await getQualityEngineerByTicketID(ticket.ID)
                     const qeName = qe?.FullName ?? 'Quality Engineer'
                     noteText = `Waiting for Permission to release from ${qeName}`
                 }

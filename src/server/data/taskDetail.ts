@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { getTaskById, type TaskItem } from '@/server/data/task'
-import { getProjectById, getQualityEngineerByProjectID, getManufacturingEngineerByProjectID, type ProjectItem } from '@/server/data/project'
+import { getTicketById, getQualityEngineerByTicketID, getManufacturingEngineerByTicketID, type TicketItem } from '@/server/data/ticket'
 import { getDepartmentById } from '@/server/data/department'
 
 const taskDetailViewSelect = {
@@ -15,7 +15,7 @@ interface TaskDetailViewRow {
 
 export interface TaskDetailModel {
   task: TaskItem
-  project: ProjectItem
+  ticket: TicketItem
   departmentName: string | null
   qualityEngineerName: string | null
   manufacturingEngineerName: string | null
@@ -38,18 +38,18 @@ export async function getTaskDetailById(taskId: number): Promise<TaskDetailModel
       return null
     }
 
-    const project = await getProjectById(task.ProjectID)
+    const { ticket } = await getTicketById(task.ProjectID)
 
     const [department, qualityEngineer, manufacturingEngineer, detailViewRow] = await Promise.all([
-      getDepartmentById(project.DepartmentID),
-      getQualityEngineerByProjectID(project.ID),
-      getManufacturingEngineerByProjectID(project.ID),
+      getDepartmentById(ticket.DepartmentID),
+      getQualityEngineerByTicketID(ticket.ID),
+      getManufacturingEngineerByTicketID(ticket.ID),
       getTaskDetailViewRow(taskId),
     ])
 
     return {
       task,
-      project,
+      ticket,
       departmentName: department?.DepartmentName ?? null,
       qualityEngineerName: qualityEngineer?.FullName ?? null,
       manufacturingEngineerName: manufacturingEngineer?.FullName ?? null,
@@ -61,4 +61,3 @@ export async function getTaskDetailById(taskId: number): Promise<TaskDetailModel
     throw new Error('Failed to fetch task detail')
   }
 }
-

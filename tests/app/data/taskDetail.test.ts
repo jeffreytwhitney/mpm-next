@@ -7,19 +7,19 @@ jest.mock('@/lib/prisma', () => ({
 }))
 
 const mockGetTaskById = jest.fn()
-const mockGetProjectById = jest.fn()
+const mockGetTicketById = jest.fn()
 const mockGetDepartmentById = jest.fn()
-const mockGetQualityEngineerByProjectID = jest.fn()
-const mockGetManufacturingEngineerByProjectID = jest.fn()
+const mockGetQualityEngineerByTicketID = jest.fn()
+const mockGetManufacturingEngineerByTicketID = jest.fn()
 
 jest.mock('@/server/data/task', () => ({
   getTaskById: (...args: unknown[]) => mockGetTaskById(...args),
 }))
 
-jest.mock('@/server/data/project', () => ({
-  getProjectById: (...args: unknown[]) => mockGetProjectById(...args),
-  getQualityEngineerByProjectID: (...args: unknown[]) => mockGetQualityEngineerByProjectID(...args),
-  getManufacturingEngineerByProjectID: (...args: unknown[]) => mockGetManufacturingEngineerByProjectID(...args),
+jest.mock('@/server/data/ticket', () => ({
+  getTicketById: (...args: unknown[]) => mockGetTicketById(...args),
+  getQualityEngineerByTicketID: (...args: unknown[]) => mockGetQualityEngineerByTicketID(...args),
+  getManufacturingEngineerByTicketID: (...args: unknown[]) => mockGetManufacturingEngineerByTicketID(...args),
 }))
 
 jest.mock('@/server/data/department', () => ({
@@ -40,7 +40,7 @@ describe('getTaskDetailById', () => {
 	mockGetTaskById.mockResolvedValueOnce(null)
 
 	await expect(getTaskDetailById(101)).resolves.toBeNull()
-	expect(mockGetProjectById).not.toHaveBeenCalled()
+	expect(mockGetTicketById).not.toHaveBeenCalled()
 	expect(mockFindFirstTaskList).not.toHaveBeenCalled()
   })
 
@@ -48,23 +48,26 @@ describe('getTaskDetailById', () => {
 	mockGetTaskById.mockResolvedValueOnce({ ID: 55, ProjectID: null })
 
 	await expect(getTaskDetailById(55)).resolves.toBeNull()
-	expect(mockGetProjectById).not.toHaveBeenCalled()
+	expect(mockGetTicketById).not.toHaveBeenCalled()
 	expect(mockFindFirstTaskList).not.toHaveBeenCalled()
   })
 
   it('returns an aggregated task detail model', async () => {
 	mockGetTaskById.mockResolvedValueOnce({ ID: 88, ProjectID: 9, StatusID: 2 })
-	mockGetProjectById.mockResolvedValueOnce({
-	  ID: 9,
-	  TicketNumber: 'TK-900',
-	  ProjectDescription: 'Fixture',
-	  DepartmentID: 5,
-	  SecondaryProjectOwnerID: 77,
-	  PrimaryProjectOwnerID: 66,
+	mockGetTicketById.mockResolvedValueOnce({
+	  ticket: {
+	    ID: 9,
+	    TicketNumber: 'TK-900',
+	    ProjectDescription: 'Fixture',
+	    DepartmentID: 5,
+	    SecondaryProjectOwnerID: 77,
+	    PrimaryProjectOwnerID: 66,
+	  },
+	  tasks: [],
 	})
 	mockGetDepartmentById.mockResolvedValueOnce({ ID: 5, DepartmentName: 'Quality' })
-	mockGetQualityEngineerByProjectID.mockResolvedValueOnce({ ID: 77, FullName: 'Q Engineer' })
-	mockGetManufacturingEngineerByProjectID.mockResolvedValueOnce({ ID: 66, FullName: 'M Engineer' })
+	mockGetQualityEngineerByTicketID.mockResolvedValueOnce({ ID: 77, FullName: 'Q Engineer' })
+	mockGetManufacturingEngineerByTicketID.mockResolvedValueOnce({ ID: 66, FullName: 'M Engineer' })
 	mockFindFirstTaskList.mockResolvedValueOnce({ JobNumber: 'JOB-42', SumOfHours: 12 })
 
 	const result = await getTaskDetailById(88)
@@ -75,7 +78,7 @@ describe('getTaskDetailById', () => {
 	})
 	expect(result).toEqual({
 	  task: { ID: 88, ProjectID: 9, StatusID: 2 },
-	  project: {
+	  ticket: {
 		ID: 9,
 		TicketNumber: 'TK-900',
 		ProjectDescription: 'Fixture',
@@ -93,15 +96,15 @@ describe('getTaskDetailById', () => {
 
   it('maps optional display values to null when not available', async () => {
 	mockGetTaskById.mockResolvedValueOnce({ ID: 90, ProjectID: 9 })
-	mockGetProjectById.mockResolvedValueOnce({ ID: 9, DepartmentID: 5 })
+	mockGetTicketById.mockResolvedValueOnce({ ticket: { ID: 9, DepartmentID: 5 }, tasks: [] })
 	mockGetDepartmentById.mockResolvedValueOnce(null)
-	mockGetQualityEngineerByProjectID.mockResolvedValueOnce(null)
-	mockGetManufacturingEngineerByProjectID.mockResolvedValueOnce(null)
+	mockGetQualityEngineerByTicketID.mockResolvedValueOnce(null)
+	mockGetManufacturingEngineerByTicketID.mockResolvedValueOnce(null)
 	mockFindFirstTaskList.mockResolvedValueOnce(null)
 
 	await expect(getTaskDetailById(90)).resolves.toEqual({
 	  task: { ID: 90, ProjectID: 9 },
-	  project: { ID: 9, DepartmentID: 5 },
+	  ticket: { ID: 9, DepartmentID: 5 },
 	  departmentName: null,
 	  qualityEngineerName: null,
 	  manufacturingEngineerName: null,

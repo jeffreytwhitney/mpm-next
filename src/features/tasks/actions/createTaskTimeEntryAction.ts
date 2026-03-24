@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireCurrentUser } from '@/lib/auth/currentUser'
 import { parseDateValue } from '@/lib/date'
 import type { CreateTaskTimeEntryState } from '@/features/tasks/actions/taskEntryActionTypes'
-import { addTaskTimeEntry } from '@/features/tasks/server/taskTimeMutations'
+import { addTaskTimeEntry } from '@/features/tasks/mutations/taskTimeMutations'
 
 export async function createTaskTimeEntryAction(
   taskId: number,

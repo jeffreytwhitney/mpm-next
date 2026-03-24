@@ -7,7 +7,6 @@ import {
     INITIAL_UPDATE_TASK_STATE,
     type UpdateTaskFieldErrors,
 } from '@/features/tasks/actions/updateTaskActionTypes'
-import {TASK_DETAIL_SAVED_EVENT} from '@/features/tasks/taskDetailEvents'
 import {
     isActiveTaskStatus,
     isRevertingToNotStarted,
@@ -19,6 +18,8 @@ import type {TaskDetailModel} from '@/server/data/taskDetail'
 import type {TaskNoteItem} from '@/server/data/taskNote'
 import type {TaskStatusDropdownOption} from '@/server/data/taskStatus'
 import type {UserDropDownOption} from '@/server/data/user'
+
+const TASK_DETAIL_SAVED_EVENT = 'task-detail:saved'
 
 interface TaskDetailFormProps {
     taskId: number
@@ -113,7 +114,7 @@ export function TaskDetailForm({
                                    isMetrologyProgrammer,
                                    taskNotes,
                                }: TaskDetailFormProps) {
-    const {task, project} = taskDetail
+    const {task, ticket} = taskDetail
     const [selectedStatusId, setSelectedStatusId] = useState<number>(task.StatusID)
     const [waitingReason, setWaitingReason] = useState<string>('')
     const [errors, setErrors] = useState<FieldErrors>({})
@@ -185,13 +186,13 @@ export function TaskDetailForm({
                   suppressHydrationWarning>
                 <div className="grid grid-cols-[12rem_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
                     <span className="font-semibold pt-1">Ticket Number</span>
-                    <span className="pt-1">{project.TicketNumber ?? ''}</span>
+                    <span className="pt-1">{ticket.TicketNumber ?? ''}</span>
 
                     <span className="font-semibold pt-1">Ticket Name</span>
-                    <span className="pt-1">{project.ProjectName ?? ''}</span>
+                    <span className="pt-1">{ticket.ProjectName ?? ''}</span>
 
                     <span className="font-semibold pt-1">Ticket Description:</span>
-                    <span className="pt-1">{project.ProjectDescription ?? ''}</span>
+                    <span className="pt-1">{ticket.ProjectDescription ?? ''}</span>
 
                     {/* Task Name */}
                     <label htmlFor="taskName" className="font-semibold pt-1">

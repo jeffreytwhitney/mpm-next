@@ -1,12 +1,12 @@
 import { TaskDetailContent } from '@/features/tasks/components/TaskDetailContent'
-import { parseTaskIdOrNotFound } from '@/app/tasks/_utils/parseParams'
+import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 
 interface TaskDetailPageProps {
   params: Promise<{ id: string }>
 }
 
 export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
-  const taskId = await parseTaskIdOrNotFound(params)
+  const taskId = await parsePositiveIntParamOrNotFound(params)
 
   return (
     <div className="container mx-auto py-10">
