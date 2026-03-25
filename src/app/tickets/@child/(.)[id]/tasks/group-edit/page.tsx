@@ -1,4 +1,4 @@
-import TicketTaskGroupEditContent from '../../../../_components/TicketTaskGroupEditContent'
+import TicketTaskGroupEditContent from '../../../../../../features/tickets/components/TicketTaskGroupEditContent'
 import TicketChildSlideOverShell from '../../../../_components/TicketChildSlideOverShell'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 

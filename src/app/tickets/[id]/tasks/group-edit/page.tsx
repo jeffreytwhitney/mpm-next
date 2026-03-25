@@ -1,4 +1,4 @@
-import TicketTaskGroupEditContent from '@/app/tickets/_components/TicketTaskGroupEditContent'
+import TicketTaskGroupEditContent from '@/features/tickets/components/TicketTaskGroupEditContent'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 
 interface TicketTaskGroupEditPageProps {

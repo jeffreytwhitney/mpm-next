@@ -81,7 +81,7 @@ function validateAndParseCreateTaskForm(formData: FormData):
 }
 
 
-export async function createTask(
+export async function addTask(
     formData: FormData
 ): Promise<CreateTaskState> {
     const validationResult = validateAndParseCreateTaskForm(formData)

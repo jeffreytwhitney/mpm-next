@@ -19,7 +19,7 @@ jest.mock('next/cache', () => ({
   revalidatePath: (...args: unknown[]) => mockRevalidatePath(...args),
 }))
 
-import { createTask } from '@/features/tickets/actions/addTaskAction'
+import { addTask } from '@/features/tickets/actions/addTaskAction'
 
 function buildValidFormData(overrides?: Record<string, string>): FormData {
   const formData = new FormData()
@@ -58,7 +58,7 @@ describe('createTask action', () => {
       opNumber: '',
     })
 
-    await expect(createTask(formData)).resolves.toEqual({
+    await expect(addTask(formData)).resolves.toEqual({
       success: false,
       fieldErrors: {
         projectId: 'Project ID is required.',
@@ -82,7 +82,7 @@ describe('createTask action', () => {
       scheduledDueDate: 'also-not-a-date',
     })
 
-    await expect(createTask(formData)).resolves.toEqual({
+    await expect(addTask(formData)).resolves.toEqual({
       success: false,
       fieldErrors: {
         dueDate: 'Due date is invalid.',
@@ -100,7 +100,7 @@ describe('createTask action', () => {
 
     mockCheckExistingTask.mockResolvedValueOnce({ ID: 77 })
 
-    await expect(createTask(formData)).resolves.toEqual({
+    await expect(addTask(formData)).resolves.toEqual({
       success: false,
       fieldErrors: {
         taskName: 'There is already a task with this name, op, and task type.',
@@ -120,7 +120,7 @@ describe('createTask action', () => {
     mockCheckExistingTask.mockResolvedValueOnce(null)
     mockCreateTaskRecord.mockResolvedValueOnce({ ID: 1001 })
 
-    await expect(createTask(formData)).resolves.toEqual({
+    await expect(addTask(formData)).resolves.toEqual({
       success: true,
       fieldErrors: {},
     })
