@@ -5,6 +5,7 @@ import {resolveSiteID} from '@/lib/site'
 
 export interface TicketListFilters {
     siteID: string
+    showCompleted?: boolean
     ticketNumber?: string
     ticketName?: string
     departmentID?: number
@@ -58,9 +59,17 @@ export interface TicketListResult { tasks: TicketListItem[], totalCount: number 
 /// Parses URL search parameters into TaskListFilters, handling type conversions and defaults
 /// This is because URL search parameters are always strings, but our filters expect specific types (e.g. numbers, enums)
 export function parseTicketListFilters(searchParams: TicketListSearchParams, defaultSiteID = '1'): TicketListFilters {
+    const showCompleted = searchParams.showCompleted === undefined
+        ? undefined
+        : searchParams.showCompleted === 'true'
+            ? true
+            : searchParams.showCompleted === 'false'
+                ? false
+                : undefined
 
     return {
         siteID: resolveSiteID(searchParams.siteID, defaultSiteID),
+        showCompleted,
         ticketNumber: searchParams.ticketNumber,
         ticketName: searchParams.ticketName,
         departmentID: parseOptionalInt(searchParams.departmentID),
@@ -84,6 +93,11 @@ export async function getTicketList(filters?: Partial<TicketListFilters>): Promi
         const sortField = filters?.sortBy ? (sortFieldMap[filters.sortBy] ?? 'TicketNumber') : 'TicketNumber'
         const sortOrder = filters?.sortOrder ?? 'asc'
         const taskName = filters?.taskName?.trim()
+        const completedFilter = filters?.showCompleted === undefined
+            ? undefined
+            : filters.showCompleted
+                ? {lte: 1}
+                : {gt: 1}
 
         let projectIDsFromTaskSearch: number[] | undefined
         if (taskName) {
@@ -92,7 +106,7 @@ export async function getTicketList(filters?: Partial<TicketListFilters>): Promi
                     TaskName: {contains: taskName},
                     Project: {
                         SiteID: siteID,
-                        CountOfActiveTasks: {gt: 1},
+                        ...(completedFilter && {CountOfActiveTasks: completedFilter}),
                     },
                 },
                 select: {ProjectID: true},
@@ -113,6 +127,7 @@ export async function getTicketList(filters?: Partial<TicketListFilters>): Promi
             ...(filters?.departmentID !== undefined && {DepartmentID: filters.departmentID}),
             ...(filters?.qualityEngineerID !== undefined && {SecondaryProjectOwnerID: filters.qualityEngineerID}),
             ...(filters?.submittorID !== undefined && {InitiatorEmployeeID: filters.submittorID}),
+            ...(completedFilter && {CountOfActiveTasks: completedFilter}),
             ...(projectIDsFromTaskSearch && {ID: {in: projectIDsFromTaskSearch}}),
         }
 

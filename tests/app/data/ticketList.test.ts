@@ -91,7 +91,6 @@ describe('ticketListActions', () => {
         TaskName: {contains: 'inspection'},
         Project: {
           SiteID: 3,
-          CountOfActiveTasks: {gt: 1},
         },
       },
       select: {ProjectID: true},
@@ -121,6 +120,21 @@ describe('ticketListActions', () => {
     expect(mockCountTicketList).not.toHaveBeenCalled()
   })
 
+  it('filters active tickets when showCompleted is false', async () => {
+    await getTicketList({
+      showCompleted: false,
+    })
+
+    expect(mockFindManyTicketList).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          SiteID: 1,
+          CountOfActiveTasks: {gt: 1},
+        }),
+      }),
+    )
+  })
+
   it('throws a consistent error when getTicketList fails', async () => {
     mockFindManyTicketList.mockRejectedValueOnce(new Error('db fail'))
 
@@ -137,6 +151,12 @@ describe('ticketListActions', () => {
     const filters = parseTicketListFilters({siteID: '1'})
 
     expect(filters.siteID).toBe('1')
+  })
+
+  it('parses showCompleted as a boolean when provided', () => {
+    expect(parseTicketListFilters({showCompleted: 'true'}).showCompleted).toBe(true)
+    expect(parseTicketListFilters({showCompleted: 'false'}).showCompleted).toBe(false)
+    expect(parseTicketListFilters({showCompleted: 'invalid'}).showCompleted).toBeUndefined()
   })
 })
 

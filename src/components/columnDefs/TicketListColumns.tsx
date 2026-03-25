@@ -1,12 +1,12 @@
-// Column definitions for the task list table
+// Column definitions for the ticket list table
 import {ColumnDef} from "@tanstack/react-table";
-import {ProjectListItem} from "@/server/data/projectList";
+import {TicketListItem} from "@/server/data/ticketList";
 import React from "react";
 import Link from 'next/link'
 
-const taskLinkClassName = "text-[#0E7490] hover:text-[#155E75] hover:underline font-semibold transition-colors"
+const ticketLinkClassName = "text-[#0E7490] hover:text-[#155E75] hover:underline font-semibold transition-colors"
 
-export const taskColumns: ColumnDef<ProjectListItem>[] = [
+export const ticketColumns: ColumnDef<TicketListItem>[] = [
     {
         accessorKey: 'TicketNumber',
         header: 'Ticket Nbr',
@@ -14,7 +14,7 @@ export const taskColumns: ColumnDef<ProjectListItem>[] = [
             const ticketNumber = row.getValue('TicketNumber') as string | null
             const projectId = row.original.ID
             return (
-                <Link href={`/tickets/${projectId}`} className={taskLinkClassName}>
+                <Link href={`/tickets/${projectId}`} className={ticketLinkClassName}>
                     {ticketNumber || ''}
                 </Link>
             )
@@ -33,8 +33,8 @@ export const taskColumns: ColumnDef<ProjectListItem>[] = [
             const projectId = row.original.ID
 
             return (
-                <Link href={`/tickets/${projectId}`} className={taskLinkClassName}>
-                    {projectName ? projectName.slice(0, 30) : ''}
+                <Link href={`/tickets/${projectId}`} className={ticketLinkClassName}>
+                    {projectName ? projectName.slice(0, 25) : ''}
                 </Link>
             )
         },
@@ -45,9 +45,12 @@ export const taskColumns: ColumnDef<ProjectListItem>[] = [
     },
     {
         accessorKey: 'ProjectDescription',
-        header: 'Ticket Description',
-        cell: ({row}) => <div>{row.getValue('ProjectDescription')}</div>,
-        size: 200,
+        header: 'Description',
+        cell: ({row}) => {
+            const projectDescription = row.getValue('ProjectDescription') as string | null
+            return <div>{projectDescription ? projectDescription.slice(0, 150) : ''}</div>
+        },
+        size: 150,
         meta: {
             align: 'left',
         },

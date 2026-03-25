@@ -306,6 +306,39 @@ export async function getQualityEngineerDropdownOptions(departmentID: number): P
 }
 
 
+export async function getQualityEngineerDropdownOptionsBySite(siteID: number): Promise<UserDropDownOption[]> {
+    try {
+        const qeUsers = await prisma.tblUser.findMany({
+            select: {
+                ID: true,
+                DisplayName: true,
+            },
+            where: {
+                SiteID: siteID,
+                IsActive: 1,
+                UserTypeID: USER_TYPES.QUALITY_ENGINEER,
+            },
+            orderBy: {
+                DisplayName: 'asc',
+            },
+        })
+
+        return qeUsers
+            .filter((user): user is { ID: number; DisplayName: string } => typeof user.DisplayName === 'string'
+                && user.DisplayName.length > 0)
+            .map((user) => ({
+                value: user.ID,
+                label: user.DisplayName,
+            }))
+
+    }
+    catch (error) {
+        console.error('Error fetching quality engineer options by site:', error)
+        throw new Error('Failed to fetch quality engineer options by site')
+    }
+}
+
+
 export async function getManufacturingEngineerDropdownOptions(departmentID: number): Promise<UserDropDownOption[]> {
     try {
         const meUsers = await prisma.tblUser.findMany({
