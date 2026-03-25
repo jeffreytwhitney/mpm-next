@@ -1,5 +1,6 @@
-import React, {useState, useCallback} from 'react'
-import {usePathname, useRouter} from 'next/navigation'
+'use client'
+
+import React, {useCallback, useState} from 'react'
 import {type TaskListFilters} from '@/server/data/taskList'
 import {type TaskStatusDropdownOption} from '@/server/data/taskStatus'
 import {type TaskTypeDropdownOption} from '@/server/data/taskType'
@@ -19,26 +20,25 @@ function ensureSelectedOption<T extends FilterSelectOption>(
     return [...options, {value: selectedValue, label: fallbackLabel(selectedValue)} as T]
 }
 
-interface UseTaskListFiltersOptions {
+interface UseTaskFiltersOptions {
     initialFilters: TaskListFilters
     initialStatusOptions: TaskStatusDropdownOption[]
     initialTaskTypeOptions: TaskTypeDropdownOption[]
     initialAssigneeOptions: UserDropDownOption[]
     initialDepartmentOptions: DepartmentDropdownOption[]
+    onFiltersChanged?: (filters: TaskListFilters) => void
 }
 
-export function useTaskListFilters({
+export function useTaskFilters({
     initialFilters,
     initialStatusOptions,
     initialTaskTypeOptions,
     initialAssigneeOptions,
     initialDepartmentOptions,
-}: UseTaskListFiltersOptions) {
-    const router = useRouter()
-    const pathname = usePathname()
+    onFiltersChanged,
+}: UseTaskFiltersOptions) {
     const [filters, setFilters] = useState<TaskListFilters>(initialFilters)
     const isInitialMount = React.useRef(true)
-    const lastNavigatedHrefRef = React.useRef<string | null>(null)
 
     const statusOptions = React.useMemo(() => ensureSelectedOption(
         initialStatusOptions,
@@ -64,37 +64,17 @@ export function useTaskListFilters({
         (id) => `Department ${id}`,
     ), [initialDepartmentOptions, filters.departmentID])
 
-    // Update URL when filters change (triggers server-side refetch)
     React.useEffect(() => {
-        // Skip pushing URL on initial mount (server already has correct URL)
+        if (!onFiltersChanged) return
+
+        // Skip callback on initial mount because SSR already rendered the first filter state.
         if (isInitialMount.current) {
             isInitialMount.current = false
             return
         }
 
-        // Do not rewrite URL while an intercepted task modal route is active.
-        if (pathname !== '/tasks') {
-            return
-        }
-
-        const params = new URLSearchParams()
-        Object.entries(filters).forEach(([key, value]) => {
-            if (value !== undefined && value !== '') {
-                params.set(key, value.toString())
-            } else {
-                params.delete(key)
-            }
-        })
-
-        const queryString = params.toString()
-        const href = queryString ? `/tasks?${queryString}` : '/tasks'
-        if (lastNavigatedHrefRef.current === href) {
-            return
-        }
-
-        lastNavigatedHrefRef.current = href
-        router.replace(href, {scroll: false})
-    }, [filters, pathname, router])
+        onFiltersChanged(filters)
+    }, [filters, onFiltersChanged])
 
     const handleFilterChange = useCallback((key: keyof TaskListFilters, value: string | number | undefined) => {
         setFilters((prevFilters) => {

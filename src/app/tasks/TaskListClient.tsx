@@ -1,6 +1,7 @@
 'use client'
 
 import React, {useCallback} from 'react'
+import {usePathname, useRouter} from 'next/navigation'
 import {DataTable} from '@/components/DataTable'
 import {type TaskListFilters, type TaskListItem} from '@/server/data/taskList'
 import DebouncedInput from '@/components/DebouncedInput'
@@ -11,9 +12,9 @@ import {type UserDropDownOption} from '@/server/data/user'
 import {type DepartmentDropdownOption} from '@/server/data/department'
 import {PAGE_SIZE, TEXT_FILTER_CLASS, FILTER_RESET_TITLE} from '@/lib/filterConstants'
 import {Pagination} from '@/components/Pagination'
+import {useTaskFilters} from '@/features/tasks/hooks/useTaskFilters'
+import {StatusFilter, TaskTypeFilter, AssignedToFilter, DepartmentFilter} from '@/features/tasks/components/TaskListFilterControls'
 import {getTaskRowStyle} from './_utils/taskRowStyle'
-import {useTaskListFilters} from './_hooks/useTaskListFilters'
-import {StatusFilter, TaskTypeFilter, AssignedToFilter, DepartmentFilter} from './_components/TaskListFilterControls'
 
 type TextFilterKey = 'ticketNumber' | 'taskName' | 'projectName'
 
@@ -28,6 +29,34 @@ interface TaskListClientProps {
 }
 
 export function TaskListClient({initialTasks, initialFilters, initialStatusOptions, initialTaskTypeOptions, initialAssigneeOptions, initialDepartmentOptions, totalCount}: TaskListClientProps) {
+    const router = useRouter()
+    const pathname = usePathname()
+    const lastNavigatedHrefRef = React.useRef<string | null>(null)
+
+    const handleFiltersChanged = useCallback((nextFilters: TaskListFilters) => {
+        if (pathname !== '/tasks') {
+            return
+        }
+
+        const params = new URLSearchParams()
+        Object.entries(nextFilters).forEach(([key, value]) => {
+            if (value !== undefined && value !== '') {
+                params.set(key, value.toString())
+            } else {
+                params.delete(key)
+            }
+        })
+
+        const queryString = params.toString()
+        const href = queryString ? `/tasks?${queryString}` : '/tasks'
+        if (lastNavigatedHrefRef.current === href) {
+            return
+        }
+
+        lastNavigatedHrefRef.current = href
+        router.replace(href, {scroll: false})
+    }, [pathname, router])
+
     const {
         filters,
         statusOptions,
@@ -44,7 +73,14 @@ export function TaskListClient({initialTasks, initialFilters, initialStatusOptio
         resetTaskTypeFilter,
         resetAssignedToFilter,
         resetDepartmentFilter,
-    } = useTaskListFilters({initialFilters, initialStatusOptions, initialTaskTypeOptions, initialAssigneeOptions, initialDepartmentOptions})
+    } = useTaskFilters({
+        initialFilters,
+        initialStatusOptions,
+        initialTaskTypeOptions,
+        initialAssigneeOptions,
+        initialDepartmentOptions,
+        onFiltersChanged: handleFiltersChanged,
+    })
 
     const textFilterColumns: Record<string, {filterKey: TextFilterKey; value: string | undefined}> = {
         TicketNumber: {filterKey: 'ticketNumber', value: filters.ticketNumber},

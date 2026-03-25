@@ -25,12 +25,17 @@ jest.mock('@/lib/prisma', () => ({
 
 import {
   getActiveUserForAuth,
+  getCellLeadDropdownOptions,
+  getManufacturingEngineerDropdownOptions,
   getMetrologyProgrammerDropdownOptions,
   getMetrologyProgrammerUsers,
+  getMetrologyUserDropdownOptions,
   getMetrologyUsers,
+  getQualityEngineerDropdownOptions,
   getUserByEmployeeNumber,
   getUserById,
   getUsersByDepartmentAndUserTypeID,
+  getUsersBySiteIDAndUserTypeID,
   verifyUserCredentials,
 } from '@/server/data/user'
 
@@ -188,10 +193,130 @@ describe('userActions', () => {
     )
   })
 
+  it('queries users by site and user type ordered by full name', async () => {
+    mockFindManyUser.mockResolvedValueOnce([])
+
+    await getUsersBySiteIDAndUserTypeID(2, 3)
+
+    expect(mockFindManyUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          SiteID: 2,
+          UserTypeID: 3,
+        },
+        orderBy: {
+          FullName: 'asc',
+        },
+      }),
+    )
+  })
+
+  it('maps metrology user dropdown options by display name and filters blank names', async () => {
+    mockFindManyUser.mockResolvedValueOnce([
+      { ID: 20, DisplayName: 'A. User' },
+      { ID: 21, DisplayName: '' },
+      { ID: 22, DisplayName: null },
+    ])
+
+    const result = await getMetrologyUserDropdownOptions(5)
+
+    expect(mockFindManyUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          SiteID: 5,
+          IsActive: 1,
+          UserTypeID: { in: [1, 2] },
+        },
+        orderBy: { DisplayName: 'asc' },
+      }),
+    )
+    expect(result).toEqual([{ value: 20, label: 'A. User' }])
+  })
+
+  it('maps quality engineer dropdown options', async () => {
+    mockFindManyUser.mockResolvedValueOnce([{ ID: 30, FullName: 'Quality Name' }])
+
+    await expect(getQualityEngineerDropdownOptions(9)).resolves.toEqual([{ value: 30, label: 'Quality Name' }])
+
+    expect(mockFindManyUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          DepartmentID: 9,
+          IsActive: 1,
+          UserTypeID: 3,
+        },
+      }),
+    )
+  })
+
+  it('maps manufacturing engineer dropdown options', async () => {
+    mockFindManyUser.mockResolvedValueOnce([{ ID: 31, FullName: 'Manufacturing Name' }])
+
+    await expect(getManufacturingEngineerDropdownOptions(11)).resolves.toEqual([{ value: 31, label: 'Manufacturing Name' }])
+
+    expect(mockFindManyUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          DepartmentID: 11,
+          IsActive: 1,
+          UserTypeID: 4,
+        },
+      }),
+    )
+  })
+
+  it('maps cell lead dropdown options', async () => {
+    mockFindManyUser.mockResolvedValueOnce([{ ID: 32, FullName: 'Cell Lead Name' }])
+
+    await expect(getCellLeadDropdownOptions(12)).resolves.toEqual([{ value: 32, label: 'Cell Lead Name' }])
+
+    expect(mockFindManyUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          DepartmentID: 12,
+          IsActive: 1,
+          UserTypeID: 5,
+        },
+      }),
+    )
+  })
+
   it('throws a consistent error when user query fails', async () => {
     mockFindFirstUser.mockRejectedValueOnce(new Error('db fail'))
 
     await expect(getUserById(1)).rejects.toThrow('Failed to fetch user')
+  })
+
+  it('throws consistent errors for representative user query failures', async () => {
+    mockFindFirstUser.mockRejectedValueOnce(new Error('db fail'))
+    await expect(getUserByEmployeeNumber('E1')).rejects.toThrow('Failed to fetch user')
+
+    mockFindFirstUser.mockRejectedValueOnce(new Error('db fail'))
+    await expect(getActiveUserForAuth('E1')).rejects.toThrow('Failed to fetch user for auth')
+
+    mockFindManyUser.mockRejectedValueOnce(new Error('db fail'))
+    await expect(getMetrologyUsers(2)).rejects.toThrow('Failed to fetch user')
+
+    mockFindManyUser.mockRejectedValueOnce(new Error('db fail'))
+    await expect(getUsersByDepartmentAndUserTypeID(2, 3)).rejects.toThrow('Failed to fetch usersByDepartmentAndUserTypeID')
+
+    mockFindManyUser.mockRejectedValueOnce(new Error('db fail'))
+    await expect(getUsersBySiteIDAndUserTypeID(2, 3)).rejects.toThrow('Failed to fetch usersByDepartmentAndUserTypeID')
+
+    mockFindManyUser.mockRejectedValueOnce(new Error('db fail'))
+    await expect(getMetrologyProgrammerDropdownOptions()).rejects.toThrow('Failed to fetch user')
+
+    mockFindManyUser.mockRejectedValueOnce(new Error('db fail'))
+    await expect(getMetrologyUserDropdownOptions(1)).rejects.toThrow('Failed to fetch user')
+
+    mockFindManyUser.mockRejectedValueOnce(new Error('db fail'))
+    await expect(getQualityEngineerDropdownOptions(1)).rejects.toThrow('Failed to fetch user')
+
+    mockFindManyUser.mockRejectedValueOnce(new Error('db fail'))
+    await expect(getManufacturingEngineerDropdownOptions(1)).rejects.toThrow('Failed to fetch user')
+
+    mockFindManyUser.mockRejectedValueOnce(new Error('db fail'))
+    await expect(getCellLeadDropdownOptions(1)).rejects.toThrow('Failed to fetch user')
   })
 
 })

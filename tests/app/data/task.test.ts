@@ -7,16 +7,37 @@ afterAll(() => {
 })
 
 const mockFindFirst = jest.fn()
+const mockFindMany = jest.fn()
+const mockCreate = jest.fn()
+const mockUpdate = jest.fn()
+const mockCount = jest.fn()
+const mockUpdateTicket = jest.fn()
 
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     tblTask: {
       findFirst: mockFindFirst,
+      findMany: mockFindMany,
+      create: mockCreate,
+      update: mockUpdate,
+      count: mockCount,
     },
   },
 }))
 
-import { checkExistingTask } from '@/server/data/task'
+jest.mock('@/server/data/ticket', () => ({
+  updateTicket: (...args: unknown[]) => mockUpdateTicket(...args),
+}))
+
+import { Prisma } from '@/generated/prisma/client'
+import {
+  checkExistingTask,
+  countActiveTasksByProjectId,
+  createTask,
+  getTaskById,
+  getTasksByProjectId,
+  updateTask,
+} from '@/server/data/task'
 
 describe('checkExistingTask (unit)', () => {
   beforeEach(() => {
@@ -82,6 +103,106 @@ describe('checkExistingTask (unit)', () => {
 
     expect(mockFindFirst).toHaveBeenCalled()
     expect(result).toBe(false)
+  })
+})
+
+describe('task data access wrappers', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('gets a task by id with the expected query shape', async () => {
+    mockFindFirst.mockResolvedValueOnce({ ID: 7 })
+
+    await expect(getTaskById(7)).resolves.toEqual({ ID: 7 })
+    expect(mockFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { ID: 7 },
+      }),
+    )
+  })
+
+  it('surfaces a user-friendly error when getTaskById fails', async () => {
+    mockFindFirst.mockRejectedValueOnce(new Error('db down'))
+
+    await expect(getTaskById(3)).rejects.toThrow('Failed to fetch task')
+  })
+
+  it('gets tasks by project id', async () => {
+    mockFindMany.mockResolvedValueOnce([{ ID: 1 }, { ID: 2 }])
+
+    await expect(getTasksByProjectId(55)).resolves.toEqual([{ ID: 1 }, { ID: 2 }])
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { ProjectID: 55 },
+      }),
+    )
+  })
+
+  it('creates a task, defaults CurrentlyRunning, and updates active task count on ticket', async () => {
+    mockCreate.mockResolvedValueOnce({ ID: 100 })
+    mockCount.mockResolvedValueOnce(8)
+
+    await expect(
+      createTask({
+        ProjectID: 10,
+        StatusID: 1,
+        TaskName: 'New Task',
+        Operation: '20',
+      }),
+    ).resolves.toEqual({ ID: 100 })
+
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          ProjectID: 10,
+          StatusID: 1,
+          TaskName: 'New Task',
+          Operation: '20',
+          CurrentlyRunning: 0,
+          CreatedTimestamp: expect.any(Date),
+          UpdatedTimestamp: expect.any(Date),
+        }),
+      }),
+    )
+
+    expect(mockCount).toHaveBeenCalledWith({
+      where: {
+        ProjectID: 10,
+        StatusID: { notIn: [4, 5] },
+      },
+    })
+
+    expect(mockUpdateTicket).toHaveBeenCalledWith(10, { CountOfActiveTasks: 8 })
+  })
+
+  it('returns null when updateTask hits Prisma P2025', async () => {
+    mockUpdate.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Record not found', {
+        code: 'P2025',
+        clientVersion: 'test-client',
+      }),
+    )
+
+    await expect(updateTask(88, { TaskName: 'x' })).resolves.toBeNull()
+  })
+
+  it('rethrows updateTask errors for non-P2025 failures', async () => {
+    mockUpdate.mockRejectedValueOnce(new Error('unexpected'))
+
+    await expect(updateTask(88, { TaskName: 'x' })).rejects.toThrow('unexpected')
+  })
+
+  it('counts active tasks by project id', async () => {
+    mockCount.mockResolvedValueOnce(3)
+
+    await expect(countActiveTasksByProjectId(42)).resolves.toBe(3)
+    expect(mockCount).toHaveBeenCalledWith({
+      where: {
+        ProjectID: 42,
+        StatusID: { notIn: [4, 5] },
+      },
+    })
   })
 })
 

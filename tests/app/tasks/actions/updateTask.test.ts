@@ -8,14 +8,18 @@ afterAll(() => {
 
 const mockGetTaskById = jest.fn()
 const mockUpdateTaskRecord = jest.fn()
+const mockCountActiveTasksByProjectId = jest.fn()
 const mockCreateTaskNote = jest.fn()
+const mockCreateTaskTimeEntry = jest.fn()
 const mockGetTicketById = jest.fn()
 const mockGetQualityEngineerByTicketID = jest.fn()
+const mockUpdateTicket = jest.fn()
 const mockRevalidatePath = jest.fn()
 
 jest.mock('@/server/data/task', () => ({
   getTaskById: (...args: unknown[]) => mockGetTaskById(...args),
   updateTask: (...args: unknown[]) => mockUpdateTaskRecord(...args),
+  countActiveTasksByProjectId: (...args: unknown[]) => mockCountActiveTasksByProjectId(...args),
 }))
 
 jest.mock('@/server/data/taskNote', () => ({
@@ -25,6 +29,11 @@ jest.mock('@/server/data/taskNote', () => ({
 jest.mock('@/server/data/ticket', () => ({
   getTicketById: (...args: unknown[]) => mockGetTicketById(...args),
   getQualityEngineerByTicketID: (...args: unknown[]) => mockGetQualityEngineerByTicketID(...args),
+  updateTicket: (...args: unknown[]) => mockUpdateTicket(...args),
+}))
+
+jest.mock('@/server/data/taskTime', () => ({
+  createTaskTimeEntry: (...args: unknown[]) => mockCreateTaskTimeEntry(...args),
 }))
 
 jest.mock('next/cache', () => ({
@@ -70,6 +79,20 @@ describe('updateTask action assignee behavior', () => {
 
   it('rejects invalid assignee values before data access', async () => {
     const formData = buildValidFormData({ assigneeID: 'abc' })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {
+        assigneeID: 'Assignee is invalid.',
+      },
+    })
+
+    expect(mockGetTaskById).not.toHaveBeenCalled()
+    expect(mockUpdateTaskRecord).not.toHaveBeenCalled()
+  })
+
+  it('rejects non-positive assignee ids before data access', async () => {
+    const formData = buildValidFormData({ assigneeID: '0' })
 
     await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
       success: false,
@@ -489,6 +512,308 @@ describe('updateTask action assignee behavior', () => {
 
     const updatePayload = mockUpdateTaskRecord.mock.calls[0][1]
     expect(updatePayload).not.toHaveProperty('DateStarted')
+  })
+
+  it('returns required-field errors when the form is missing key values', async () => {
+    const formData = buildValidFormData({
+      taskName: '',
+      statusId: '',
+      opNumber: '',
+      dueDate: '',
+      scheduledDueDate: '',
+      manufacturingRev: '',
+    })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {
+        taskName: 'Task name is required.',
+        statusId: 'Status is required.',
+        opNumber: 'Op number is required.',
+        dueDate: 'Due date is required.',
+        scheduledDueDate: 'Scheduled due date is required.',
+        manufacturingRev: 'Rev is required.',
+      },
+    })
+  })
+
+  it('returns a status validation error for non-integer statuses', async () => {
+    const formData = buildValidFormData({ statusId: 'abc' })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {
+        statusId: 'Status is invalid.',
+      },
+    })
+  })
+
+  it('returns date validation errors for invalid dates', async () => {
+    const formData = buildValidFormData({
+      dueDate: 'bad-date',
+      scheduledDueDate: 'also-bad',
+    })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {
+        dueDate: 'Due date is invalid.',
+        scheduledDueDate: 'Scheduled due date is invalid.',
+      },
+    })
+  })
+
+  it('returns only scheduled due date error when due date is valid', async () => {
+    const formData = buildValidFormData({
+      dueDate: '2026-03-20',
+      scheduledDueDate: 'not-a-date',
+    })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {
+        scheduledDueDate: 'Scheduled due date is invalid.',
+      },
+    })
+  })
+
+  it('requires waiting note when waiting reason is other', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_WAITING_ID),
+      waitingReason: 'other',
+      waitingNote: '',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+    })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {
+        waitingNote: 'Waiting note is required when selecting "Other".',
+      },
+    })
+  })
+
+  it('creates the waiting-for-part canned note when transitioning to Waiting', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_WAITING_ID),
+      waitingReason: 'waiting-for-part',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+      ProjectID: 55,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: true,
+      fieldErrors: {},
+    })
+
+    expect(mockCreateTaskNote).toHaveBeenCalledWith({
+      TaskID: 100,
+      TaskNote: 'Waiting for part in order to complete the program.',
+    })
+  })
+
+  it('creates waiting-for-permission note using quality engineer fallback name', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_WAITING_ID),
+      waitingReason: 'waiting-for-permission',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+      ProjectID: 321,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+    mockGetTicketById.mockResolvedValueOnce({ ticket: { ID: 321 } })
+    mockGetQualityEngineerByTicketID.mockResolvedValueOnce(null)
+
+    await updateTask(100, { success: false, fieldErrors: {} }, formData)
+
+    expect(mockCreateTaskNote).toHaveBeenCalledWith({
+      TaskID: 100,
+      TaskNote: 'Waiting for Permission to release from Quality Engineer',
+    })
+  })
+
+  it('creates waiting-for-permission note using quality engineer full name when available', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_WAITING_ID),
+      waitingReason: 'waiting-for-permission',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+      ProjectID: 321,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+    mockGetTicketById.mockResolvedValueOnce({ ticket: { ID: 321 } })
+    mockGetQualityEngineerByTicketID.mockResolvedValueOnce({ FullName: 'Jane QE' })
+
+    await updateTask(100, { success: false, fieldErrors: {} }, formData)
+
+    expect(mockCreateTaskNote).toHaveBeenCalledWith({
+      TaskID: 100,
+      TaskNote: 'Waiting for Permission to release from Jane QE',
+    })
+  })
+
+  it('does not create waiting-for-permission note when task has no project id', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_WAITING_ID),
+      waitingReason: 'waiting-for-permission',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+      ProjectID: null,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+
+    await updateTask(100, { success: false, fieldErrors: {} }, formData)
+
+    expect(mockGetTicketById).not.toHaveBeenCalled()
+    expect(mockGetQualityEngineerByTicketID).not.toHaveBeenCalled()
+    expect(mockCreateTaskNote).not.toHaveBeenCalled()
+  })
+
+  it('returns task not found when initial task lookup fails', async () => {
+    const formData = buildValidFormData()
+    mockGetTaskById.mockResolvedValueOnce(null)
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {},
+      formError: 'Task was not found.',
+    })
+  })
+
+  it('returns task not found when update call returns null', async () => {
+    const formData = buildValidFormData()
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_NOT_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+      ProjectID: 22,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce(null)
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {},
+      formError: 'Task was not found.',
+    })
+  })
+
+  it('updates active task count on completed transitions with a project id', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_COMPLETED_ID),
+      completedNote: 'Done',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+      DateCompleted: null,
+      ProjectID: 50,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+    mockCountActiveTasksByProjectId.mockResolvedValueOnce(4)
+
+    await updateTask(100, { success: false, fieldErrors: {} }, formData)
+
+    expect(mockCountActiveTasksByProjectId).toHaveBeenCalledWith(50)
+    expect(mockUpdateTicket).toHaveBeenCalledWith(50, { CountOfActiveTasks: 4 })
+  })
+
+  it('persists manual due date flag and null drawing number', async () => {
+    const formData = buildValidFormData({
+      drawingNumber: '',
+      manualDueDate: 'on',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_NOT_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+      ProjectID: 50,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+
+    await updateTask(100, { success: false, fieldErrors: {} }, formData)
+
+    expect(mockUpdateTaskRecord).toHaveBeenCalledWith(
+      100,
+      expect.objectContaining({
+        ManualDueDate: 1,
+        DrawingNumber: null,
+      }),
+    )
+  })
+
+  it('creates a task time entry when completing with entryDate and hours', async () => {
+    const formData = buildValidFormData({
+      statusId: String(TASK_STATUS_COMPLETED_ID),
+      entryDate: '2026-03-22',
+      hours: '1.75',
+    })
+
+    mockGetTaskById.mockResolvedValueOnce({
+      ID: 100,
+      StatusID: TASK_STATUS_STARTED_ID,
+      AssignedToID: null,
+      DateStarted: null,
+      DateCompleted: null,
+      ProjectID: 50,
+    })
+    mockUpdateTaskRecord.mockResolvedValueOnce({ ID: 100 })
+    mockCountActiveTasksByProjectId.mockResolvedValueOnce(2)
+    mockCreateTaskTimeEntry.mockResolvedValueOnce({ ID: 1 })
+
+    await updateTask(100, { success: false, fieldErrors: {} }, formData)
+
+    expect(mockCreateTaskTimeEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TaskID: 100,
+        AssignedToID: 27,
+        Hours: 1.75,
+      }),
+    )
+  })
+
+  it('returns a generic form error when an unexpected exception is thrown', async () => {
+    const formData = buildValidFormData()
+    mockGetTaskById.mockRejectedValueOnce(new Error('boom'))
+
+    await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {},
+      formError: 'Unable to save task right now. Please try again.',
+    })
   })
 })
 

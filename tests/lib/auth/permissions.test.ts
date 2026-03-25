@@ -50,6 +50,12 @@ describe('auth permissions', () => {
     expect(hasPermission({ UserTypeID: USER_TYPE_IDS.cellLeader }, 'tickets.addTasks')).toBe(false)
   })
 
+  it('denies nullish or missing user type values', () => {
+    expect(hasPermission(null, 'tickets.create')).toBe(false)
+    expect(hasPermission(undefined, 'tickets.create')).toBe(false)
+    expect(hasPermission({ UserTypeID: null }, 'tickets.create')).toBe(false)
+  })
+
   it('grants full access only when an admin-eligible user has IsAdmin enabled', () => {
     const adminUser = {
       UserTypeID: USER_TYPE_IDS.metrologyCalibrationTechnician,
@@ -82,6 +88,12 @@ describe('auth permissions', () => {
     expect(() => requirePermission({ UserTypeID: USER_TYPE_IDS.manufacturingEngineer }, 'tickets.create')).toThrow(
       'Permission denied: tickets.create',
     )
+  })
+
+  it('returns the authenticated user when permission is granted', () => {
+    const user = { UserTypeID: USER_TYPE_IDS.metrologyProgrammer }
+
+    expect(requirePermission(user, 'tickets.create')).toBe(user)
   })
 })
 
