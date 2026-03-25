@@ -1,7 +1,9 @@
 'use client'
 
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+
+const TASK_ADDED_EVENT = 'ticket-task:added'
 
 interface TicketChildModalShellProps {
   children: React.ReactNode
@@ -19,6 +21,18 @@ export default function TicketChildModalShell({ children, title }: TicketChildMo
 
 	router.push('/tickets')
   }, [router])
+
+  useEffect(() => {
+	const handleTaskAdded = () => {
+	  closeModal()
+	}
+
+	window.addEventListener(TASK_ADDED_EVENT, handleTaskAdded)
+
+	return () => {
+	  window.removeEventListener(TASK_ADDED_EVENT, handleTaskAdded)
+	}
+  }, [closeModal])
 
   return (
 	<div className="fixed inset-0 z-70 flex items-center justify-center bg-black/55" role="dialog" aria-modal="true" aria-label={title}>

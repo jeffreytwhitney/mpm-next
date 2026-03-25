@@ -11,9 +11,14 @@ const TICKET_DETAIL_REFRESH_EVENT = 'ticket-detail:refresh'
 interface TicketDetailModalShellProps {
   children: React.ReactNode
   title: string
+  panelWidthClassName?: string
 }
 
-export default function TicketDetailModalShell({ children, title }: TicketDetailModalShellProps) {
+export default function TicketDetailModalShell({
+  children,
+  title,
+  panelWidthClassName,
+}: TicketDetailModalShellProps) {
   const router = useRouter()
 
   const closeModal = useCallback(() => {
@@ -44,7 +49,12 @@ export default function TicketDetailModalShell({ children, title }: TicketDetail
   }, [closeModal, router])
 
   return (
-    <SlideOverShell title={title} onClose={closeModal} closeAriaLabel="Close ticket details">
+    <SlideOverShell
+      title={title}
+      onClose={closeModal}
+      closeAriaLabel="Close ticket details"
+      panelWidthClassName={panelWidthClassName}
+    >
       {children}
     </SlideOverShell>
   )

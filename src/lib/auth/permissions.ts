@@ -13,6 +13,10 @@ export interface PermissionAwareUser extends RoleAwareUser {
   FullName?: string | null
 }
 
+export interface TicketEditPermissionAwareUser extends Pick<PermissionAwareUser, 'UserTypeID' | 'IsAdmin'> {
+  DepartmentID?: number | null
+}
+
 const permissionMatrix: Record<AppPermission, readonly KnownUserTypeID[]> = {
   'programmingTasks.manage': [USER_TYPE_IDS.metrologyProgrammer],
   'serviceTickets.manage': [
@@ -68,6 +72,32 @@ export function canAddTasksToTickets(
   return hasPermission(user, 'tickets.addTasks')
 }
 
+export function canEditTicket(
+  user: TicketEditPermissionAwareUser | null | undefined,
+  ticketDepartmentID: number | null | undefined,
+): boolean {
+  if (isEffectiveAdmin(user)) {
+    return true
+  }
+
+  if (!user?.UserTypeID) {
+    return false
+  }
+
+  if (
+    user.UserTypeID === USER_TYPE_IDS.metrologyProgrammer ||
+    user.UserTypeID === USER_TYPE_IDS.metrologyCalibrationTechnician
+  ) {
+    return true
+  }
+
+  return (
+    user.UserTypeID === USER_TYPE_IDS.qualityEngineer &&
+    ticketDepartmentID != null &&
+    user.DepartmentID === ticketDepartmentID
+  )
+}
+
 export function requireAuthenticatedUser<TUser>(user: TUser | null | undefined): TUser {
   if (!user) {
     throw new Error('Authentication required')
@@ -84,6 +114,19 @@ export function requirePermission<TUser extends Pick<PermissionAwareUser, 'UserT
 
   if (!hasPermission(authenticatedUser, permission)) {
     throw new Error(`Permission denied: ${permission}`)
+  }
+
+  return authenticatedUser
+}
+
+export function requireTicketEditPermission<TUser extends TicketEditPermissionAwareUser>(
+  user: TUser | null | undefined,
+  ticketDepartmentID: number | null | undefined,
+): TUser {
+  const authenticatedUser = requireAuthenticatedUser(user)
+
+  if (!canEditTicket(authenticatedUser, ticketDepartmentID)) {
+    throw new Error('Permission denied: tickets.edit')
   }
 
   return authenticatedUser

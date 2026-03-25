@@ -10,6 +10,8 @@ import {
 
 import type {TaskTypeDropdownOption} from '@/server/data/taskType'
 
+const TASK_ADDED_EVENT = 'ticket-task:added'
+
 interface TicketAddTaskFormProps {
     ticketId: number
     ticketNumber: string
@@ -69,6 +71,7 @@ export default function TicketAddTaskForm({
             return
         }
 
+        window.dispatchEvent(new CustomEvent(TASK_ADDED_EVENT, {detail: {ticketId}}))
         router.push(`/tickets/${ticketId}`)
         router.refresh()
     }, [router, serverState.success, ticketId])

@@ -1,6 +1,6 @@
 import TicketNewTaskContent from '@/features/tickets/components/TicketNewTaskContent'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
-import {getTicketById} from '@/server/data/ticket'
+import {getTicketRecordById} from '@/server/data/ticket'
 import {notFound} from 'next/navigation'
 
 interface TicketTaskNewPageProps {
@@ -9,11 +9,9 @@ interface TicketTaskNewPageProps {
 
 export default async function TicketTaskNewPage({ params }: TicketTaskNewPageProps) {
   const ticketId = await parsePositiveIntParamOrNotFound(params)
-  let ticket
+  const ticket = await getTicketRecordById(ticketId)
 
-  try {
-    ticket = await getTicketById(ticketId)
-  } catch {
+  if (!ticket) {
     notFound()
   }
 
@@ -23,9 +21,9 @@ export default async function TicketTaskNewPage({ params }: TicketTaskNewPagePro
 		<h1 className="mb-4 text-xl font-semibold">Add Tasks to Ticket {ticketId}</h1>
 		<TicketNewTaskContent
 		  ticketId={ticketId}
-		  ticketNumber={ticket.ticket.TicketNumber ?? ''}
-		  ticketName={ticket.ticket.ProjectName ?? ''}
-		  ticketDescription={ticket.ticket.ProjectDescription ?? ''}
+		  ticketNumber={ticket.TicketNumber ?? ''}
+		  ticketName={ticket.ProjectName ?? ''}
+		  ticketDescription={ticket.ProjectDescription ?? ''}
 		/>
 	  </div>
 	</div>

@@ -30,7 +30,7 @@ export const INITIAL_CREATE_TICKET_STATE: CreateTicketState = {
 // Field errors for Update Ticket
 export type UpdateTicketFieldErrors = Partial<Record<
     | 'ticketName'
-    | 'departmentID'
+    | 'primaryProjectOwnerID'
     | 'secondaryProjectOwnerID',
     string
 >>

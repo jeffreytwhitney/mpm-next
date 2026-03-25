@@ -2,7 +2,7 @@ import TicketNewTaskContent from '@/features/tickets/components/TicketNewTaskCon
 import TicketChildModalShell from '../../../../_components/TicketChildModalShell'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 import { notFound } from 'next/navigation'
-import {getTicketById} from "@/server/data/ticket"
+import {getTicketRecordById} from "@/server/data/ticket"
 
 interface TicketNewTaskChildModalPageProps {
   params: Promise<{ id: string }>
@@ -10,25 +10,19 @@ interface TicketNewTaskChildModalPageProps {
 
 export default async function TicketNewTaskChildModalPage({ params }: TicketNewTaskChildModalPageProps) {
   const ticketId = await parsePositiveIntParamOrNotFound(params)
-  let ticket
+  const ticket = await getTicketRecordById(ticketId)
 
-  try {
-    ticket = await getTicketById(ticketId)
-  } catch {
+  if (!ticket) {
     notFound()
   }
-
-  const ticketNumber = ticket.ticket.TicketNumber ?? ''
-  const ticketName = ticket.ticket.ProjectName ?? ''
-  const ticketDescription = ticket.ticket.ProjectDescription ?? ''
 
   return (
     <TicketChildModalShell title="Add Task">
       <TicketNewTaskContent
         ticketId={ticketId}
-        ticketNumber={ticketNumber}
-        ticketName={ticketName}
-        ticketDescription={ticketDescription}
+        ticketNumber={ticket.TicketNumber ?? ''}
+        ticketName={ticket.ProjectName ?? ''}
+        ticketDescription={ticket.ProjectDescription ?? ''}
       />
     </TicketChildModalShell>
   )

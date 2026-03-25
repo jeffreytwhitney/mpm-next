@@ -11,9 +11,14 @@ const TASK_DETAIL_REFRESH_EVENT = 'task-detail:refresh'
 interface TaskDetailModalShellProps {
   children: React.ReactNode
   title: string
+  panelWidthClassName?: string
 }
 
-export default function TaskDetailModalShell({ children, title }: TaskDetailModalShellProps) {
+export default function TaskDetailModalShell({
+  children,
+  title,
+  panelWidthClassName,
+}: TaskDetailModalShellProps) {
   const router = useRouter()
 
   const closeModal = useCallback(() => {
@@ -44,7 +49,12 @@ export default function TaskDetailModalShell({ children, title }: TaskDetailModa
   }, [closeModal, router])
 
   return (
-    <SlideOverShell title={title} onClose={closeModal} closeAriaLabel="Close task details">
+    <SlideOverShell
+      title={title}
+      onClose={closeModal}
+      closeAriaLabel="Close task details"
+      panelWidthClassName={panelWidthClassName}
+    >
       {children}
     </SlideOverShell>
   )

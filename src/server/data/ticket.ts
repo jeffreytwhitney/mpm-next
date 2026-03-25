@@ -31,18 +31,22 @@ export interface TicketDetailModel {
     tasks: TaskListItem[]
 }
 
-export async function getTicketById(
-    id: number,
-    taskFilters?: Partial<TaskListByProjectIDFilters>,
-): Promise<TicketDetailModel> {
-    const ticket = await withErrorHandling(
+export async function getTicketRecordById(id: number): Promise<TicketItem | null> {
+    return withErrorHandling(
         () => prisma.tblProject.findFirst({
             select: ticketSelect,
             where: {ID: id},
         }),
         'fetching ticket',
-        'Failed to fetch ticket'
+        'Failed to fetch ticket',
     )
+}
+
+export async function getTicketById(
+    id: number,
+    taskFilters?: Partial<TaskListByProjectIDFilters>,
+): Promise<TicketDetailModel> {
+    const ticket = await getTicketRecordById(id)
     if (!ticket) {
         throw new Error('Failed to fetch ticket')
     }

@@ -7,9 +7,14 @@ import SlideOverShell from '@/components/ui/SlideOverShell'
 interface TicketChildSlideOverShellProps {
   children: React.ReactNode
   title: string
+  panelWidthClassName?: string
 }
 
-export default function TicketChildSlideOverShell({ children, title }: TicketChildSlideOverShellProps) {
+export default function TicketChildSlideOverShell({
+  children,
+  title,
+  panelWidthClassName,
+}: TicketChildSlideOverShellProps) {
   const router = useRouter()
 
   const closeModal = useCallback(() => {
@@ -28,6 +33,7 @@ export default function TicketChildSlideOverShell({ children, title }: TicketChi
       closeAriaLabel="Close task group editor"
       side="left"
       zIndexClassName="z-60"
+      panelWidthClassName={panelWidthClassName}
     >
       {children}
     </SlideOverShell>

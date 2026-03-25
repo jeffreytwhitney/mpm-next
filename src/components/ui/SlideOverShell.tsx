@@ -9,7 +9,10 @@ interface SlideOverShellProps {
   closeAriaLabel?: string
   side?: 'left' | 'right'
   zIndexClassName?: string
+  panelWidthClassName?: string
 }
+
+const DEFAULT_PANEL_WIDTH_CLASS_NAME = 'w-full sm:w-2/5'
 
 export default function SlideOverShell({
   children,
@@ -18,6 +21,7 @@ export default function SlideOverShell({
   closeAriaLabel = 'Close dialog',
   side = 'right',
   zIndexClassName = 'z-50',
+  panelWidthClassName = DEFAULT_PANEL_WIDTH_CLASS_NAME,
 }: SlideOverShellProps) {
   const containerJustifyClassName = side === 'left' ? 'justify-start' : 'justify-end'
   const animationName = side === 'left' ? 'slide-in-left' : 'slide-in-right'
@@ -39,7 +43,7 @@ export default function SlideOverShell({
       aria-label={title}
     >
       <div
-        className={`h-screen w-full sm:w-2/5 bg-white shadow-xl ${borderClassName} rounded-none flex flex-col`}
+        className={`h-screen bg-white shadow-xl ${borderClassName} rounded-none flex flex-col ${panelWidthClassName}`}
         style={panelStyle}
       >
         <div className="mb-4 flex items-center justify-between border-b pb-2 p-4">

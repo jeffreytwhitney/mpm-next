@@ -9,11 +9,13 @@ afterAll(() => {
 import {
   canAddTasksToTickets,
   canCreateTickets,
+  canEditTicket,
   canManageProgrammingTasks,
   canManageServiceTickets,
   hasPermission,
   requireAuthenticatedUser,
   requirePermission,
+  requireTicketEditPermission,
 } from '@/lib/auth/permissions'
 import { USER_TYPE_IDS } from '@/lib/auth/roles'
 
@@ -94,6 +96,36 @@ describe('auth permissions', () => {
     const user = { UserTypeID: USER_TYPE_IDS.metrologyProgrammer }
 
     expect(requirePermission(user, 'tickets.create')).toBe(user)
+  })
+
+  it('allows both metrology user types to edit tickets across departments', () => {
+    expect(canEditTicket({ UserTypeID: USER_TYPE_IDS.metrologyProgrammer, DepartmentID: 10 }, 25)).toBe(true)
+    expect(
+      canEditTicket({ UserTypeID: USER_TYPE_IDS.metrologyCalibrationTechnician, DepartmentID: 99 }, 25),
+    ).toBe(true)
+  })
+
+  it('allows only same-department quality engineers to edit tickets', () => {
+    expect(canEditTicket({ UserTypeID: USER_TYPE_IDS.qualityEngineer, DepartmentID: 25 }, 25)).toBe(true)
+    expect(canEditTicket({ UserTypeID: USER_TYPE_IDS.qualityEngineer, DepartmentID: 24 }, 25)).toBe(false)
+    expect(canEditTicket({ UserTypeID: USER_TYPE_IDS.qualityEngineer, DepartmentID: null }, 25)).toBe(false)
+  })
+
+  it('denies non-metrology non-quality roles from editing tickets', () => {
+    expect(canEditTicket({ UserTypeID: USER_TYPE_IDS.manufacturingEngineer, DepartmentID: 25 }, 25)).toBe(false)
+    expect(canEditTicket({ UserTypeID: USER_TYPE_IDS.cellLeader, DepartmentID: 25 }, 25)).toBe(false)
+  })
+
+  it('throws when an authenticated user lacks ticket edit permission', () => {
+    expect(() =>
+      requireTicketEditPermission({ UserTypeID: USER_TYPE_IDS.qualityEngineer, DepartmentID: 12 }, 25),
+    ).toThrow('Permission denied: tickets.edit')
+  })
+
+  it('returns the user when ticket edit permission is granted', () => {
+    const user = { UserTypeID: USER_TYPE_IDS.qualityEngineer, DepartmentID: 25 }
+
+    expect(requireTicketEditPermission(user, 25)).toBe(user)
   })
 })
 
