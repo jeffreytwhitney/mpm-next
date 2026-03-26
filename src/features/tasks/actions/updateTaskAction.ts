@@ -8,13 +8,13 @@
  * - Enforce task status transition and assignee rules.
  * - Persist task field updates and transition timestamps.
  * - Apply ticket-level active task count updates when tasks complete/cancel.
- * - Emit related notes/time-entry side effects for waiting/cancelled/completed flows.
+ * - Emit related notes/time-entry side effects for waiting/canceled/completed flows.
  * - Revalidate task list/detail routes after a successful mutation.
  */
 import {revalidatePath} from 'next/cache'
 import {
     isActiveTaskStatus,
-    TASK_STATUS_CANCELLED_ID,
+    TASK_STATUS_CANCELED_ID,
     TASK_STATUS_COMPLETED_ID,
     isRevertingToNotStarted,
     shouldSetDateStartedForTransition,
@@ -40,7 +40,7 @@ interface ParsedUpdateTaskForm {
     manualDueDate: 0 | 1
     waitingReason: string
     waitingNote: string
-    cancelledNote: string
+    canceledNote: string
     completedNote: string
     entryDate: Date | null
     hours: number | null
@@ -73,7 +73,7 @@ function validateAndParseUpdateTaskForm(formData: FormData):
     const manualDueDateValue: 0 | 1 = formData.get('manualDueDate') === 'on' ? 1 : 0
     const waitingReasonValue = String(formData.get('waitingReason') ?? '').trim()
     const waitingNoteValue = String(formData.get('waitingNote') ?? '').trim()
-    const cancelledNoteValue = String(formData.get('cancelledNote') ?? '').trim()
+    const canceledNoteValue = String(formData.get('canceledNote') ?? '').trim()
     const completedNoteValue = String(formData.get('completedNote') ?? '').trim()
     const entryDateValue = String(formData.get('entryDate') ?? '').trim()
     const hoursValue = String(formData.get('hours') ?? '').trim()
@@ -171,7 +171,7 @@ function validateAndParseUpdateTaskForm(formData: FormData):
             manualDueDate: manualDueDateValue,
             waitingReason: waitingReasonValue,
             waitingNote: waitingNoteValue,
-            cancelledNote: cancelledNoteValue,
+            canceledNote: canceledNoteValue,
             completedNote: completedNoteValue,
             entryDate: entryDateValue ? parseDateValue(entryDateValue) : null,
             hours: hoursValue ? Number(hoursValue) : null,
@@ -193,7 +193,7 @@ function validateTaskUpdateBusinessRules(
         assigneeId,
         waitingReason,
         waitingNote,
-        cancelledNote,
+        canceledNote,
     } = parsedForm
 
     if (isRevertingToNotStarted(currentTask.StatusID, statusId)) {
@@ -220,7 +220,7 @@ function validateTaskUpdateBusinessRules(
 
     const isTaskCurrentlyActive = isActiveTaskStatus(currentTask.StatusID)
     const isMarkingWaiting = statusId === TASK_STATUS_WAITING_ID && currentTask.StatusID !== TASK_STATUS_WAITING_ID
-    const isMarkingCancelled = isTaskCurrentlyActive && statusId === TASK_STATUS_CANCELLED_ID
+    const isMarkingCancelled = isTaskCurrentlyActive && statusId === TASK_STATUS_CANCELED_ID
     const isMarkingCompleted = isTaskCurrentlyActive && statusId === TASK_STATUS_COMPLETED_ID
 
     if (isMarkingWaiting && !waitingReason) {
@@ -245,12 +245,12 @@ function validateTaskUpdateBusinessRules(
         }
     }
 
-    if (isMarkingCancelled && !cancelledNote) {
+    if (isMarkingCancelled && !canceledNote) {
         return {
             errorState: {
                 success: false,
                 fieldErrors: {
-                    cancelledNote: 'Cancelled note is required when setting status to Cancelled.',
+                    canceledNote: 'Canceled note is required when setting status to Canceled.',
                 },
             },
         }
@@ -297,7 +297,7 @@ async function buildWaitingNoteText(
  * Server action used by task detail form submissions.
  *
  * Enforces transition rules, persists the task, and emits related note/time
- * side effects for waiting/cancelled/completed transitions.
+ * side effects for waiting/canceled/completed transitions.
  */
 export async function updateTask(
     taskId: number,
@@ -321,7 +321,7 @@ export async function updateTask(
         manualDueDate,
         waitingReason,
         waitingNote,
-        cancelledNote,
+        canceledNote,
         completedNote,
         entryDate,
         hours,
@@ -391,10 +391,10 @@ export async function updateTask(
             }
         }
 
-        if (isMarkingCancelled && cancelledNote) {
+        if (isMarkingCancelled && canceledNote) {
             await addTaskNote({
                 taskId,
-                note: cancelledNote,
+                note: canceledNote,
             })
         }
 

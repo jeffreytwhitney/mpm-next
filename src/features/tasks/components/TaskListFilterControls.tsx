@@ -15,14 +15,24 @@ interface StatusFilterProps {
     options: TaskStatusDropdownOption[]
     onChange: (value: string) => void
     onReset: () => void
+    emptyLabel?: string
+    includeActiveNotWaitingPreset?: boolean
 }
 
-export function StatusFilter({statusID, statusPreset, options, onChange, onReset}: StatusFilterProps) {
+export function StatusFilter({
+    statusID,
+    statusPreset,
+    options,
+    onChange,
+    onReset,
+    emptyLabel = 'Active',
+    includeActiveNotWaitingPreset = true,
+}: StatusFilterProps) {
     const value = statusID !== undefined ? statusID.toString() : (statusPreset ?? '')
     return (
         <select value={value} onChange={(e) => onChange(e.target.value)} className={SELECT_FILTER_CLASS} title={FILTER_RESET_TITLE} onDoubleClick={onReset}>
-            <option value="">Active</option>
-            <option value="activeNotWaiting">Not Waiting</option>
+            <option value="">{emptyLabel}</option>
+            {includeActiveNotWaitingPreset ? <option value="activeNotWaiting">Not Waiting</option> : null}
             {options.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
             ))}
@@ -55,14 +65,24 @@ interface AssignedToFilterProps {
     options: UserDropDownOption[]
     onChange: (value: string) => void
     onReset: () => void
+    emptyLabel?: string
+    includeUnassignedPreset?: boolean
 }
 
-export function AssignedToFilter({assignedToID, unassignedPreset, options, onChange, onReset}: AssignedToFilterProps) {
+export function AssignedToFilter({
+    assignedToID,
+    unassignedPreset,
+    options,
+    onChange,
+    onReset,
+    emptyLabel = '',
+    includeUnassignedPreset = true,
+}: AssignedToFilterProps) {
     const value = assignedToID !== undefined ? assignedToID.toString() : (unassignedPreset ?? '')
     return (
         <select value={value} onChange={(e) => onChange(e.target.value)} className={SELECT_FILTER_CLASS} title={FILTER_RESET_TITLE} onDoubleClick={onReset}>
-            <option value=""></option>
-            <option value="unAssigned">Unassigned</option>
+            <option value="">{emptyLabel}</option>
+            {includeUnassignedPreset ? <option value="unAssigned">Unassigned</option> : null}
             {options.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
             ))}

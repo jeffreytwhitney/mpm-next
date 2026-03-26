@@ -13,10 +13,22 @@ export type CreateTaskFieldErrors = Partial<Record<
   string
 >>
 
+export interface CreateTaskFormValues {
+  projectID: string
+  taskTypeID: string
+  dueDate: string
+  scheduledDueDate: string
+  taskName: string
+  manufacturingRev: string
+  drawingNumber: string
+  opNumber: string
+}
+
 export interface CreateTaskState {
   success: boolean
   fieldErrors: CreateTaskFieldErrors
   formError?: string
+  values?: CreateTaskFormValues
 }
 
 export const INITIAL_CREATE_TASK_STATE: CreateTaskState = {
@@ -35,7 +47,7 @@ export type UpdateTaskFieldErrors = Partial<Record<
   | 'manufacturingRev'
   | 'waitingReason'
   | 'waitingNote'
-  | 'cancelledNote'
+  | 'canceledNote'
   | 'completedNote'
   | 'entryDate'
   | 'hours',

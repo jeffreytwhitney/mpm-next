@@ -132,6 +132,8 @@ export function TaskListClient({initialTasks, initialFilters, initialStatusOptio
                 columns={taskColumns}
                 data={initialTasks}
                 onSortChange={handleSortChange}
+                sortColumn={filters.sortBy ?? 'DueDate'}
+                sortDirection={filters.sortOrder ?? 'asc'}
                 renderHeaderFilter={renderHeaderFilter}
                 getRowStyle={getTaskRowStyle}
             />

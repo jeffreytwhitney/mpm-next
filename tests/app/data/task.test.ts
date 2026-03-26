@@ -44,17 +44,17 @@ describe('checkExistingTask (unit)', () => {
     jest.clearAllMocks()
   })
 
-  it('returns true when a task exists with matching taskName, operation, and taskTypeID', async () => {
-    mockFindFirst.mockResolvedValueOnce({ ID: 1 })
+  it('returns true when a task exists with matching taskName, operation, taskTypeID, and manufacturingRev', async () => {
+    mockFindMany.mockResolvedValueOnce([{ TaskName: 'Task ABC' }])
 
-    const result = await checkExistingTask('Task ABC', 'OP-001', 5, 100)
+    const result = await checkExistingTask('Task ABC', 'OP-001', 5, 'B', 100)
 
-    expect(mockFindFirst).toHaveBeenCalledWith({
-      select: { ID: true },
+    expect(mockFindMany).toHaveBeenCalledWith({
+      select: { TaskName: true },
       where: {
-        TaskName: 'Task ABC',
         Operation: 'OP-001',
         TaskTypeID: 5,
+        ManufacturingRev: 'B',
         ProjectID: 100,
       },
     })
@@ -62,16 +62,16 @@ describe('checkExistingTask (unit)', () => {
   })
 
   it('returns false when no task exists with the given criteria', async () => {
-    mockFindFirst.mockResolvedValueOnce(null)
+    mockFindMany.mockResolvedValueOnce([])
 
-    const result = await checkExistingTask('Task XYZ', 'OP-999', 10, 200)
+    const result = await checkExistingTask('Task XYZ', 'OP-999', 10, 'C', 200)
 
-    expect(mockFindFirst).toHaveBeenCalledWith({
-      select: { ID: true },
+    expect(mockFindMany).toHaveBeenCalledWith({
+      select: { TaskName: true },
       where: {
-        TaskName: 'Task XYZ',
         Operation: 'OP-999',
         TaskTypeID: 10,
+        ManufacturingRev: 'C',
         ProjectID: 200,
       },
     })
@@ -79,33 +79,41 @@ describe('checkExistingTask (unit)', () => {
   })
 
   it('passes the exact string values to the query without transformation', async () => {
-    mockFindFirst.mockResolvedValueOnce(null)
+    mockFindMany.mockResolvedValueOnce([])
 
-    await checkExistingTask('Task With Spaces', 'OP-123', 3, 50)
+    await checkExistingTask('Task With Spaces', 'OP-123', 3, 'REV-1', 50)
 
-    const callArgs = mockFindFirst.mock.calls[0][0]
-    expect(callArgs.where.TaskName).toBe('Task With Spaces')
+    const callArgs = mockFindMany.mock.calls[0][0]
     expect(callArgs.where.Operation).toBe('OP-123')
     expect(callArgs.where.TaskTypeID).toBe(3)
+    expect(callArgs.where.ManufacturingRev).toBe('REV-1')
     expect(callArgs.where.ProjectID).toBe(50)
   })
 
   it('throws an error when the database query fails', async () => {
-    mockFindFirst.mockRejectedValueOnce(new Error('Database connection failed'))
+    mockFindMany.mockRejectedValueOnce(new Error('Database connection failed'))
 
-    await expect(checkExistingTask('Task ABC', 'OP-001', 5, 100)).rejects.toThrow(
+    await expect(checkExistingTask('Task ABC', 'OP-001', 5, 'B', 100)).rejects.toThrow(
       'Database connection failed',
     )
   })
 
   it('handles null or undefined task names', async () => {
-    mockFindFirst.mockResolvedValueOnce(null)
+    mockFindMany.mockResolvedValueOnce([])
 
     // Testing with empty string
-    const result = await checkExistingTask('', 'OP-001', 5, 100)
+    const result = await checkExistingTask('', 'OP-001', 5, 'B', 100)
 
-    expect(mockFindFirst).toHaveBeenCalled()
+    expect(mockFindMany).toHaveBeenCalled()
     expect(result).toBe(false)
+  })
+
+  it('matches taskName case-insensitively', async () => {
+    mockFindMany.mockResolvedValueOnce([{ TaskName: 'TaSk AbC' }])
+
+    const result = await checkExistingTask('task abc', 'OP-001', 5, 'B', 100)
+
+    expect(result).toBe(true)
   })
 })
 

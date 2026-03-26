@@ -5,7 +5,7 @@
  * Feature module for 'tasks' domain behavior.
  */
 import {useActionState, useEffect, useState} from 'react'
-import Link from 'next/link'
+import {useRouter} from 'next/navigation'
 import {updateTask} from '@/features/tasks/actions/updateTaskAction'
 import {
     INITIAL_UPDATE_TASK_STATE,
@@ -14,7 +14,7 @@ import {
 import {
     isActiveTaskStatus,
     isRevertingToNotStarted,
-    TASK_STATUS_CANCELLED_ID,
+    TASK_STATUS_CANCELED_ID,
     TASK_STATUS_COMPLETED_ID,
     TASK_STATUS_WAITING_ID,
 } from '@/features/tasks/taskStatusTransition'
@@ -22,6 +22,7 @@ import type {TaskDetailModel} from '@/server/data/taskDetail'
 import type {TaskNoteItem} from '@/server/data/taskNote'
 import type {TaskStatusDropdownOption} from '@/server/data/taskStatus'
 import type {UserDropDownOption} from '@/server/data/user'
+import Link from "next/link";
 
 const TASK_DETAIL_SAVED_EVENT = 'task-detail:saved'
 
@@ -33,6 +34,7 @@ interface TaskDetailFormProps {
     canSubmit: boolean
     isMetrologyProgrammer: boolean
     taskNotes: TaskNoteItem[]
+    detailBasePath?: string
 }
 
 type FieldErrors = UpdateTaskFieldErrors
@@ -69,7 +71,7 @@ function validateForm(
 
         const isTaskCurrentlyActive = isActiveTaskStatus(task.StatusID)
         const isMarkingWaiting = submittedStatusId === TASK_STATUS_WAITING_ID && task.StatusID !== TASK_STATUS_WAITING_ID
-        const isMarkingCancelled = isTaskCurrentlyActive && submittedStatusId === TASK_STATUS_CANCELLED_ID
+        const isMarkingCancelled = isTaskCurrentlyActive && submittedStatusId === TASK_STATUS_CANCELED_ID
 
         if (isMarkingWaiting && !formData.get('waitingReason')?.toString().trim()) {
             errors.waitingReason = 'Please select a waiting reason.'
@@ -77,8 +79,8 @@ function validateForm(
         if (isMarkingWaiting && formData.get('waitingReason')?.toString() === 'other' && !formData.get('waitingNote')?.toString().trim()) {
             errors.waitingNote = 'Waiting note is required when selecting "Other".'
         }
-        if (isMarkingCancelled && !formData.get('cancelledNote')?.toString().trim()) {
-            errors.cancelledNote = 'Cancelled note is required when setting status to Cancelled.'
+        if (isMarkingCancelled && !formData.get('canceledNote')?.toString().trim()) {
+            errors.canceledNote = 'Canceled note is required when setting status to Canceled.'
         }
     }
 
@@ -117,8 +119,13 @@ export function TaskDetailForm({
                                    canSubmit,
                                    isMetrologyProgrammer,
                                    taskNotes,
+                                   detailBasePath,
                                }: TaskDetailFormProps) {
+            const router = useRouter()
     const {task, ticket} = taskDetail
+    const taskDetailBasePath = detailBasePath ?? `/tasks/${taskId}`
+    const addNoteHref = `${taskDetailBasePath}/notes/new`
+    const logTimeHref = `${taskDetailBasePath}/time-entry`
     const [selectedStatusId, setSelectedStatusId] = useState<number>(task.StatusID)
     const [waitingReason, setWaitingReason] = useState<string>('')
     const [errors, setErrors] = useState<FieldErrors>({})
@@ -140,9 +147,9 @@ export function TaskDetailForm({
     const selectedAssigneeValue = task.AssignedToID != null ? String(task.AssignedToID) : ''
     const isTaskCurrentlyActive = isActiveTaskStatus(task.StatusID)
     const isMarkingWaiting = isMetrologyProgrammer && selectedStatusId === TASK_STATUS_WAITING_ID && task.StatusID !== TASK_STATUS_WAITING_ID
-    const isMarkingCancelled = isMetrologyProgrammer && isTaskCurrentlyActive && selectedStatusId === TASK_STATUS_CANCELLED_ID
+    const isMarkingCancelled = isMetrologyProgrammer && isTaskCurrentlyActive && selectedStatusId === TASK_STATUS_CANCELED_ID
     const isMarkingCompleted = isMetrologyProgrammer && isTaskCurrentlyActive && selectedStatusId === TASK_STATUS_COMPLETED_ID
-    const isTaskCompletedOrCancelled = task.StatusID === TASK_STATUS_COMPLETED_ID || task.StatusID === TASK_STATUS_CANCELLED_ID
+    const isTaskCompletedOrCancelled = task.StatusID === TASK_STATUS_COMPLETED_ID || task.StatusID === TASK_STATUS_CANCELED_ID
     const displayErrors: FieldErrors = {
         ...serverState.fieldErrors,
         ...errors,
@@ -164,18 +171,20 @@ export function TaskDetailForm({
         <>
             <div className="-mt-4 mb-4">
                 <div className="flex flex-wrap justify-end gap-2">
-                    <Link
-                        href={`/tasks/${taskId}/notes/new`}
-                        className="rounded border border-slate-300 px-2 py-1 text-xs font-medium hover:bg-slate-100 flex items-center gap-1"
+                    <button
+                        type="button"
+                        disabled={!canSubmit}
+                        onClick={() => router.push(addNoteHref)}
+                        className="rounded border border-slate-300 px-2 py-1 text-xs font-medium hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent flex items-center gap-1"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                         Add note
-                    </Link>
+                    </button>
                     {(isMetrologyProgrammer) && (
                     <Link
-                        href={`/tasks/${taskId}/time-entry`}
+                        href={logTimeHref}
                         className="rounded border border-slate-300 px-2 py-1 text-xs font-medium hover:bg-slate-100 flex items-center gap-1"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -352,20 +361,20 @@ export function TaskDetailForm({
 
                     {isMarkingCancelled && (
                         <>
-                            <label htmlFor="cancelledNote" className="font-semibold pt-1">
-                                Cancelled Note <span className="text-red-500">*</span>
+                            <label htmlFor="canceledNote" className="font-semibold pt-1">
+                                Cancellation Note {canSubmit && <span className="text-red-500">*</span>}
                             </label>
                             <div>
-                            <textarea
-                                id="cancelledNote"
-                                name="cancelledNote"
+                                <textarea
+                                    id="canceledNote"
+                                    name="canceledNote"
                                 rows={3}
                                 required
                                 className="rounded border border-gray-300 bg-white px-2 py-1 w-72"
                                 suppressHydrationWarning
                             />
-                                {displayErrors.cancelledNote && (
-                                    <p className="mt-0.5 text-xs text-red-600">{displayErrors.cancelledNote}</p>
+                                {displayErrors.canceledNote && (
+                                    <p className="mt-0.5 text-xs text-red-600">{displayErrors.canceledNote}</p>
                                 )}
                             </div>
                         </>

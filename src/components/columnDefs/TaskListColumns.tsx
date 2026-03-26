@@ -1,7 +1,3 @@
-/**
- * AUTO-GENERATED MODULE DOC
- * Shared UI component module for 'TaskListColumns'.
- */
 // Column definitions for the task list table
 import {ColumnDef} from "@tanstack/react-table";
 import type {TaskListItem} from "@/server/data/taskList";
@@ -77,6 +73,7 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
         minSize: 7,
         meta: {
             align: 'center',
+            sortable: false,
         },
     },
     {
@@ -138,6 +135,7 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
         minSize: 7,
         meta: {
             align: 'center',
+            sortable: false,
         },
     },
     {
@@ -235,6 +233,7 @@ export const taskColumns: ColumnDef<TaskListItem>[] = [
         minSize: 5,
         meta: {
             align: 'center',
+            sortable: false,
         },
     },
     {

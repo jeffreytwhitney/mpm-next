@@ -205,27 +205,39 @@ export async function updateTask(id: number, data: TaskUpdateInput): Promise<Tas
 
 
 /**
- * Checks if a task with the same name, operation, and task type already exists within a specific project.
+ * Checks if a task with the same task type, name (case-insensitive),
+ * operation, and manufacturing rev already exists within a specific project.
  * Used to prevent duplicate tasks from being created in the same ticket.
  *
  * @param taskName - The task name to check for duplicates
  * @param operationNumber - The operation number to check for duplicates
  * @param taskTypeID - The task type ID to check for duplicates
+ * @param manufacturingRev - The rev number to check for duplicates
  * @param projectID - The project ID to scope the uniqueness check to (prevents duplicates within a ticket)
  * @returns true if a task with these exact properties exists in the project, false otherwise
  * @throws Logs and throws an error if the database query fails
  */
-export async function checkExistingTask(taskName: string, operationNumber: string, taskTypeID: number, projectID: number): Promise<boolean> {
-    const task = await prisma.tblTask.findFirst({
-        select: { ID: true },
+export async function checkExistingTask(
+    taskName: string,
+    operationNumber: string,
+    taskTypeID: number,
+    manufacturingRev: string,
+    projectID: number,
+): Promise<boolean> {
+    const matchingTasks = await prisma.tblTask.findMany({
+        select: {
+            TaskName: true,
+        },
         where: {
-            TaskName: taskName,
             Operation: operationNumber,
             TaskTypeID: taskTypeID,
+            ManufacturingRev: manufacturingRev,
             ProjectID: projectID,
         },
     })
-    return (task != null)
+
+    const normalizedTaskName = taskName.trim().toLocaleLowerCase()
+    return matchingTasks.some((task) => (task.TaskName ?? '').trim().toLocaleLowerCase() === normalizedTaskName)
 }
 
 

@@ -7,7 +7,7 @@ afterAll(() => {
 })
 
 import {
-  TASK_STATUS_CANCELLED_ID,
+  TASK_STATUS_CANCELED_ID,
   TASK_STATUS_COMPLETED_ID,
   TASK_STATUS_NOT_STARTED_ID,
   TASK_STATUS_STARTED_ID,
@@ -16,9 +16,9 @@ import {
 } from '@/features/tasks/taskStatusTransition'
 
 describe('status ID constants', () => {
-  it('keeps Completed and Cancelled IDs mapped to the expected values', () => {
+  it('keeps Completed and Canceled IDs mapped to the expected values', () => {
     expect(TASK_STATUS_COMPLETED_ID).toBe(4)
-    expect(TASK_STATUS_CANCELLED_ID).toBe(5)
+    expect(TASK_STATUS_CANCELED_ID).toBe(5)
   })
 })
 

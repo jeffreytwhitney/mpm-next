@@ -11,7 +11,11 @@
  */
 import {revalidatePath} from 'next/cache'
 import {createTask as createTaskRecord, checkExistingTask} from '@/server/data/task'
-import type {CreateTaskFieldErrors, CreateTaskState, UpdateTaskState} from '@/features/tasks/actions/taskActionTypes'
+import type {
+    CreateTaskFieldErrors,
+    CreateTaskFormValues,
+    CreateTaskState,
+} from '@/features/tasks/actions/taskActionTypes'
 import {validateAndParseTaskFields, type RawTaskFields} from '@/features/tasks/actions/taskValidationHelpers'
 import {parsePositiveIntOrDefault} from '@/server/data/lib/common'
 
@@ -30,9 +34,11 @@ async function validateTaskUniqueness(
     taskName: string,
     operation: string,
     taskTypeID: number,
+    manufacturingRev: string,
     projectID: number,
+    values: CreateTaskFormValues,
 ): Promise<CreateTaskState | null> {
-    const preExistingTask = await checkExistingTask(taskName, operation, taskTypeID, projectID)
+    const preExistingTask = await checkExistingTask(taskName, operation, taskTypeID, manufacturingRev, projectID)
     if (!preExistingTask) {
         return null
     }
@@ -40,17 +46,32 @@ async function validateTaskUniqueness(
     return {
         success: false,
         fieldErrors: {
-            taskName: 'There is already a task with this name, op, and task type in this ticket.',
-            opNumber: 'There is already a task with this name, op, and task type in this ticket.',
-            taskTypeID: 'There is already a task with this name, op, and task type in this ticket.',
+            taskName: 'There is already a task with this name, op, task type, and rev in this ticket.',
+            opNumber: 'There is already a task with this name, op, task type, and rev in this ticket.',
+            taskTypeID: 'There is already a task with this name, op, task type, and rev in this ticket.',
+            manufacturingRev: 'There is already a task with this name, op, task type, and rev in this ticket.',
         },
+        values,
     }
 }
 
-function validateAndParseCreateTaskForm(formData: FormData):
+function getCreateTaskFormValues(formData: FormData): CreateTaskFormValues {
+    return {
+        projectID: String(formData.get('projectID') ?? '').trim(),
+        taskName: String(formData.get('taskName') ?? '').trim(),
+        taskTypeID: String(formData.get('taskTypeID') ?? '').trim(),
+        opNumber: String(formData.get('opNumber') ?? '').trim(),
+        dueDate: String(formData.get('dueDate') ?? '').trim(),
+        scheduledDueDate: String(formData.get('scheduledDueDate') ?? '').trim(),
+        manufacturingRev: String(formData.get('manufacturingRev') ?? '').trim(),
+        drawingNumber: String(formData.get('drawingNumber') ?? '').trim(),
+    }
+}
+
+function validateAndParseCreateTaskForm(values: CreateTaskFormValues):
     | { parsed: ParsedCreateTaskForm }
-    | { errorState: UpdateTaskState } {
-    const projectIDValue = String(formData.get('projectID') ?? '').trim()
+    | { errorState: CreateTaskState } {
+    const projectIDValue = values.projectID
     const fieldErrors: CreateTaskFieldErrors = {}
 
     if (!projectIDValue) {
@@ -65,13 +86,13 @@ function validateAndParseCreateTaskForm(formData: FormData):
     }
 
     const rawTaskFields: RawTaskFields = {
-        taskName: String(formData.get('taskName') ?? '').trim(),
-        taskTypeID: String(formData.get('taskTypeID') ?? '').trim(),
-        opNumber: String(formData.get('opNumber') ?? '').trim(),
-        dueDate: String(formData.get('dueDate') ?? '').trim(),
-        scheduledDueDate: String(formData.get('scheduledDueDate') ?? '').trim(),
-        manufacturingRev: String(formData.get('manufacturingRev') ?? '').trim(),
-        drawingNumber: String(formData.get('drawingNumber') ?? '').trim(),
+        taskName: values.taskName,
+        taskTypeID: values.taskTypeID,
+        opNumber: values.opNumber,
+        dueDate: values.dueDate,
+        scheduledDueDate: values.scheduledDueDate,
+        manufacturingRev: values.manufacturingRev,
+        drawingNumber: values.drawingNumber,
     }
 
     const parsedTask = validateAndParseTaskFields(rawTaskFields, (key, message) => {
@@ -83,6 +104,7 @@ function validateAndParseCreateTaskForm(formData: FormData):
             errorState: {
                 success: false,
                 fieldErrors,
+                values,
             },
         }
     }
@@ -92,6 +114,7 @@ function validateAndParseCreateTaskForm(formData: FormData):
             errorState: {
                 success: false,
                 fieldErrors,
+                values,
             },
         }
     }
@@ -114,7 +137,8 @@ function validateAndParseCreateTaskForm(formData: FormData):
 export async function addTask(
     formData: FormData
 ): Promise<CreateTaskState> {
-    const validationResult = validateAndParseCreateTaskForm(formData)
+    const values = getCreateTaskFormValues(formData)
+    const validationResult = validateAndParseCreateTaskForm(values)
     if ('errorState' in validationResult) {
         return validationResult.errorState
     }
@@ -130,7 +154,7 @@ export async function addTask(
         operation,
     } = validationResult.parsed
 
-    const uniquenessError = await validateTaskUniqueness(taskName, operation, taskTypeID, projectID)
+    const uniquenessError = await validateTaskUniqueness(taskName, operation, taskTypeID, manufacturingRev, projectID, values)
     if (uniquenessError) {
         return uniquenessError
     }

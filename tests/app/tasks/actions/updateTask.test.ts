@@ -41,7 +41,7 @@ jest.mock('next/cache', () => ({
 }))
 
 import {
-  TASK_STATUS_CANCELLED_ID,
+  TASK_STATUS_CANCELED_ID,
   TASK_STATUS_COMPLETED_ID,
   TASK_STATUS_NOT_SCHEDULED_ID,
   TASK_STATUS_NOT_STARTED_ID,
@@ -313,9 +313,9 @@ describe('updateTask action assignee behavior', () => {
     expect(mockCreateTaskNote).not.toHaveBeenCalled()
   })
 
-  it('requires cancelledNote when moving active task to Cancelled', async () => {
+  it('requires canceledNote when moving active task to Canceled', async () => {
     const formData = buildValidFormData({
-      statusId: String(TASK_STATUS_CANCELLED_ID),
+      statusId: String(TASK_STATUS_CANCELED_ID),
     })
 
     mockGetTaskById.mockResolvedValueOnce({
@@ -328,7 +328,7 @@ describe('updateTask action assignee behavior', () => {
     await expect(updateTask(100, { success: false, fieldErrors: {} }, formData)).resolves.toEqual({
       success: false,
       fieldErrors: {
-        cancelledNote: 'Cancelled note is required when setting status to Cancelled.',
+        canceledNote: 'Canceled note is required when setting status to Canceled.',
       },
     })
 
@@ -336,10 +336,10 @@ describe('updateTask action assignee behavior', () => {
     expect(mockCreateTaskNote).not.toHaveBeenCalled()
   })
 
-  it('creates a note when moving active task to Cancelled with note', async () => {
+  it('creates a note when moving active task to Canceled with note', async () => {
     const formData = buildValidFormData({
-      statusId: String(TASK_STATUS_CANCELLED_ID),
-      cancelledNote: 'Cancelled due to customer request.',
+      statusId: String(TASK_STATUS_CANCELED_ID),
+      canceledNote: 'Canceled due to customer request.',
     })
 
     mockGetTaskById.mockResolvedValueOnce({
@@ -358,18 +358,18 @@ describe('updateTask action assignee behavior', () => {
 
     expect(mockCreateTaskNote).toHaveBeenCalledWith({
       TaskID: 100,
-      TaskNote: 'Cancelled due to customer request.',
+      TaskNote: 'Canceled due to customer request.',
     })
   })
 
-  it('does not require or create a note when task is already Cancelled', async () => {
+  it('does not require or create a note when task is already Canceled', async () => {
     const formData = buildValidFormData({
-      statusId: String(TASK_STATUS_CANCELLED_ID),
+      statusId: String(TASK_STATUS_CANCELED_ID),
     })
 
     mockGetTaskById.mockResolvedValueOnce({
       ID: 100,
-      StatusID: TASK_STATUS_CANCELLED_ID,
+      StatusID: TASK_STATUS_CANCELED_ID,
       AssignedToID: null,
       DateStarted: null,
     })

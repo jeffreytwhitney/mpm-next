@@ -10,9 +10,16 @@ import { useRouter } from 'next/navigation'
 interface TaskChildModalShellProps {
   children: React.ReactNode
   title: string
+  fallbackHref?: string
+  zIndexClassName?: string
 }
 
-export default function TaskChildModalShell({ children, title }: TaskChildModalShellProps) {
+export default function TaskChildModalShell({
+  children,
+  title,
+  fallbackHref = '/tasks',
+  zIndexClassName = 'z-60',
+}: TaskChildModalShellProps) {
   const router = useRouter()
 
   const closeModal = useCallback(() => {
@@ -21,11 +28,11 @@ export default function TaskChildModalShell({ children, title }: TaskChildModalS
       return
     }
 
-    router.push('/tasks')
-  }, [router])
+    router.push(fallbackHref)
+  }, [fallbackHref, router])
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/55" role="dialog" aria-modal="true" aria-label={title}>
+    <div className={`fixed inset-0 ${zIndexClassName} flex items-center justify-center bg-black/55`} role="dialog" aria-modal="true" aria-label={title}>
       <div className="w-full max-w-xl rounded-lg border bg-white p-4 shadow-xl">
         <div className="mb-4 flex items-center justify-between border-b pb-2">
           <h2 className="text-lg font-semibold">{title}</h2>

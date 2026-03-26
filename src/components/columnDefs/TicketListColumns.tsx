@@ -57,6 +57,7 @@ export const ticketColumns: ColumnDef<TicketListItem>[] = [
         size: 150,
         meta: {
             align: 'left',
+            sortable: false,
         },
     },
     {

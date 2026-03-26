@@ -84,6 +84,8 @@ export default function TicketAddTaskForm({
         ...serverState.fieldErrors,
         ...errors,
     }
+    const formValues = serverState.values
+    const taskTypeDefaultValue = formValues?.taskTypeID ?? ''
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         const formData = new FormData(e.currentTarget)
@@ -120,9 +122,10 @@ export default function TicketAddTaskForm({
                 </label>
                 <div>
                     <select
+                        key={`taskType-${taskTypeDefaultValue}`}
                         id="taskTypeID"
                         name="taskTypeID"
-                        defaultValue=""
+                        defaultValue={taskTypeDefaultValue}
                         className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
                         suppressHydrationWarning
                     >
@@ -145,6 +148,7 @@ export default function TicketAddTaskForm({
                     <input
                         id="taskName"
                         name="taskName"
+                        defaultValue={formValues?.taskName ?? ''}
                         className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
                         suppressHydrationWarning
                     />
@@ -160,6 +164,7 @@ export default function TicketAddTaskForm({
                     <input
                         id="manufacturingRev"
                         name="manufacturingRev"
+                        defaultValue={formValues?.manufacturingRev ?? ''}
                         className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
                         suppressHydrationWarning
                     />
@@ -172,6 +177,7 @@ export default function TicketAddTaskForm({
                 <input
                     id="drawingNumber"
                     name="drawingNumber"
+                    defaultValue={formValues?.drawingNumber ?? ''}
                     className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
                     suppressHydrationWarning
                 />
@@ -183,6 +189,7 @@ export default function TicketAddTaskForm({
                     <input
                         id="opNumber"
                         name="opNumber"
+                        defaultValue={formValues?.opNumber ?? ''}
                         className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
                         suppressHydrationWarning
                     />
@@ -199,6 +206,7 @@ export default function TicketAddTaskForm({
                         type="date"
                         id="dueDate"
                         name="dueDate"
+                        defaultValue={formValues?.dueDate ?? ''}
                         className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
                         suppressHydrationWarning
                     />
@@ -215,6 +223,7 @@ export default function TicketAddTaskForm({
                         type="date"
                         id="scheduledDueDate"
                         name="scheduledDueDate"
+                        defaultValue={formValues?.scheduledDueDate ?? ''}
                         className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
                         suppressHydrationWarning
                     />

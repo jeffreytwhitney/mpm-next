@@ -52,14 +52,6 @@ const sortFieldMap: Record<string, keyof typeof projectListSelect> = {
     SecondaryOwnerName: 'SecondaryOwnerName',
     InitiatorName: 'InitiatorName',
     CreatedTimestamp: 'CreatedTimestamp',
-    ticketNumber: 'TicketNumber',
-    ticketName: 'ProjectName',
-    departmentName: 'DepartmentName',
-    countOfActiveTasks: 'CountOfActiveTasks',
-    primaryOwnerName: 'PrimaryOwnerName',
-    secondaryOwnerName: 'SecondaryOwnerName',
-    initiatorName: 'InitiatorName',
-    createdTimestamp: 'CreatedTimestamp',
 }
 
 export type TicketListItem = Prisma.qryProjectListGetPayload<{ select: typeof projectListSelect }>

@@ -16,12 +16,18 @@ interface TaskDetailModalShellProps {
   children: React.ReactNode
   title: string
   panelWidthClassName?: string
+  side?: 'left' | 'right'
+  zIndexClassName?: string
+  fallbackHref?: string
 }
 
 export default function TaskDetailModalShell({
   children,
   title,
   panelWidthClassName,
+  side = 'right',
+  zIndexClassName = 'z-50',
+  fallbackHref = '/tasks',
 }: TaskDetailModalShellProps) {
   const router = useRouter()
 
@@ -31,8 +37,8 @@ export default function TaskDetailModalShell({
       return
     }
 
-    router.push('/tasks')
-  }, [router])
+    router.push(fallbackHref)
+  }, [fallbackHref, router])
 
   useEffect(() => {
     const handleTaskSaved = () => {
@@ -57,6 +63,8 @@ export default function TaskDetailModalShell({
       title={title}
       onClose={closeModal}
       closeAriaLabel="Close task details"
+      side={side}
+      zIndexClassName={zIndexClassName}
       panelWidthClassName={panelWidthClassName}
     >
       {children}

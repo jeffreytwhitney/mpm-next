@@ -12,13 +12,14 @@ import { prisma } from '@/lib/prisma'
 
 describe('checkExistingTask (integration - DB)', () => {
 
-  it('returns true when querying an existing task with correct taskName, operation, and taskTypeID', async () => {
+  it('returns true when querying an existing task with correct taskName, operation, taskTypeID, and rev', async () => {
     // Get an existing task from the database
     const existingTask = await prisma.tblTask.findFirst({
       select: {
         TaskName: true,
         Operation: true,
         TaskTypeID: true,
+        ManufacturingRev: true,
         ProjectID: true,
       },
       where: {
@@ -39,6 +40,7 @@ describe('checkExistingTask (integration - DB)', () => {
       existingTask.TaskName || '',
       existingTask.Operation || '',
       existingTask.TaskTypeID || 0,
+      existingTask.ManufacturingRev || '',
       existingTask.ProjectID,
     )
 
@@ -51,6 +53,7 @@ describe('checkExistingTask (integration - DB)', () => {
       select: {
         Operation: true,
         TaskTypeID: true,
+        ManufacturingRev: true,
         ProjectID: true,
       },
     })
@@ -63,6 +66,7 @@ describe('checkExistingTask (integration - DB)', () => {
       'NON_EXISTENT_TASK_NAME_XYZ_' + Date.now(),
       existingTask.Operation || '',
       existingTask.TaskTypeID || 0,
+      existingTask.ManufacturingRev || '',
       existingTask.ProjectID,
     )
 
@@ -76,6 +80,7 @@ describe('checkExistingTask (integration - DB)', () => {
         TaskName: true,
         Operation: true,
         TaskTypeID: true,
+        ManufacturingRev: true,
         ProjectID: true,
       },
       where: {
@@ -93,6 +98,7 @@ describe('checkExistingTask (integration - DB)', () => {
       existingTask.TaskName || '',
       'NON_EXISTENT_OPERATION_' + Date.now(),
       existingTask.TaskTypeID || 0,
+      existingTask.ManufacturingRev || '',
       existingTask.ProjectID,
     )
 
@@ -106,6 +112,7 @@ describe('checkExistingTask (integration - DB)', () => {
         TaskName: true,
         Operation: true,
         TaskTypeID: true,
+        ManufacturingRev: true,
         ProjectID: true,
       },
     })
@@ -119,22 +126,24 @@ describe('checkExistingTask (integration - DB)', () => {
       existingTask.TaskName || '',
       existingTask.Operation || '',
       999999,
+      existingTask.ManufacturingRev || '',
       existingTask.ProjectID,
     )
 
     expect(result).toBe(false)
   })
 
-  it('handles all three criteria matching correctly', async () => {
+  it('handles all criteria matching correctly', async () => {
     // Create a task with specific criteria for testing
     const timestamp = Date.now().toString().slice(-6) // Use last 6 digits to keep it short
     const testTaskName = 'IntTest_' + timestamp
     const testOperation = 'OP_' + timestamp // Operation field is limited to 15 characters
+    const testRev = 'REV1'
     const testTypeID = 1
     const testProjectID = 1
 
     // First verify it doesn't exist
-    let result = await checkExistingTask(testTaskName, testOperation, testTypeID, testProjectID)
+    let result = await checkExistingTask(testTaskName, testOperation, testTypeID, testRev, testProjectID)
     expect(result).toBe(false)
 
     // Create a task with these criteria
@@ -145,13 +154,18 @@ describe('checkExistingTask (integration - DB)', () => {
         TaskName: testTaskName,
         Operation: testOperation,
         TaskTypeID: testTypeID,
+        ManufacturingRev: testRev,
         CurrentlyRunning: 0,
       },
       select: { ID: true },
     })
 
     // Now verify it exists
-    result = await checkExistingTask(testTaskName, testOperation, testTypeID, testProjectID)
+    result = await checkExistingTask(testTaskName, testOperation, testTypeID, testRev, testProjectID)
+    expect(result).toBe(true)
+
+    // TaskName comparison should be case-insensitive.
+    result = await checkExistingTask(testTaskName.toLowerCase(), testOperation, testTypeID, testRev, testProjectID)
     expect(result).toBe(true)
 
     // Clean up
@@ -160,7 +174,38 @@ describe('checkExistingTask (integration - DB)', () => {
     })
 
     // Verify it no longer exists
-    result = await checkExistingTask(testTaskName, testOperation, testTypeID, testProjectID)
+    result = await checkExistingTask(testTaskName, testOperation, testTypeID, testRev, testProjectID)
+    expect(result).toBe(false)
+  })
+
+  it('returns false when rev is different even if task name/op/type match', async () => {
+    const existingTask = await prisma.tblTask.findFirst({
+      select: {
+        TaskName: true,
+        Operation: true,
+        TaskTypeID: true,
+        ManufacturingRev: true,
+        ProjectID: true,
+      },
+      where: {
+        TaskName: { not: null },
+        Operation: { not: null },
+        ManufacturingRev: { not: null },
+      },
+    })
+
+    if (!existingTask) {
+      throw new Error('No existing task found in the database to test with')
+    }
+
+    const result = await checkExistingTask(
+      existingTask.TaskName || '',
+      existingTask.Operation || '',
+      existingTask.TaskTypeID || 0,
+      `NON_EXISTENT_REV_${Date.now()}`,
+      existingTask.ProjectID,
+    )
+
     expect(result).toBe(false)
   })
 })

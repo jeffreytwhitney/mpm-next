@@ -5,7 +5,9 @@
  * Shared UI component module for 'HeaderAuthControls'.
  */
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { LoginModal } from '@/components/LoginModal'
+import { logout } from '@/server/data/auth'
 
 interface HeaderAuthControlsProps {
   userLabel?: string
@@ -14,7 +16,9 @@ interface HeaderAuthControlsProps {
 }
 
 export function HeaderAuthControls({ userLabel, fullName, isAnonymous }: HeaderAuthControlsProps) {
+  const router = useRouter()
   const [isLoginOpen, setIsLoginOpen] = React.useState(false)
+  const [isLoggingOut, startLogoutTransition] = React.useTransition()
   const displayLabel = userLabel ?? fullName ?? 'Anonymous'
 
   return (
@@ -29,7 +33,21 @@ export function HeaderAuthControls({ userLabel, fullName, isAnonymous }: HeaderA
           >
             Login
           </button>
-        ) : null}
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              startLogoutTransition(async () => {
+                await logout()
+                router.refresh()
+              })
+            }}
+            disabled={isLoggingOut}
+            className="text-blue-600 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isLoggingOut ? 'Logging out...' : 'Logout'}
+          </button>
+        )}
       </div>
 
       {isAnonymous ? (

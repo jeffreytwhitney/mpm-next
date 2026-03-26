@@ -13,9 +13,10 @@ import { getTaskNotesByTaskID } from '@/server/data/taskNote'
 
 interface TaskDetailContentProps {
     taskId: number
+    detailBasePath?: string
 }
 
-export async function TaskDetailContent({taskId}: TaskDetailContentProps) {
+export async function TaskDetailContent({taskId, detailBasePath}: TaskDetailContentProps) {
     const [taskDetail, currentUser, statusOptions, assigneeOptions, taskNotes] = await Promise.all([
         getTaskDetailById(taskId),
         getCurrentUser(),
@@ -44,6 +45,7 @@ export async function TaskDetailContent({taskId}: TaskDetailContentProps) {
             canSubmit={canSubmit}
             isMetrologyProgrammer={isMetrologyProgrammer}
             taskNotes={taskNotes}
+            detailBasePath={detailBasePath}
         />
     )
 }

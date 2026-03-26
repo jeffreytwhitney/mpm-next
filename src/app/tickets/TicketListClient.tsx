@@ -122,6 +122,8 @@ export function TicketListClient({initialTickets, initialFilters, initialDepartm
                 columns={ticketColumns}
                 data={initialTickets}
                 onSortChange={handleSortChange}
+                sortColumn={filters.sortBy ?? 'TicketNumber'}
+                sortDirection={filters.sortOrder ?? 'asc'}
                 renderHeaderFilter={renderHeaderFilter}
             />
             <Pagination

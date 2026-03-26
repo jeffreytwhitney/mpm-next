@@ -12,6 +12,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import {getAlignmentClass} from '@/lib/utils'
+import {getNextSortDirection, isServerSortableColumn} from '@/lib/dataTableSorting'
 
 
 
@@ -19,14 +20,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   onSortChange?: (column: string, direction: 'asc' | 'desc') => void
+  sortColumn?: string
+  sortDirection?: 'asc' | 'desc'
   renderHeaderFilter?: (columnId: string) => React.ReactNode
   getRowClassName?: (rowData: TData) => string
   getRowStyle?: (rowData: TData) => React.CSSProperties | undefined
 }
 
-export function DataTable<TData, TValue>({columns, data, onSortChange, renderHeaderFilter, getRowClassName, getRowStyle}: DataTableProps<TData, TValue>) {
-  const [sortState, setSortState] = React.useState<{ column: string; direction: 'asc' | 'desc' } | null>(null)
-
+export function DataTable<TData, TValue>({columns, data, onSortChange, sortColumn, sortDirection, renderHeaderFilter, getRowClassName, getRowStyle}: DataTableProps<TData, TValue>) {
   // Memoize columns to prevent unnecessary re-renders
   const memoizedColumns = React.useMemo(() => columns, [columns])
 
@@ -40,6 +41,13 @@ export function DataTable<TData, TValue>({columns, data, onSortChange, renderHea
     getCoreRowModel: getCoreRowModel(),
   })
 
+  const activeSort = sortColumn
+    ? {
+        column: sortColumn,
+        direction: sortDirection ?? 'asc',
+      }
+    : null
+
   return (
     <div className="rounded-md border">
       <table className="w-full">
@@ -47,34 +55,44 @@ export function DataTable<TData, TValue>({columns, data, onSortChange, renderHea
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="border-b bg-slate-100">
               {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  onClick={() => {
-                    if (!onSortChange) {
-                      return
-                    }
+                (() => {
+                  const sortable = isServerSortableColumn(Boolean(onSortChange), header.column.columnDef.meta?.sortable)
 
-                    const columnId = header.column.id
-                    const nextDirection: 'asc' | 'desc' =
-                      sortState?.column === columnId && sortState.direction === 'asc' ? 'desc' : 'asc'
+                  return (
+                    <th
+                      key={header.id}
+                      onClick={() => {
+                        if (!onSortChange || !sortable) {
+                          return
+                        }
 
-                    setSortState({ column: columnId, direction: nextDirection })
-                    onSortChange(columnId, nextDirection)
-                  }}
-                  className={`px-0 py-0 font-medium text-xs ${getAlignmentClass(header.column.columnDef.meta?.align)} ${onSortChange ? 'cursor-pointer hover:bg-slate-200' : ''}`}
-                  style={{
-                    width: header.getSize(),
-                    minWidth: header.getSize(),
-                    maxWidth: header.getSize(),
-                  }}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
+                        const columnId = header.column.id
+                        const nextDirection = getNextSortDirection(activeSort, columnId)
+                        onSortChange(columnId, nextDirection)
+                      }}
+                      className={`px-0 py-0 font-medium text-xs ${getAlignmentClass(header.column.columnDef.meta?.align)} ${sortable ? 'cursor-pointer hover:bg-slate-200' : ''}`}
+                      style={{
+                        width: header.getSize(),
+                        minWidth: header.getSize(),
+                        maxWidth: header.getSize(),
+                      }}
+                    >
+                      <span className="inline-flex items-center gap-0.5 px-1 py-1">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                        {sortable && activeSort?.column === header.column.id && (
+                          <span className="text-[8px] leading-none text-black select-none">
+                            {activeSort.direction === 'asc' ? '▲' : '▼'}
+                          </span>
+                        )}
+                      </span>
+                    </th>
+                  )
+                })()
               ))}
             </tr>
           ))}

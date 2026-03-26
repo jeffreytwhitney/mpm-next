@@ -69,6 +69,16 @@ describe('createTask action', () => {
         dueDate: 'Due date is required.',
         scheduledDueDate: 'Scheduled due date is required.',
       },
+      values: {
+        projectID: '',
+        taskTypeID: '',
+        dueDate: '',
+        scheduledDueDate: '',
+        taskName: '',
+        manufacturingRev: '',
+        drawingNumber: 'DWG-4000',
+        opNumber: '',
+      },
     })
 
     expect(mockCheckExistingTask).not.toHaveBeenCalled()
@@ -88,6 +98,16 @@ describe('createTask action', () => {
         dueDate: 'Due date is invalid.',
         scheduledDueDate: 'Scheduled due date is invalid.',
       },
+      values: {
+        projectID: '123',
+        taskTypeID: '5',
+        dueDate: 'not-a-date',
+        scheduledDueDate: 'also-not-a-date',
+        taskName: 'Inspection',
+        manufacturingRev: 'B',
+        drawingNumber: 'DWG-4000',
+        opNumber: '20',
+      },
     })
 
     expect(mockCheckExistingTask).not.toHaveBeenCalled()
@@ -103,13 +123,24 @@ describe('createTask action', () => {
     await expect(addTask(formData)).resolves.toEqual({
       success: false,
       fieldErrors: {
-        taskName: 'There is already a task with this name, op, and task type in this ticket.',
-        opNumber: 'There is already a task with this name, op, and task type in this ticket.',
-        taskTypeID: 'There is already a task with this name, op, and task type in this ticket.',
+        taskName: 'There is already a task with this name, op, task type, and rev in this ticket.',
+        opNumber: 'There is already a task with this name, op, task type, and rev in this ticket.',
+        taskTypeID: 'There is already a task with this name, op, task type, and rev in this ticket.',
+        manufacturingRev: 'There is already a task with this name, op, task type, and rev in this ticket.',
+      },
+      values: {
+        projectID: '123',
+        taskTypeID: '5',
+        dueDate: '2026-03-20',
+        scheduledDueDate: '2026-03-19',
+        taskName: 'Inspection',
+        manufacturingRev: 'B',
+        drawingNumber: 'DWG-4000',
+        opNumber: '20',
       },
     })
 
-    expect(mockCheckExistingTask).toHaveBeenCalledWith('Inspection', '20', 5, 123)
+    expect(mockCheckExistingTask).toHaveBeenCalledWith('Inspection', '20', 5, 'B', 123)
     expect(mockCreateTaskRecord).not.toHaveBeenCalled()
     expect(mockRevalidatePath).not.toHaveBeenCalled()
   })
@@ -125,7 +156,7 @@ describe('createTask action', () => {
       fieldErrors: {},
     })
 
-    expect(mockCheckExistingTask).toHaveBeenCalledWith('Inspection', '20', 5, 123)
+    expect(mockCheckExistingTask).toHaveBeenCalledWith('Inspection', '20', 5, 'B', 123)
     expect(mockCreateTaskRecord).toHaveBeenCalledTimes(1)
 
     const payload = mockCreateTaskRecord.mock.calls[0][0]
