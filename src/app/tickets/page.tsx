@@ -3,8 +3,8 @@
  * App Router page module for '/tickets'.
  */
 import {TicketListClient} from './TicketListClient'
-import {getTicketList, parseTicketListFilters} from '@/server/data/ticketList'
-import type {TicketListSearchParams} from '@/server/data/ticketList'
+import {getTicketList, parseTicketListFilters} from '@/server/data/queries/ticketList'
+import type {TicketListSearchParams} from '@/server/data/queries/ticketList'
 import {getTopLevelDepartmentDropdownOptions} from '@/server/data/department'
 import {getQualityEngineerDropdownOptionsBySite} from '@/server/data/user'
 import {cookies} from 'next/headers'

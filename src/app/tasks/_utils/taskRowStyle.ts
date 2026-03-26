@@ -3,7 +3,7 @@
  * App Router module for route composition and rendering.
  */
 import React from 'react'
-import {type TaskListItem} from '@/server/data/taskList'
+import {type TaskListItem} from '@/server/data/queries/taskList'
 import {getTaskRowStateFlags} from '@/features/tasks/taskRowState'
 import {ROW_HIGHLIGHT_OPACITY} from '@/lib/filterConstants'
 

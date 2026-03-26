@@ -3,8 +3,8 @@
  * App Router page module for '/tasks'.
  */
 import {TaskListClient} from './TaskListClient';
-import {getTaskList, parseTaskListFilters} from '@/server/data/taskList';
-import type {TaskListSearchParams} from '@/server/data/taskList';
+import {getTaskList, parseTaskListFilters} from '@/server/data/queries/taskList';
+import type {TaskListSearchParams} from '@/server/data/queries/taskList';
 import {getTaskStatusDropdownOptions} from "@/server/data/taskStatus";
 import {getTaskTypeDropdownOptions} from '@/server/data/taskType';
 import {getMetrologyUserDropdownOptions} from '@/server/data/user';

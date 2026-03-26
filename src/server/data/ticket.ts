@@ -15,7 +15,7 @@ import type {Prisma} from "@/generated/prisma/client";
 import {Prisma as PrismaNamespace} from "@/generated/prisma/client";
 import {getUserById, type MPMUser} from "@/server/data/user";
 import {withErrorHandling} from "@/server/data/lib/errorHandling";
-import {getTaskListByProjectID, type TaskListByProjectIDFilters, type TaskListItem} from "@/server/data/taskList";
+import {getTaskListByProjectID, type TaskListByProjectIDFilters, type TaskListItem} from "@/server/data/queries/taskList";
 
 const ticketSelect = {
     ID: true,

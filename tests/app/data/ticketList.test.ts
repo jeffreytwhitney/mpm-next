@@ -19,7 +19,7 @@ afterAll(() => {
 })
 
 import {prisma} from '@/lib/prisma'
-import {getTicketList, parseTicketListFilters} from '@/server/data/ticketList'
+import {getTicketList, parseTicketListFilters} from '@/server/data/queries/ticketList'
 
 const mockFindManyTicketList = prisma.qryProjectList.findMany as jest.Mock
 const mockCountTicketList = prisma.qryProjectList.count as jest.Mock

@@ -7,7 +7,7 @@
 import React, {useCallback} from 'react'
 import {usePathname, useRouter} from 'next/navigation'
 import {DataTable} from '@/components/DataTable'
-import {type TaskListFilters, type TaskListItem} from '@/server/data/taskList'
+import {type TaskListFilters, type TaskListItem} from '@/server/data/queries/taskList'
 import DebouncedInput from '@/components/DebouncedInput'
 import {taskColumns} from '@/components/columnDefs/TaskListColumns'
 import {type TaskStatusDropdownOption} from '@/server/data/taskStatus'

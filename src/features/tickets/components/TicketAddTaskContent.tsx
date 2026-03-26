@@ -12,7 +12,7 @@ interface TicketTaskNewContentProps {
     ticketDescription: string
 }
 
-export default async function TicketNewTaskContent({
+export default async function TicketAddTaskContent({
     ticketId,
     ticketNumber,
     ticketName,

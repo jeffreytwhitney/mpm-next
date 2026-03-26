@@ -5,7 +5,7 @@
  * Feature module for 'tasks' domain behavior.
  */
 import React, {useCallback, useState} from 'react'
-import {type TaskListFilters} from '@/server/data/taskList'
+import {type TaskListFilters} from '@/server/data/queries/taskList'
 import {type TaskStatusDropdownOption} from '@/server/data/taskStatus'
 import {type TaskTypeDropdownOption} from '@/server/data/taskType'
 import {type UserDropDownOption} from '@/server/data/user'

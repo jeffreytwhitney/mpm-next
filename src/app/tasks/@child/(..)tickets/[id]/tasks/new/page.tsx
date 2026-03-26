@@ -2,7 +2,7 @@
  * AUTO-GENERATED MODULE DOC
  * App Router page module for '/tasks/@child/(..)tickets/[id]/tasks/new'.
  */
-import TicketNewTaskContent from '@/features/tickets/components/TicketNewTaskContent'
+import TicketAddTaskContent from '@/features/tickets/components/TicketAddTaskContent'
 import TicketChildModalShell from '@/app/tickets/_components/TicketChildModalShell'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 import { notFound } from 'next/navigation'
@@ -22,7 +22,7 @@ export default async function TaskTicketNewTaskChildModalPage({ params }: TaskTi
 
   return (
     <TicketChildModalShell title="Add Task">
-      <TicketNewTaskContent
+      <TicketAddTaskContent
         ticketId={ticketId}
         ticketNumber={ticket.TicketNumber ?? ''}
         ticketName={ticket.ProjectName ?? ''}

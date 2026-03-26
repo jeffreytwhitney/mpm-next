@@ -2,7 +2,7 @@
  * AUTO-GENERATED MODULE DOC
  * App Router page module for '/tickets/[id]/tasks/new'.
  */
-import TicketNewTaskContent from '@/features/tickets/components/TicketNewTaskContent'
+import TicketAddTaskContent from '@/features/tickets/components/TicketAddTaskContent'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 import {getTicketRecordById} from '@/server/data/ticket'
 import {notFound} from 'next/navigation'
@@ -23,7 +23,7 @@ export default async function TicketTaskNewPage({ params }: TicketTaskNewPagePro
 	<div className="container mx-auto py-10">
 	  <div className="rounded-md border bg-slate-50 p-4">
 		<h1 className="mb-4 text-xl font-semibold">Add Tasks to Ticket {ticketId}</h1>
-		<TicketNewTaskContent
+		<TicketAddTaskContent
 		  ticketId={ticketId}
 		  ticketNumber={ticket.TicketNumber ?? ''}
 		  ticketName={ticket.ProjectName ?? ''}

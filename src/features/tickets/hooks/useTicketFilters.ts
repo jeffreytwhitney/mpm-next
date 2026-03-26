@@ -5,7 +5,7 @@
  * Feature module for 'tickets' domain behavior.
  */
 import React, {useCallback, useState} from 'react'
-import {type TicketListFilters} from '@/server/data/ticketList'
+import {type TicketListFilters} from '@/server/data/queries/ticketList'
 import {type UserDropDownOption} from '@/server/data/user'
 import {type DepartmentDropdownOption} from '@/server/data/department'
 

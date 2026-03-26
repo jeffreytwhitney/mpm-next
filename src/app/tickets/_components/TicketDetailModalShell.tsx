@@ -1,9 +1,5 @@
 'use client'
 
-/**
- * AUTO-GENERATED MODULE DOC
- * App Router module for route composition and rendering.
- */
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect } from 'react'

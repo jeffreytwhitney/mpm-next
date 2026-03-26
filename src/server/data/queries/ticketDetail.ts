@@ -15,7 +15,7 @@ import {
     type TicketItem,
 } from '@/server/data/ticket'
 import { getDepartmentById } from '@/server/data/department'
-import { getTaskListByProjectID, type TaskListItem } from '@/server/data/taskList'
+import { getTaskListByProjectID, type TaskListItem } from '@/server/data/queries/taskList'
 
 
 export interface TicketDetailModel {
@@ -67,3 +67,4 @@ export async function getTicketDetailById(ticketId: number): Promise<TicketDetai
         throw new Error('Failed to fetch ticket detail')
     }
 }
+

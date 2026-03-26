@@ -4,7 +4,7 @@
  */
 // Column definitions for the ticket list table
 import {ColumnDef} from "@tanstack/react-table";
-import {TicketListItem} from "@/server/data/ticketList";
+import {TicketListItem} from "@/server/data/queries/ticketList";
 import React from "react";
 import Link from 'next/link'
 

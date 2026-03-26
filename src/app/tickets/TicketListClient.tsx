@@ -7,7 +7,7 @@
 import React, {useCallback} from 'react'
 import {usePathname, useRouter} from 'next/navigation'
 import {DataTable} from '@/components/DataTable'
-import {type TicketListFilters, type TicketListItem} from '@/server/data/ticketList'
+import {type TicketListFilters, type TicketListItem} from '@/server/data/queries/ticketList'
 import DebouncedInput from '@/components/DebouncedInput'
 import {ticketColumns} from '@/components/columnDefs/TicketListColumns'
 

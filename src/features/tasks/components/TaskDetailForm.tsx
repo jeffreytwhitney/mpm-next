@@ -18,7 +18,7 @@ import {
     TASK_STATUS_COMPLETED_ID,
     TASK_STATUS_WAITING_ID,
 } from '@/features/tasks/taskStatusTransition'
-import type {TaskDetailModel} from '@/server/data/taskDetail'
+import type {TaskDetailModel} from '@/server/data/queries/taskDetail'
 import type {TaskNoteItem} from '@/server/data/taskNote'
 import type {TaskStatusDropdownOption} from '@/server/data/taskStatus'
 import type {UserDropDownOption} from '@/server/data/user'

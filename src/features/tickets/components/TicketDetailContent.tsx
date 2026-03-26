@@ -2,7 +2,7 @@
  * AUTO-GENERATED MODULE DOC
  * Feature module for 'tickets' domain behavior.
  */
-import {getTicketDetailById} from '@/server/data/ticketDetail'
+import {getTicketDetailById} from '@/server/data/queries/ticketDetail'
 import {notFound} from 'next/navigation'
 import {
     getMetrologyUserDropdownOptions,

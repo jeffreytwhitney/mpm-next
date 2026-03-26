@@ -27,7 +27,7 @@ import {
     INITIAL_UPDATE_TICKET_STATE,
     type UpdateTicketFieldErrors,
 } from '@/features/tickets/actions/ticketActionTypes'
-import type {TicketDetailModel} from '@/server/data/ticketDetail'
+import type {TicketDetailModel} from '@/server/data/queries/ticketDetail'
 import type {UserDropDownOption} from '@/server/data/user'
 import type {TaskStatusDropdownOption} from '@/server/data/taskStatus'
 import type {TaskTypeDropdownOption} from '@/server/data/taskType'

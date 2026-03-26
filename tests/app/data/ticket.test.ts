@@ -41,7 +41,7 @@ jest.mock('@/server/data/user', () => ({
 
 const mockGetTaskListByProjectID = jest.fn()
 
-jest.mock('@/server/data/taskList', () => ({
+jest.mock('@/server/data/queries/taskList', () => ({
   getTaskListByProjectID: (...args: unknown[]) => mockGetTaskListByProjectID(...args),
 }))
 

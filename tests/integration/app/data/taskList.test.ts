@@ -7,7 +7,7 @@ afterAll(async () => {
   await prisma.$disconnect()
 })
 
-import { getTaskList } from '@/server/data/taskList'
+import { getTaskList } from '@/server/data/queries/taskList'
 import { prisma } from '@/lib/prisma'
 import {getTaskById} from "@/server/data/task";
 

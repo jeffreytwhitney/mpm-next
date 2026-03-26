@@ -35,7 +35,7 @@ jest.mock('@/server/data/department', () => ({
 }))
 
 import { prisma } from '@/lib/prisma'
-import { getTaskDetailById } from '@/server/data/taskDetail'
+import { getTaskDetailById } from '@/server/data/queries/taskDetail'
 
 const mockFindFirstTaskList = prisma.qryTaskListRaw.findFirst as jest.Mock
 

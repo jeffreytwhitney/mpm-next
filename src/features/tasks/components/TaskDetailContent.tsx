@@ -3,7 +3,7 @@
  * Feature module for 'tasks' domain behavior.
  */
 import {notFound} from 'next/navigation'
-import {getTaskDetailById} from '@/server/data/taskDetail'
+import {getTaskDetailById} from '@/server/data/queries/taskDetail'
 import {getTaskStatusDropdownOptions} from '@/server/data/taskStatus'
 import {getMetrologyProgrammerDropdownOptions} from '@/server/data/user'
 import {getCurrentUser} from '@/lib/auth/currentUser'
