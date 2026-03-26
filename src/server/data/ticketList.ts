@@ -1,3 +1,13 @@
+/**
+ * Ticket List Data Access Module
+ *
+ * Handles filtered, sorted, and paginated ticket queries used by ticket list views.
+ * Supports filtering by ticket number, name, department, engineer assignments, and task names.
+ * Enables customizable sorting, pagination, and completion status filtering.
+ *
+ * Optimizes queries with calculated fields and eager-loaded relationships to support
+ * rich list UI without additional client-side queries.
+ */
 import {prisma} from '@/lib/prisma'
 import type {Prisma} from '@/generated/prisma/client'
 import {parseOptionalInt, parsePositiveIntOrDefault} from "@/server/data/lib/common";

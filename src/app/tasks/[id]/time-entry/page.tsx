@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/tasks/[id]/time-entry'.
+ */
 import { TaskTimeEntryForm } from '@/features/tasks/components/TaskTimeEntryForm'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 

@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/service-tickets'.
+ */
 export default function ServiceTicketsPage() {
     return (
         <div className="p-6">

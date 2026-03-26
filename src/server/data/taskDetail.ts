@@ -1,3 +1,12 @@
+/**
+ * Task Detail Data Access Module
+ *
+ * Builds composite task detail models containing all data needed for task detail pages and forms.
+ * Aggregates base task data, related ticket/department information, assigned engineers,
+ * job number from raw view, and tracked time hours - all in a single fetch.
+ *
+ * Consolidates multiple data sources to prevent N+1 queries and keep detail pages efficient.
+ */
 import { prisma } from '@/lib/prisma'
 import { getTaskById, type TaskItem } from '@/server/data/task'
 import { getTicketById, getQualityEngineerByTicketID, getManufacturingEngineerByTicketID, type TicketItem } from '@/server/data/ticket'
@@ -8,11 +17,13 @@ const taskDetailViewSelect = {
   SumOfHours: true,
 }
 
+/** Narrow projection returned by the task list raw view query. */
 interface TaskDetailViewRow {
   JobNumber: string | null
   SumOfHours: number | null
 }
 
+/** Composite task detail payload consumed by task detail routes/forms. */
 export interface TaskDetailModel {
   task: TaskItem
   ticket: TicketItem
@@ -23,6 +34,7 @@ export interface TaskDetailModel {
   totalTrackedHours: number | null
 }
 
+/** Fetches additional fields available only from the raw task list view. */
 async function getTaskDetailViewRow(taskId: number): Promise<TaskDetailViewRow | null> {
   return prisma.qryTaskListRaw.findFirst({
     select: taskDetailViewSelect,
@@ -30,6 +42,9 @@ async function getTaskDetailViewRow(taskId: number): Promise<TaskDetailViewRow |
   })
 }
 
+/**
+ * Loads task detail and related ticket/department/owner display data.
+ */
 export async function getTaskDetailById(taskId: number): Promise<TaskDetailModel | null> {
   try {
     const task = await getTaskById(taskId)

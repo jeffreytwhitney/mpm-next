@@ -1,3 +1,13 @@
+/**
+ * Task Type Data Access Module
+ *
+ * Handles database operations for task type reference data including:
+ * - Retrieving all available task types
+ * - Fetching task types formatted as dropdown options for forms
+ *
+ * Task types categorize work (e.g., inspection, manufacturing, setup)
+ * and enable filtering and reporting by work category.
+ */
 import {prisma} from "@/lib/prisma";
 import type {Prisma} from "@/generated/prisma/client";
 export interface TaskTypeDropdownOption {value: number, label: string}

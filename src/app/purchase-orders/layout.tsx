@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router layout module for '/purchase-orders'.
+ */
 import AppShellLayout from '@/components/AppShellLayout'
 
 interface PurchaseOrdersLayoutProps {

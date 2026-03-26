@@ -1,5 +1,14 @@
 'use server'
 
+/**
+ * Updates editable fields on an existing ticket.
+ *
+ * Responsibilities in this module:
+ * - Parse and validate incoming ticket form data.
+ * - Enforce permission and department-bound owner assignment rules.
+ * - Persist ticket field updates.
+ * - Revalidate tickets list/detail routes after success.
+ */
 import {revalidatePath} from 'next/cache'
 import {getCurrentUserRecord} from '@/lib/auth/currentUser'
 import {canEditTicket} from '@/lib/auth/permissions'
@@ -18,6 +27,13 @@ interface ParsedUpdateTicketForm {
     secondaryProjectOwnerID: number
 }
 
+interface OwnerMembershipValidationInput {
+    ticketDepartmentID: number
+    primaryProjectOwnerID: number | null
+    secondaryProjectOwnerID: number
+}
+
+/** Parses a required positive integer field; returns null for invalid input. */
 function parseRequiredPositiveInt(value: string): number | null {
     const parsed = Number(value)
     if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -26,6 +42,7 @@ function parseRequiredPositiveInt(value: string): number | null {
     return parsed
 }
 
+/** Parses an optional positive integer field. */
 function parseOptionalPositiveInt(value: string): number | null {
     if (!value) {
         return null
@@ -33,6 +50,9 @@ function parseOptionalPositiveInt(value: string): number | null {
     return parseRequiredPositiveInt(value)
 }
 
+/**
+ * Validates incoming form data and normalizes it into domain-safe values.
+ */
 function validateAndParseUpdateTicketForm(formData: FormData):
     | { parsed: ParsedUpdateTicketForm }
     | { errorState: UpdateTicketState } {
@@ -97,6 +117,51 @@ function validateAndParseUpdateTicketForm(formData: FormData):
     }
 }
 
+/**
+ * Validates owner assignments against users available in the ticket's department.
+ */
+async function validateOwnerMembershipRules(
+    input: OwnerMembershipValidationInput,
+): Promise<UpdateTicketState | null> {
+    const {
+        ticketDepartmentID,
+        primaryProjectOwnerID,
+        secondaryProjectOwnerID,
+    } = input
+
+    const [qualityEngineerOptions, manufacturingEngineerOptions] = await Promise.all([
+        getQualityEngineerDropdownOptions(ticketDepartmentID),
+        primaryProjectOwnerID == null
+            ? Promise.resolve([])
+            : getManufacturingEngineerDropdownOptions(ticketDepartmentID),
+    ])
+
+    const fieldErrors: UpdateTicketFieldErrors = {}
+
+    if (!qualityEngineerOptions.some((option) => option.value === secondaryProjectOwnerID)) {
+        fieldErrors.secondaryProjectOwnerID = 'Quality engineer must belong to this ticket department.'
+    }
+
+    if (
+        primaryProjectOwnerID != null &&
+        !manufacturingEngineerOptions.some((option) => option.value === primaryProjectOwnerID)
+    ) {
+        fieldErrors.primaryProjectOwnerID = 'Manufacturing engineer must belong to this ticket department.'
+    }
+
+    if (Object.keys(fieldErrors).length > 0) {
+        return {
+            success: false,
+            fieldErrors,
+        }
+    }
+
+    return null
+}
+
+/**
+ * Server action for updating editable ticket fields from detail form submits.
+ */
 export async function updateTicketAction(
     ticketId: number,
     _prevState: UpdateTicketState,
@@ -146,31 +211,13 @@ export async function updateTicketAction(
             }
         }
 
-        const [qualityEngineerOptions, manufacturingEngineerOptions] = await Promise.all([
-            getQualityEngineerDropdownOptions(ticketDepartmentID),
-            primaryProjectOwnerID == null
-                ? Promise.resolve([])
-                : getManufacturingEngineerDropdownOptions(ticketDepartmentID),
-        ])
-
-        const fieldErrors: UpdateTicketFieldErrors = {}
-
-        if (!qualityEngineerOptions.some((option) => option.value === secondaryProjectOwnerID)) {
-            fieldErrors.secondaryProjectOwnerID = 'Quality engineer must belong to this ticket department.'
-        }
-
-        if (
-            primaryProjectOwnerID != null &&
-            !manufacturingEngineerOptions.some((option) => option.value === primaryProjectOwnerID)
-        ) {
-            fieldErrors.primaryProjectOwnerID = 'Manufacturing engineer must belong to this ticket department.'
-        }
-
-        if (Object.keys(fieldErrors).length > 0) {
-            return {
-                success: false,
-                fieldErrors,
-            }
+        const ownerMembershipError = await validateOwnerMembershipRules({
+            ticketDepartmentID,
+            primaryProjectOwnerID,
+            secondaryProjectOwnerID,
+        })
+        if (ownerMembershipError) {
+            return ownerMembershipError
         }
 
         const updatedTicket = await updateTicketRecord(ticketId, {

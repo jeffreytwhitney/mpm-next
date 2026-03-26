@@ -1,3 +1,12 @@
+/**
+ * Task Note Mutations Module
+ *
+ * Provides high-level mutations for task note operations.
+ * Wraps low-level data access with business logic including:
+ * - Note text validation and trimming
+ * - User attribution and automation flags
+ * - Input normalization before persistence
+ */
 import { createTaskNote } from '@/server/data/taskNote'
 
 interface AddTaskNoteInput {

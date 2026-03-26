@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Feature module for 'tasks' domain behavior.
+ */
 import React from 'react'
 import {type TaskStatusDropdownOption} from '@/server/data/taskStatus'
 import {type TaskTypeDropdownOption} from '@/server/data/taskType'

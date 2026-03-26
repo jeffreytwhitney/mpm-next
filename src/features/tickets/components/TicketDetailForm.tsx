@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Feature module for 'tickets' domain behavior.
+ */
 import React, {useActionState} from 'react'
 import { useRouter } from 'next/navigation'
 import {updateTicketAction} from '@/features/tickets/actions/updateTicketAction'
@@ -10,8 +14,12 @@ import {
 import type {TicketDetailModel} from '@/server/data/ticketDetail'
 import type {UserDropDownOption} from '@/server/data/user'
 
+/** Emitted after a successful save so modal shells can close themselves. */
 const TICKET_DETAIL_SAVED_EVENT = 'ticket-detail:saved'
 
+/**
+ * Client-side props for rendering and submitting the ticket detail form.
+ */
 interface TicketDetailFormProps {
     ticketId: number
     ticketDetail: TicketDetailModel
@@ -22,6 +30,10 @@ interface TicketDetailFormProps {
 
 type FieldErrors = UpdateTicketFieldErrors
 
+/**
+ * Performs lightweight client validation so users get immediate feedback
+ * before the server action runs.
+ */
 function validateForm(formData: FormData): FieldErrors {
     const errors: FieldErrors = {}
 
@@ -36,6 +48,13 @@ function validateForm(formData: FormData): FieldErrors {
     return errors
 }
 
+/**
+ * Interactive ticket detail editor.
+ *
+ * Server data and permission decisions are resolved upstream in
+ * `TicketDetailContent`; this component focuses on interaction,
+ * validation, and submission state.
+ */
 export function TicketDetailForm({
     ticketId,
     ticketDetail,

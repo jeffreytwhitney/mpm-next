@@ -1,3 +1,15 @@
+/**
+ * Task Time Entry Data Access Module
+ *
+ * Handles database operations for task time tracking including:
+ * - Retrieving time entries by task, assignee, or date
+ * - Creating new time entry records
+ * - Aggregating total hours tracked per task
+ *
+ * Enables time tracking for manufacturing operations and provides data
+ * for job costing and productivity analysis. Each entry records who worked,
+ * when, for how long, and on which task.
+ */
 import {prisma} from "@/lib/prisma";
 import type {Prisma} from "@/generated/prisma/client";
 import {withErrorHandling} from "@/server/data/lib/errorHandling";

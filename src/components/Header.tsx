@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'Header'.
+ */
 import { getCurrentUser } from '@/lib/auth/currentUser'
 import { HeaderAuthControls } from '@/components/HeaderAuthControls'
 

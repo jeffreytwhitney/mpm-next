@@ -1,3 +1,6 @@
+/**
+ * Shared state and field-error types for task create/update server actions.
+ */
 // Field errors for Create Task
 export type CreateTaskFieldErrors = Partial<Record<
   | 'taskName'

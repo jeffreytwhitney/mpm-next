@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Feature module for 'tasks' domain behavior.
+ */
 import {notFound} from 'next/navigation'
 import {getTaskDetailById} from '@/server/data/taskDetail'
 import {getTaskStatusDropdownOptions} from '@/server/data/taskStatus'

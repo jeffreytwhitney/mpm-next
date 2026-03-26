@@ -1,12 +1,23 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/tickets/[id]'.
+ */
 import { notFound } from 'next/navigation'
 import { TicketDetailContent } from '@/features/tickets/components/TicketDetailContent'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 import { getTicketRecordById } from '@/server/data/ticket'
 
+/** Route params for `/tickets/[id]`. */
 interface TicketDetailPageProps {
   params: Promise<{ id: string }>
 }
 
+/**
+ * Full-page ticket detail route.
+ *
+ * This route provides a page-level shell and delegates shared detail
+ * loading + form rendering to `TicketDetailContent`.
+ */
 export default async function TicketDetailPage({ params }: TicketDetailPageProps) {
   const ticketId = await parsePositiveIntParamOrNotFound(params)
   const ticket = await getTicketRecordById(ticketId)

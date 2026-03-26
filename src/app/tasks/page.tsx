@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/tasks'.
+ */
 import {TaskListClient} from './TaskListClient';
 import {getTaskList, parseTaskListFilters} from '@/server/data/taskList';
 import type {TaskListSearchParams} from '@/server/data/taskList';

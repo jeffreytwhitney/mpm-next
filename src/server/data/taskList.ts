@@ -1,3 +1,13 @@
+/**
+ * Task List Data Access Module
+ *
+ * Handles filtered, sorted, and paginated task queries across the entire system and per-project.
+ * Supports flexible filtering by status, task type, assignment, dates, ticket/project info, and task names.
+ * Enables status presets (open, all, my tasks) and custom sorting/pagination.
+ *
+ * Optimizes queries with calculated fields and status joins to provide rich task list views
+ * without requiring additional client-side data fetches.
+ */
 import {prisma} from '@/lib/prisma'
 import type {Prisma} from '@/generated/prisma/client'
 import {parseOptionalInt, parsePositiveIntOrDefault} from "@/server/data/lib/common";

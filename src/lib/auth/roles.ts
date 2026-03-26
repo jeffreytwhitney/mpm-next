@@ -1,3 +1,14 @@
+/**
+ * User Roles and Types Module
+ *
+ * Defines the user role/type system including:
+ * - Five user type categories (Metrology Programmer, Calibration Tech, QA Engineer, Manufacturing Engineer, Cell Leader)
+ * - Role validation and type normalization
+ * - Admin eligibility rules (only Programmers and Tech can be admins)
+ * - Helper functions for role checking and validation
+ *
+ * User types determine feature access, permission levels, and authorization rules.
+ */
 export const USER_TYPES = {
   METROLOGY_PROGRAMMER: 1,
   METROLOGY_CALIBRATION_TECHNICIAN: 2,

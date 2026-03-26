@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/tasks/@child/(.)[id]/time-entry'.
+ */
 import TaskChildModalShell from '@/app/tasks/_components/TaskChildModalShell'
 import { TaskTimeEntryForm } from '@/features/tasks/components/TaskTimeEntryForm'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'

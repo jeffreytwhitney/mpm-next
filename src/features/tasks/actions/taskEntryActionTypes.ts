@@ -1,3 +1,6 @@
+/**
+ * Shared state and field-error types for task note and time-entry actions.
+ */
 export interface CreateTaskNoteState {
   success: boolean
   fieldErrors: {

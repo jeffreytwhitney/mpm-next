@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/purchase-orders'.
+ */
 export default function PurchaseOrdersPage() {
     return (
         <div className="p-6">

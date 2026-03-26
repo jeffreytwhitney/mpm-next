@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Feature module for 'tasks' domain behavior.
+ */
 import { useActionState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createTaskTimeEntryAction } from '@/features/tasks/actions/createTaskTimeEntryAction'

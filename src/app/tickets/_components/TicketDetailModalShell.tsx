@@ -1,19 +1,32 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router module for route composition and rendering.
+ */
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect } from 'react'
 import SlideOverShell from '@/components/ui/SlideOverShell'
 
+/** Fired by the form after a successful save so the shell can close itself. */
 const TICKET_DETAIL_SAVED_EVENT = 'ticket-detail:saved'
+/** Fired when child flows need the detail view to re-fetch server data. */
 const TICKET_DETAIL_REFRESH_EVENT = 'ticket-detail:refresh'
 
+/** UI shell props for rendering ticket detail in a slide-over panel. */
 interface TicketDetailModalShellProps {
   children: React.ReactNode
   title: string
   panelWidthClassName?: string
 }
 
+/**
+ * Client shell used by the intercepted modal route.
+ *
+ * It owns close/navigation behavior and listens for cross-component
+ * events emitted by child forms.
+ */
 export default function TicketDetailModalShell({
   children,
   title,

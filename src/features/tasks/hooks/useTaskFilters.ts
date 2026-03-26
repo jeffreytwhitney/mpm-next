@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Feature module for 'tasks' domain behavior.
+ */
 import React, {useCallback, useState} from 'react'
 import {type TaskListFilters} from '@/server/data/taskList'
 import {type TaskStatusDropdownOption} from '@/server/data/taskStatus'

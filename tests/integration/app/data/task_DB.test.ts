@@ -19,6 +19,7 @@ describe('checkExistingTask (integration - DB)', () => {
         TaskName: true,
         Operation: true,
         TaskTypeID: true,
+        ProjectID: true,
       },
       where: {
         TaskName: {
@@ -38,6 +39,7 @@ describe('checkExistingTask (integration - DB)', () => {
       existingTask.TaskName || '',
       existingTask.Operation || '',
       existingTask.TaskTypeID || 0,
+      existingTask.ProjectID,
     )
 
     expect(result).toBe(true)
@@ -49,6 +51,7 @@ describe('checkExistingTask (integration - DB)', () => {
       select: {
         Operation: true,
         TaskTypeID: true,
+        ProjectID: true,
       },
     })
 
@@ -60,6 +63,7 @@ describe('checkExistingTask (integration - DB)', () => {
       'NON_EXISTENT_TASK_NAME_XYZ_' + Date.now(),
       existingTask.Operation || '',
       existingTask.TaskTypeID || 0,
+      existingTask.ProjectID,
     )
 
     expect(result).toBe(false)
@@ -72,6 +76,7 @@ describe('checkExistingTask (integration - DB)', () => {
         TaskName: true,
         Operation: true,
         TaskTypeID: true,
+        ProjectID: true,
       },
       where: {
         TaskName: {
@@ -88,6 +93,7 @@ describe('checkExistingTask (integration - DB)', () => {
       existingTask.TaskName || '',
       'NON_EXISTENT_OPERATION_' + Date.now(),
       existingTask.TaskTypeID || 0,
+      existingTask.ProjectID,
     )
 
     expect(result).toBe(false)
@@ -100,6 +106,7 @@ describe('checkExistingTask (integration - DB)', () => {
         TaskName: true,
         Operation: true,
         TaskTypeID: true,
+        ProjectID: true,
       },
     })
 
@@ -112,6 +119,7 @@ describe('checkExistingTask (integration - DB)', () => {
       existingTask.TaskName || '',
       existingTask.Operation || '',
       999999,
+      existingTask.ProjectID,
     )
 
     expect(result).toBe(false)
@@ -123,15 +131,16 @@ describe('checkExistingTask (integration - DB)', () => {
     const testTaskName = 'IntTest_' + timestamp
     const testOperation = 'OP_' + timestamp // Operation field is limited to 15 characters
     const testTypeID = 1
+    const testProjectID = 1
 
     // First verify it doesn't exist
-    let result = await checkExistingTask(testTaskName, testOperation, testTypeID)
+    let result = await checkExistingTask(testTaskName, testOperation, testTypeID, testProjectID)
     expect(result).toBe(false)
 
     // Create a task with these criteria
     const createdTask = await prisma.tblTask.create({
       data: {
-        ProjectID: 1, // Assuming project 1 exists
+        ProjectID: testProjectID,
         StatusID: 1, // Assuming status 1 exists
         TaskName: testTaskName,
         Operation: testOperation,
@@ -142,7 +151,7 @@ describe('checkExistingTask (integration - DB)', () => {
     })
 
     // Now verify it exists
-    result = await checkExistingTask(testTaskName, testOperation, testTypeID)
+    result = await checkExistingTask(testTaskName, testOperation, testTypeID, testProjectID)
     expect(result).toBe(true)
 
     // Clean up
@@ -151,7 +160,7 @@ describe('checkExistingTask (integration - DB)', () => {
     })
 
     // Verify it no longer exists
-    result = await checkExistingTask(testTaskName, testOperation, testTypeID)
+    result = await checkExistingTask(testTaskName, testOperation, testTypeID, testProjectID)
     expect(result).toBe(false)
   })
 })

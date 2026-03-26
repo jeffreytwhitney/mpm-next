@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/tasks/@modal/(.)[id]'.
+ */
 import { TaskDetailContent } from '@/features/tasks/components/TaskDetailContent'
 import TaskDetailModalShell from '@/app/tasks/_components/TaskDetailModalShell'
 import {getTaskById} from "@/server/data/task"

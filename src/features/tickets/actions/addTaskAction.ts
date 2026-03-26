@@ -1,5 +1,14 @@
 'use server'
 
+/**
+ * Creates a new task for an existing ticket.
+ *
+ * Responsibilities in this module:
+ * - Parse and validate task-create form input.
+ * - Enforce duplicate task uniqueness business rules.
+ * - Persist the new task with default status metadata.
+ * - Revalidate the ticket detail route after success.
+ */
 import {revalidatePath} from 'next/cache'
 import {createTask as createTaskRecord, checkExistingTask} from '@/server/data/task'
 import type {CreateTaskFieldErrors, CreateTaskState, UpdateTaskState} from '@/features/tasks/actions/taskActionTypes'
@@ -15,6 +24,27 @@ interface ParsedCreateTaskForm {
     manufacturingRev: string
     drawingNumber: string | null
     operation: string
+}
+
+async function validateTaskUniqueness(
+    taskName: string,
+    operation: string,
+    taskTypeID: number,
+    projectID: number,
+): Promise<CreateTaskState | null> {
+    const preExistingTask = await checkExistingTask(taskName, operation, taskTypeID, projectID)
+    if (!preExistingTask) {
+        return null
+    }
+
+    return {
+        success: false,
+        fieldErrors: {
+            taskName: 'There is already a task with this name, op, and task type in this ticket.',
+            opNumber: 'There is already a task with this name, op, and task type in this ticket.',
+            taskTypeID: 'There is already a task with this name, op, and task type in this ticket.',
+        },
+    }
 }
 
 function validateAndParseCreateTaskForm(formData: FormData):
@@ -100,21 +130,11 @@ export async function addTask(
         operation,
     } = validationResult.parsed
 
-    // Check for existing task with same name, op, and task type
-    const preExistingTask = await checkExistingTask(taskName, operation, taskTypeID)
-
-    if (preExistingTask) {
-        return {
-            success: false,
-            fieldErrors: {
-                taskName: 'There is already a task with this name, op, and task type.',
-                opNumber: 'There is already a task with this name, op, and task type.',
-                taskTypeID: 'There is already a task with this name, op, and task type.',
-            },
-        }
+    const uniquenessError = await validateTaskUniqueness(taskName, operation, taskTypeID, projectID)
+    if (uniquenessError) {
+        return uniquenessError
     }
 
-    // Create the task record
     await createTaskRecord({
         ProjectID: projectID,
         TaskTypeID: taskTypeID,

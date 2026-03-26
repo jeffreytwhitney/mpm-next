@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'TaskListColumns'.
+ */
 // Column definitions for the task list table
 import {ColumnDef} from "@tanstack/react-table";
 import type {TaskListItem} from "@/server/data/taskList";

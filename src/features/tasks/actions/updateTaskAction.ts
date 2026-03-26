@@ -1,5 +1,16 @@
 'use server'
 
+/**
+ * Handles task detail form submissions for updating an existing task.
+ *
+ * Responsibilities in this module:
+ * - Validate and normalize incoming form data.
+ * - Enforce task status transition and assignee rules.
+ * - Persist task field updates and transition timestamps.
+ * - Apply ticket-level active task count updates when tasks complete/cancel.
+ * - Emit related notes/time-entry side effects for waiting/cancelled/completed flows.
+ * - Revalidate task list/detail routes after a successful mutation.
+ */
 import {revalidatePath} from 'next/cache'
 import {
     isActiveTaskStatus,
@@ -35,6 +46,19 @@ interface ParsedUpdateTaskForm {
     hours: number | null
 }
 
+type ExistingTask = NonNullable<Awaited<ReturnType<typeof getTaskById>>>
+
+interface TaskTransitionContext {
+    isMarkingWaiting: boolean
+    isMarkingCancelled: boolean
+    isMarkingCompleted: boolean
+    shouldSetDateStarted: boolean
+    shouldSetDateCompleted: boolean
+}
+
+/**
+ * Validates and normalizes task detail form input before mutation logic runs.
+ */
 function validateAndParseUpdateTaskForm(formData: FormData):
     | { parsed: ParsedUpdateTaskForm }
     | { errorState: UpdateTaskState } {
@@ -155,6 +179,126 @@ function validateAndParseUpdateTaskForm(formData: FormData):
     }
 }
 
+/**
+ * Validates update rules that depend on current persisted task state.
+ */
+function validateTaskUpdateBusinessRules(
+    currentTask: ExistingTask,
+    parsedForm: ParsedUpdateTaskForm,
+):
+    | { context: TaskTransitionContext }
+    | { errorState: UpdateTaskState } {
+    const {
+        statusId,
+        assigneeId,
+        waitingReason,
+        waitingNote,
+        cancelledNote,
+    } = parsedForm
+
+    if (isRevertingToNotStarted(currentTask.StatusID, statusId)) {
+        return {
+            errorState: {
+                success: false,
+                fieldErrors: {
+                    statusId: 'Cannot move a Started or Waiting task back to Not Started.',
+                },
+            },
+        }
+    }
+
+    if (currentTask.AssignedToID && assigneeId == null) {
+        return {
+            errorState: {
+                success: false,
+                fieldErrors: {
+                    assigneeID: 'Cannot remove assignee once assigned.',
+                },
+            },
+        }
+    }
+
+    const isTaskCurrentlyActive = isActiveTaskStatus(currentTask.StatusID)
+    const isMarkingWaiting = statusId === TASK_STATUS_WAITING_ID && currentTask.StatusID !== TASK_STATUS_WAITING_ID
+    const isMarkingCancelled = isTaskCurrentlyActive && statusId === TASK_STATUS_CANCELLED_ID
+    const isMarkingCompleted = isTaskCurrentlyActive && statusId === TASK_STATUS_COMPLETED_ID
+
+    if (isMarkingWaiting && !waitingReason) {
+        return {
+            errorState: {
+                success: false,
+                fieldErrors: {
+                    waitingReason: 'Please select a waiting reason.',
+                },
+            },
+        }
+    }
+
+    if (isMarkingWaiting && waitingReason === 'other' && !waitingNote) {
+        return {
+            errorState: {
+                success: false,
+                fieldErrors: {
+                    waitingNote: 'Waiting note is required when selecting "Other".',
+                },
+            },
+        }
+    }
+
+    if (isMarkingCancelled && !cancelledNote) {
+        return {
+            errorState: {
+                success: false,
+                fieldErrors: {
+                    cancelledNote: 'Cancelled note is required when setting status to Cancelled.',
+                },
+            },
+        }
+    }
+
+    return {
+        context: {
+            isMarkingWaiting,
+            isMarkingCancelled,
+            isMarkingCompleted,
+            shouldSetDateStarted:
+                currentTask.DateStarted == null &&
+                shouldSetDateStartedForTransition(currentTask.StatusID, statusId),
+            shouldSetDateCompleted:
+                (isMarkingCompleted || isMarkingCancelled) && !currentTask.DateCompleted,
+        },
+    }
+}
+
+async function buildWaitingNoteText(
+    currentTask: ExistingTask,
+    waitingReason: string,
+    waitingNote: string,
+): Promise<string> {
+    if (waitingReason === 'waiting-for-part') {
+        return 'Waiting for part in order to complete the program.'
+    }
+
+    if (waitingReason === 'waiting-for-permission' && currentTask.ProjectID != null) {
+        const { ticket } = await getTicketById(currentTask.ProjectID)
+        const qe = await getQualityEngineerByTicketID(ticket.ID)
+        const qeName = qe?.FullName ?? 'Quality Engineer'
+        return `Waiting for Permission to release from ${qeName}`
+    }
+
+    if (waitingReason === 'other') {
+        return waitingNote
+    }
+
+    return ''
+}
+
+/**
+ * Server action used by task detail form submissions.
+ *
+ * Enforces transition rules, persists the task, and emits related note/time
+ * side effects for waiting/cancelled/completed transitions.
+ */
 export async function updateTask(
     taskId: number,
     _prevState: UpdateTaskState,
@@ -193,60 +337,18 @@ export async function updateTask(
             }
         }
 
-        if (isRevertingToNotStarted(currentTask.StatusID, statusId)) {
-            return {
-                success: false,
-                fieldErrors: {
-                    statusId: 'Cannot move a Started or Waiting task back to Not Started.',
-                },
-            }
+        const businessValidation = validateTaskUpdateBusinessRules(currentTask, validationResult.parsed)
+        if ('errorState' in businessValidation) {
+            return businessValidation.errorState
         }
 
-        if (currentTask.AssignedToID && assigneeId == null) {
-            return {
-                success: false,
-                fieldErrors: {
-                    assigneeID: 'Cannot remove assignee once assigned.',
-                },
-            }
-        }
-
-        const isTaskCurrentlyActive = isActiveTaskStatus(currentTask.StatusID)
-        const isMarkingWaiting = statusId === TASK_STATUS_WAITING_ID && currentTask.StatusID !== TASK_STATUS_WAITING_ID
-        const isMarkingCancelled = isTaskCurrentlyActive && statusId === TASK_STATUS_CANCELLED_ID
-        const isMarkingCompleted = isTaskCurrentlyActive && statusId === TASK_STATUS_COMPLETED_ID
-
-        if (isMarkingWaiting && !waitingReason) {
-            return {
-                success: false,
-                fieldErrors: {
-                    waitingReason: 'Please select a waiting reason.',
-                },
-            }
-        }
-
-        if (isMarkingWaiting && waitingReason === 'other' && !waitingNote) {
-            return {
-                success: false,
-                fieldErrors: {
-                    waitingNote: 'Waiting note is required when selecting "Other".',
-                },
-            }
-        }
-
-        if (isMarkingCancelled && !cancelledNote) {
-            return {
-                success: false,
-                fieldErrors: {
-                    cancelledNote: 'Cancelled note is required when setting status to Cancelled.',
-                },
-            }
-        }
-
-        const shouldSetDateStarted =
-            currentTask.DateStarted == null && shouldSetDateStartedForTransition(currentTask.StatusID, statusId)
-
-        const shouldSetDateCompleted = (isMarkingCompleted || isMarkingCancelled) && !currentTask.DateCompleted
+        const {
+            isMarkingWaiting,
+            isMarkingCancelled,
+            isMarkingCompleted,
+            shouldSetDateStarted,
+            shouldSetDateCompleted,
+        } = businessValidation.context
 
         const update: Parameters<typeof updateTaskRecord>[1] = {
             StatusID: statusId,
@@ -278,26 +380,9 @@ export async function updateTask(
                 CountOfActiveTasks: activeTaskCount,
             })
         }
-        
-        
 
         if (isMarkingWaiting && waitingReason) {
-            let noteText = ''
-            
-            if (waitingReason === 'waiting-for-part') {
-                noteText = 'Waiting for part in order to complete the program.'
-            } else if (waitingReason === 'waiting-for-permission') {
-                // Get the ticket and quality engineer name for the template
-                if (currentTask.ProjectID != null) {
-                    const { ticket } = await getTicketById(currentTask.ProjectID)
-                    const qe = await getQualityEngineerByTicketID(ticket.ID)
-                    const qeName = qe?.FullName ?? 'Quality Engineer'
-                    noteText = `Waiting for Permission to release from ${qeName}`
-                }
-            } else if (waitingReason === 'other') {
-                noteText = waitingNote
-            }
-            
+            const noteText = await buildWaitingNoteText(currentTask, waitingReason, waitingNote)
             if (noteText) {
                 await addTaskNote({
                     taskId,
@@ -345,4 +430,3 @@ export async function updateTask(
         }
     }
 }
-

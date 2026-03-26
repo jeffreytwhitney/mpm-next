@@ -1,3 +1,13 @@
+/**
+ * Task Status Data Access Module
+ *
+ * Handles database operations for task status options including:
+ * - Fetching available task status values for UI dropdowns
+ * - Filtering and formatting status data for display
+ *
+ * Provides the reference data for task status transitions and UI filtering.
+ * Status IDs are constants defined elsewhere and used for business logic checks.
+ */
 import {prisma} from "@/lib/prisma";
 
 export interface TaskStatusDropdownOption {

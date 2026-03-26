@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/admin/sites'.
+ */
 export default function AdminSitesPage() {
     return (
         <div className="p-6">

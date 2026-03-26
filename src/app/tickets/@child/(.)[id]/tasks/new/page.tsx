@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/tickets/@child/(.)[id]/tasks/new'.
+ */
 import TicketNewTaskContent from '@/features/tickets/components/TicketNewTaskContent'
 import TicketChildModalShell from '../../../../_components/TicketChildModalShell'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'

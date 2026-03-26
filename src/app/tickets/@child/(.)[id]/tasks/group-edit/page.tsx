@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/tickets/@child/(.)[id]/tasks/group-edit'.
+ */
 import TicketTaskGroupEditContent from '../../../../../../features/tickets/components/TicketTaskGroupEditContent'
 import TicketChildSlideOverShell from '../../../../_components/TicketChildSlideOverShell'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'

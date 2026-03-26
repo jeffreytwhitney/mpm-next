@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/tasks/@child/(.)[id]/notes/new'.
+ */
 import TaskChildModalShell from '@/app/tasks/_components/TaskChildModalShell'
 import { TaskNoteEntryForm } from '@/features/tasks/components/TaskNoteEntryForm'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'

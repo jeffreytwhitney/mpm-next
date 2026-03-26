@@ -1,4 +1,8 @@
 'use client'
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'DebouncedInput'.
+ */
 import React from "react";
 
 function DebouncedInput({value: initialValue, onChange, debounce = 500, ...props}: {

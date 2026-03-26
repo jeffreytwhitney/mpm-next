@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/tasks/[id]'.
+ */
 import { TaskDetailContent } from '@/features/tasks/components/TaskDetailContent'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 

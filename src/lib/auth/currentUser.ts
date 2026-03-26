@@ -1,3 +1,14 @@
+/**
+ * Current User Resolution Module
+ *
+ * Provides cached functions for resolving the authenticated user in server components.
+ * Uses React cache() to deduplicate user lookups within a single request.
+ * Handles:
+ * - Session user validation
+ * - Full user record loading from database
+ * - Converting records to CurrentUser shape for use in components
+ * - Enforcing authentication with requireCurrentUser()
+ */
 import { cache } from 'react'
 import { getUserById, type MPMUser } from '@/server/data/user'
 import { getSessionUser, type SessionUser } from '@/lib/auth/session'

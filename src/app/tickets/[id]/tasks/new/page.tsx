@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/tickets/[id]/tasks/new'.
+ */
 import TicketNewTaskContent from '@/features/tickets/components/TicketNewTaskContent'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 import {getTicketRecordById} from '@/server/data/ticket'

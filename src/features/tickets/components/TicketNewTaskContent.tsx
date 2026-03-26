@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Feature module for 'tickets' domain behavior.
+ */
 import TicketAddTaskForm from '@/features/tickets/components/TicketAddTaskForm'
 import {getTaskTypeDropdownOptions} from '@/server/data/taskType'
 

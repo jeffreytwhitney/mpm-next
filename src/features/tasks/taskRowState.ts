@@ -1,3 +1,15 @@
+/**
+ * Task Row State Calculation Module
+ *
+ * Computes display-oriented flags for task list rows including:
+ * - Overdue status (due date < today)
+ * - Started status and when work began
+ * - Waiting status
+ * - Completion status
+ * - Long-running indicator (started > 1 month ago)
+ *
+ * These flags drive row styling and visual indicators in task list views.
+ */
 import {parseDateValue, startOfDay} from '@/lib/date'
 
 type TaskRowStateInput = {

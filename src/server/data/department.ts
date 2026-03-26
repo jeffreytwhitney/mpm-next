@@ -1,3 +1,13 @@
+/**
+ * Department Data Access Module
+ *
+ * Handles database operations for departments including:
+ * - Retrieving department records by ID
+ * - Fetching dropdown lists of available departments
+ * - Accessing department contact lists (cell leads, quality, manufacturing)
+ *
+ * Departments define organizational hierarchy and email notification routing.
+ */
 import {prisma} from '@/lib/prisma'
 
 export interface DepartmentDropdownOption {value: number, label: string}

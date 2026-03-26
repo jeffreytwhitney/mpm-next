@@ -1,3 +1,15 @@
+/**
+ * Session Management Module
+ *
+ * Handles HTTP-only cookie-based session tokens including:
+ * - Session token creation with JWT claims (issuer, audience, expiration)
+ * - Session token validation and decoding
+ * - Cookie persistence and clearing
+ * - Session user extraction from request cookies
+ *
+ * Uses HTTP-only, Lax SameSite cookies for security and 7-day expiration.
+ * Session tokens are JWTs containing user info for efficient lookups without additional DB queries.
+ */
 import crypto from 'crypto'
 import { cookies } from 'next/headers'
 import type { MPMUser } from '@/server/data/user'

@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'Pagination'.
+ */
 import React from 'react'
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDoubleLeftIcon } from '@heroicons/react/24/solid'
 

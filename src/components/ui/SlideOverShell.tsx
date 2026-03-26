@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'SlideOverShell'.
+ */
 import React from 'react'
 
 interface SlideOverShellProps {

@@ -103,13 +103,13 @@ describe('createTask action', () => {
     await expect(addTask(formData)).resolves.toEqual({
       success: false,
       fieldErrors: {
-        taskName: 'There is already a task with this name, op, and task type.',
-        opNumber: 'There is already a task with this name, op, and task type.',
-        taskTypeID: 'There is already a task with this name, op, and task type.',
+        taskName: 'There is already a task with this name, op, and task type in this ticket.',
+        opNumber: 'There is already a task with this name, op, and task type in this ticket.',
+        taskTypeID: 'There is already a task with this name, op, and task type in this ticket.',
       },
     })
 
-    expect(mockCheckExistingTask).toHaveBeenCalledWith('Inspection', '20', 5)
+    expect(mockCheckExistingTask).toHaveBeenCalledWith('Inspection', '20', 5, 123)
     expect(mockCreateTaskRecord).not.toHaveBeenCalled()
     expect(mockRevalidatePath).not.toHaveBeenCalled()
   })
@@ -125,7 +125,7 @@ describe('createTask action', () => {
       fieldErrors: {},
     })
 
-    expect(mockCheckExistingTask).toHaveBeenCalledWith('Inspection', '20', 5)
+    expect(mockCheckExistingTask).toHaveBeenCalledWith('Inspection', '20', 5, 123)
     expect(mockCreateTaskRecord).toHaveBeenCalledTimes(1)
 
     const payload = mockCreateTaskRecord.mock.calls[0][0]

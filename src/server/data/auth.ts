@@ -1,5 +1,16 @@
 'use server'
 
+/**
+ * Authentication Data Access Module
+ *
+ * Handles user authentication flows including:
+ * - Credential verification and password validation
+ * - Session management (creation, validation, clearing)
+ * - Permission checking at action level
+ *
+ * Works in conjunction with session and permission modules to provide
+ * a complete authentication and authorization system.
+ */
 import { hasPermission, type AppPermission } from '@/lib/auth/permissions'
 import {
   clearSessionCookie,

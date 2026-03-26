@@ -1,3 +1,15 @@
+/**
+ * Task Note Data Access Module
+ *
+ * Handles database operations for task notes including:
+ * - Retrieving notes associated with a specific task
+ * - Creating new task notes with update-user attribution
+ * - Tracking automated vs. manual notes
+ *
+ * Task notes provide audit trail and communication for task progress.
+ * Automated notes are system-generated (status transitions, time entries),
+ * while manual notes are user-created documentation.
+ */
 import { prisma } from '@/lib/prisma'
 import type { Prisma } from '@/generated/prisma/client'
 

@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'AdminNavLinks'.
+ */
 import {
     UsersIcon,
     BuildingOfficeIcon,

@@ -1,3 +1,6 @@
+/**
+ * Shared state and field-error types for ticket create/update server actions.
+ */
 // Field errors for Create Task
 export type CreateTicketFieldErrors = Partial<Record<
     | 'siteID'

@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'LoginModal'.
+ */
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { loginFromFormState, type LoginResult } from '@/server/data/auth'

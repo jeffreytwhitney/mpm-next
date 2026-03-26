@@ -1,14 +1,25 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'AppShellLayout'.
+ */
 import React from 'react'
 import { Header } from '@/components/Header'
 import { SideNav } from '@/components/SideNav'
 import { getSessionUser } from '@/lib/auth/session'
 
+/** Shared frame props for top-level app sections. */
 interface AppShellLayoutProps {
   children: React.ReactNode
   modal?: React.ReactNode
   child?: React.ReactNode
 }
 
+/**
+ * Server layout frame for authenticated app pages.
+ *
+ * Renders global header/nav once and injects parallel route slots for
+ * modal and child overlays.
+ */
 export default async function AppShellLayout({
   children,
   modal,

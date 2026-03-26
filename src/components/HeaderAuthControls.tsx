@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'HeaderAuthControls'.
+ */
 import React from 'react'
 import { LoginModal } from '@/components/LoginModal'
 

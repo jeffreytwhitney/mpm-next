@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/admin/departments'.
+ */
 export default function AdminDepartmentsPage() {
     return (
         <div className="p-6">

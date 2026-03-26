@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Project script entry module.
+ */
 import bcrypt from 'bcryptjs'
 
 const password = process.argv[2]

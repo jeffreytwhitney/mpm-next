@@ -1,3 +1,15 @@
+/**
+ * Ticket Data Access Module
+ *
+ * Handles all server-side database operations for tickets (projects), including:
+ * - Retrieving tickets by ID or list with filtering/sorting/pagination
+ * - Creating and updating ticket records
+ * - Accessing related ticket data (owners, initiators, engineers)
+ * - Tracking active task counts per ticket
+ *
+ * All database operations use error handling middleware to ensure consistent
+ * error reporting and graceful failure handling.
+ */
 import {prisma} from "@/lib/prisma";
 import type {Prisma} from "@/generated/prisma/client";
 import {Prisma as PrismaNamespace} from "@/generated/prisma/client";

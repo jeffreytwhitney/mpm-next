@@ -1,3 +1,12 @@
+/**
+ * Common Data Parsing Utilities Module
+ *
+ * Provides reusable parsing helpers for form input and query parameters including:
+ * - Optional integer parsing with null-safe handling
+ * - Positive integer parsing with default fallback values
+ *
+ * Used throughout server actions and data access layers for consistent input normalization.
+ */
 export const parseOptionalInt = (value?: string): number | undefined => {
     if (!value) {
         return undefined

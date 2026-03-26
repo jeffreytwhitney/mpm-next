@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Feature module for 'tasks' domain behavior.
+ */
 import {useActionState, useEffect, useState} from 'react'
 import Link from 'next/link'
 import {updateTask} from '@/features/tasks/actions/updateTaskAction'

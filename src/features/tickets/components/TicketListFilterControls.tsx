@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Feature module for 'tickets' domain behavior.
+ */
 import React from 'react'
 import {type UserDropDownOption} from '@/server/data/user'
 import {type DepartmentDropdownOption} from '@/server/data/department'

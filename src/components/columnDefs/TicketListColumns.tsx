@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'TicketListColumns'.
+ */
 // Column definitions for the ticket list table
 import {ColumnDef} from "@tanstack/react-table";
 import {TicketListItem} from "@/server/data/ticketList";

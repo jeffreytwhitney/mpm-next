@@ -1,10 +1,18 @@
 'use server'
 
+/**
+ * Creates a new ticket and optional initial tasks.
+ *
+ * Responsibilities in this module:
+ * - Parse and validate ticket-level form fields and dynamic task rows.
+ * - Enforce duplicate task uniqueness before persistence.
+ * - Persist the ticket, then persist associated task drafts.
+ * - Revalidate tickets/tasks routes after a successful creation.
+ */
 import {revalidatePath} from 'next/cache'
 import {createTicket as createTicketRecord} from '@/server/data/ticket'
-import {checkExistingTask, createTask as createTaskRecord} from '@/server/data/task'
+import {createTask as createTaskRecord} from '@/server/data/task'
 import type {CreateTicketFieldErrors, CreateTicketState} from '@/features/tickets/actions/ticketActionTypes'
-import {parseDateValue} from '@/lib/date'
 import {parseOptionalInt, parsePositiveIntOrDefault} from '@/server/data/lib/common'
 import {validateAndParseTaskFields, isTaskRowEmpty, type RawTaskFields, type ParsedTaskDraft} from '@/features/tasks/actions/taskValidationHelpers'
 
@@ -21,15 +29,6 @@ interface ParsedCreateTicketForm {
     requiresModels: boolean
 }
 
-interface ParsedTaskDraft_RawForm {
-    taskName?: string
-    taskTypeID?: string
-    opNumber?: string
-    dueDate?: string
-    scheduledDueDate?: string
-    manufacturingRev?: string
-    drawingNumber?: string
-}
 
 type ValidateCreateTicketResult =
     | {parsedTicket: ParsedCreateTicketForm; parsedTasks: ParsedTaskDraft[]}
@@ -191,6 +190,31 @@ function validateAndParseCreateTicketForm(formData: FormData): ValidateCreateTic
     }
 }
 
+function validateNoDuplicateTasks(parsedTasks: ParsedTaskDraft[]): CreateTicketState | null {
+    const seenTasks = new Set<string>()
+
+    for (let index = 0; index < parsedTasks.length; index += 1) {
+        const task = parsedTasks[index]
+        const taskKey = `${task.taskName}|${task.operation}|${task.taskTypeID}`
+
+        if (seenTasks.has(taskKey)) {
+            const duplicateTaskErrors: CreateTicketFieldErrors = {}
+            setFieldError(duplicateTaskErrors, `tasks.${index}.taskName`, 'A task with this name, operation, and task type is already being added.')
+            setFieldError(duplicateTaskErrors, `tasks.${index}.opNumber`, 'A task with this name, operation, and task type is already being added.')
+            setFieldError(duplicateTaskErrors, `tasks.${index}.taskTypeID`, 'A task with this name, operation, and task type is already being added.')
+
+            return {
+                success: false,
+                fieldErrors: duplicateTaskErrors,
+            }
+        }
+
+        seenTasks.add(taskKey)
+    }
+
+    return null
+}
+
 export async function createTicket(
     _prevState: CreateTicketState,
     formData: FormData,
@@ -202,20 +226,9 @@ export async function createTicket(
 
     const {parsedTicket, parsedTasks} = validationResult
 
-    for (let index = 0; index < parsedTasks.length; index += 1) {
-        const task = parsedTasks[index]
-        const alreadyExists = await checkExistingTask(task.taskName, task.operation, task.taskTypeID)
-        if (alreadyExists) {
-            const duplicateTaskErrors: CreateTicketFieldErrors = {}
-            setFieldError(duplicateTaskErrors, `tasks.${index}.taskName`, 'A task with this name, operation, and task type already exists.')
-            setFieldError(duplicateTaskErrors, `tasks.${index}.opNumber`, 'A task with this name, operation, and task type already exists.')
-            setFieldError(duplicateTaskErrors, `tasks.${index}.taskTypeID`, 'A task with this name, operation, and task type already exists.')
-
-            return {
-                success: false,
-                fieldErrors: duplicateTaskErrors,
-            }
-        }
+    const duplicateTaskError = validateNoDuplicateTasks(parsedTasks)
+    if (duplicateTaskError) {
+        return duplicateTaskError
     }
 
     try {

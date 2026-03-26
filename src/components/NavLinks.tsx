@@ -1,4 +1,8 @@
 'use client';
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'NavLinks'.
+ */
 import {
     WrenchScrewdriverIcon,
     ClipboardDocumentListIcon,

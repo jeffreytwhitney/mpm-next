@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router module for route composition and rendering.
+ */
 import React, { useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import SlideOverShell from '@/components/ui/SlideOverShell'

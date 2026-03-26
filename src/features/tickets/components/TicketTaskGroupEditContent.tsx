@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Feature module for 'tickets' domain behavior.
+ */
 interface TicketTaskGroupEditContentProps {
   ticketId: number
 }

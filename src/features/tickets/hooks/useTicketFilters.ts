@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Feature module for 'tickets' domain behavior.
+ */
 import React, {useCallback, useState} from 'react'
 import {type TicketListFilters} from '@/server/data/ticketList'
 import {type UserDropDownOption} from '@/server/data/user'

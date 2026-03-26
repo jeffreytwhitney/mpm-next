@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Project source module.
+ */
 import { NextRequest, NextResponse } from 'next/server'
 
 const SESSION_COOKIE_NAME = 'mpm_session'

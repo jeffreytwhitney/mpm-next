@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'AuthUserProvider'.
+ */
 import React from 'react'
 import type { CurrentUser } from '@/lib/auth/currentUserTypes'
 

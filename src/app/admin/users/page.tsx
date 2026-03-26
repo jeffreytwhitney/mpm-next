@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/admin/users'.
+ */
 export default function AdminUsersPage() {
     return (
         <div className="p-6">

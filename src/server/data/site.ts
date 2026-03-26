@@ -1,5 +1,12 @@
 'use server'
 
+/**
+ * Site Cookie Management Module
+ *
+ * Manages site selection persistence via HTTP-only cookie.
+ * Allows users to select between configured manufacturing sites
+ * (Coon Rapids, Anoka) with persistent preference storage.
+ */
 import {cookies} from 'next/headers'
 import {SITE_COOKIE_NAME, parseSiteID} from '@/lib/site'
 

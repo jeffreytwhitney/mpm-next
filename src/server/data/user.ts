@@ -1,3 +1,16 @@
+/**
+ * User Data Access Module
+ *
+ * Handles all server-side database operations for users including:
+ * - Retrieving user records by ID, email, or network username
+ * - Authenticating users with password verification
+ * - Fetching dropdown lists of users by role/type (quality engineers, manufacturing engineers)
+ * - Site and department assignments
+ * - User type and admin status metadata
+ *
+ * All database operations use error handling middleware to ensure consistent
+ * error reporting and graceful failure handling.
+ */
 import {prisma} from '@/lib/prisma'
 import type { Prisma } from '@/generated/prisma/client'
 import { verifyPassword } from '@/lib/hash'

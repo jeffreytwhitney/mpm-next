@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'DataTable'.
+ */
 import React from 'react'
 import {
   ColumnDef,

@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/admin/schedules'.
+ */
 export default function AdminSchedulesPage() {
     return (
         <div className="p-6">

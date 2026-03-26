@@ -1,3 +1,7 @@
+/**
+ * AUTO-GENERATED MODULE DOC
+ * App Router page module for '/tasks/[id]/notes/new'.
+ */
 import { TaskNoteEntryForm } from '@/features/tasks/components/TaskNoteEntryForm'
 import { parsePositiveIntParamOrNotFound } from '@/lib/routeParams'
 

@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * AUTO-GENERATED MODULE DOC
+ * Shared UI component module for 'SideNav'.
+ */
 import React from 'react'
 import {usePathname, useRouter, useSearchParams} from 'next/navigation'
 import {setCurrentSiteCookie} from '@/server/data/site'
