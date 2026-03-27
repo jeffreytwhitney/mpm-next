@@ -1,9 +1,5 @@
 'use client'
 
-/**
- * AUTO-GENERATED MODULE DOC
- * Feature module for 'tickets' domain behavior.
- */
 import {useActionState, useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
 import {addTask} from '@/features/tickets/actions/addTaskAction'

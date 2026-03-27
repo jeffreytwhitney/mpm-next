@@ -15,6 +15,8 @@ import {createTask as createTaskRecord} from '@/server/data/task'
 import type {CreateTicketFieldErrors, CreateTicketState} from '@/features/tickets/actions/ticketActionTypes'
 import {parseOptionalInt, parsePositiveIntOrDefault} from '@/server/data/lib/common'
 import {validateAndParseTaskFields, isTaskRowEmpty, type RawTaskFields, type ParsedTaskDraft} from '@/features/tasks/actions/taskValidationHelpers'
+import {requireCurrentUser} from '@/lib/auth/currentUser'
+import {USER_TYPE_IDS} from '@/lib/auth/roles'
 
 interface ParsedCreateTicketForm {
     siteID: number
@@ -216,7 +218,6 @@ function validateNoDuplicateTasks(parsedTasks: ParsedTaskDraft[]): CreateTicketS
 }
 
 export async function createTicket(
-    _prevState: CreateTicketState,
     formData: FormData,
 ): Promise<CreateTicketState> {
     const validationResult = validateAndParseCreateTicketForm(formData)
@@ -225,6 +226,17 @@ export async function createTicket(
     }
 
     const {parsedTicket, parsedTasks} = validationResult
+
+    // Server-side role enforcement: if the current user is a Quality Engineer,
+    // override the submitted secondaryProjectOwnerID and departmentID with the
+    // values from the session — the client cannot be trusted for these fields.
+    const currentUser = await requireCurrentUser()
+    if (currentUser.userType === USER_TYPE_IDS.qualityEngineer) {
+        parsedTicket.secondaryProjectOwnerID = currentUser.userId
+        if (currentUser.departmentID != null) {
+            parsedTicket.departmentID = currentUser.departmentID
+        }
+    }
 
     const duplicateTaskError = validateNoDuplicateTasks(parsedTasks)
     if (duplicateTaskError) {
