@@ -156,6 +156,121 @@ describe('updateTicketAction', () => {
     expect(mockUpdateTicketRecord).not.toHaveBeenCalled()
   })
 
+  it('succeeds and persists null primaryProjectOwnerID when no ME is provided', async () => {
+    const formData = buildValidFormData({primaryProjectOwnerID: ''})
+
+    mockGetCurrentUserRecord.mockResolvedValueOnce({
+      ID: 9,
+      UserTypeID: USER_TYPE_IDS.metrologyProgrammer,
+      DepartmentID: 10,
+      IsAdmin: 0,
+    })
+    mockGetTicketRecordById.mockResolvedValueOnce({ID: 55, DepartmentID: 25})
+    mockGetQualityEngineerDropdownOptions.mockResolvedValueOnce([{value: 22, label: 'QE User'}])
+    mockUpdateTicketRecord.mockResolvedValueOnce({ID: 55})
+
+    await expect(updateTicketAction(55, {success: false, fieldErrors: {}}, formData)).resolves.toEqual({
+      success: true,
+      fieldErrors: {},
+    })
+
+    expect(mockUpdateTicketRecord).toHaveBeenCalledWith(55, expect.objectContaining({PrimaryProjectOwnerID: null}))
+    expect(mockGetManufacturingEngineerDropdownOptions).not.toHaveBeenCalled()
+  })
+
+  it('returns an invalid ME error when primaryProjectOwnerID is a non-numeric string', async () => {
+    const formData = buildValidFormData({primaryProjectOwnerID: 'not-a-number'})
+
+    await expect(updateTicketAction(55, {success: false, fieldErrors: {}}, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {
+        primaryProjectOwnerID: 'Manufacturing engineer is invalid.',
+      },
+    })
+
+    expect(mockGetCurrentUserRecord).not.toHaveBeenCalled()
+    expect(mockUpdateTicketRecord).not.toHaveBeenCalled()
+  })
+
+  it('returns a form error when the ticket does not exist', async () => {
+    const formData = buildValidFormData()
+
+    mockGetCurrentUserRecord.mockResolvedValueOnce({
+      ID: 9,
+      UserTypeID: USER_TYPE_IDS.metrologyProgrammer,
+      DepartmentID: 10,
+      IsAdmin: 0,
+    })
+    mockGetTicketRecordById.mockResolvedValueOnce(null)
+
+    await expect(updateTicketAction(55, {success: false, fieldErrors: {}}, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {},
+      formError: 'Ticket was not found.',
+    })
+
+    expect(mockGetQualityEngineerDropdownOptions).not.toHaveBeenCalled()
+    expect(mockUpdateTicketRecord).not.toHaveBeenCalled()
+  })
+
+  it('returns a form error when the ticket has no valid department', async () => {
+    const formData = buildValidFormData()
+
+    mockGetCurrentUserRecord.mockResolvedValueOnce({
+      ID: 9,
+      UserTypeID: USER_TYPE_IDS.metrologyProgrammer,
+      DepartmentID: 10,
+      IsAdmin: 0,
+    })
+    mockGetTicketRecordById.mockResolvedValueOnce({ID: 55, DepartmentID: null})
+
+    await expect(updateTicketAction(55, {success: false, fieldErrors: {}}, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {},
+      formError: 'This ticket is missing a valid department and cannot be edited.',
+    })
+
+    expect(mockGetQualityEngineerDropdownOptions).not.toHaveBeenCalled()
+    expect(mockUpdateTicketRecord).not.toHaveBeenCalled()
+  })
+
+  it('returns a form error when the update write returns no record', async () => {
+    const formData = buildValidFormData()
+
+    mockGetCurrentUserRecord.mockResolvedValueOnce({
+      ID: 9,
+      UserTypeID: USER_TYPE_IDS.metrologyProgrammer,
+      DepartmentID: 10,
+      IsAdmin: 0,
+    })
+    mockGetTicketRecordById.mockResolvedValueOnce({ID: 55, DepartmentID: 25})
+    mockGetQualityEngineerDropdownOptions.mockResolvedValueOnce([{value: 22, label: 'QE User'}])
+    mockGetManufacturingEngineerDropdownOptions.mockResolvedValueOnce([{value: 31, label: 'ME User'}])
+    mockUpdateTicketRecord.mockResolvedValueOnce(null)
+
+    await expect(updateTicketAction(55, {success: false, fieldErrors: {}}, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {},
+      formError: 'Ticket was not found.',
+    })
+
+    expect(mockRevalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('returns a form error when an unexpected error is thrown during the update', async () => {
+    const formData = buildValidFormData()
+
+    mockGetCurrentUserRecord.mockRejectedValueOnce(new Error('DB connection failed'))
+
+    await expect(updateTicketAction(55, {success: false, fieldErrors: {}}, formData)).resolves.toEqual({
+      success: false,
+      fieldErrors: {},
+      formError: 'Unable to save ticket right now. Please try again.',
+    })
+
+    expect(mockUpdateTicketRecord).not.toHaveBeenCalled()
+  })
+
   it('rejects engineer selections outside the ticket department', async () => {
     const formData = buildValidFormData()
 

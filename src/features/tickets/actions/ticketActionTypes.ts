@@ -1,3 +1,4 @@
+
 /**
  * Shared state and field-error types for ticket create/update server actions.
  */
@@ -6,10 +7,14 @@ export type CreateTicketFieldErrors = Partial<Record<
     | 'siteID'
     | 'ticketName'
     | 'primaryProjectOwnerID'
+    | 'manufacturingEngineerID'
     | 'departmentID'
     | 'secondaryProjectOwnerID'
+    | 'qualityEngineerID'
     | 'initiatorEmployeeID'
     | 'carbonCopyEmailList'
+    | 'copyUserEmailAddresses'
+    | `copyUserEmailAddresses.${number}`
     | `tasks.${number}.taskName`
     | `tasks.${number}.taskTypeID`
     | `tasks.${number}.opNumber`
@@ -19,10 +24,34 @@ export type CreateTicketFieldErrors = Partial<Record<
     string
 >>
 
+export interface CreateTicketTaskFormValues {
+    taskTypeID: string
+    dueDate: string
+    scheduledDueDate: string
+    taskName: string
+    manufacturingRev: string
+    drawingNumber: string
+    opNumber: string
+}
+
+
+export interface CreateTicketFormValues {
+    ticketName: string
+    ticketDescription: string
+    departmentID: string
+    qualityEngineerID: string
+    manufacturingEngineerID: string
+    requiresNewModels: string
+    copyUserEmailAddresses: string[]
+    tasks: CreateTicketTaskFormValues[]
+}
+
+
 export interface CreateTicketState {
     success: boolean
     fieldErrors: CreateTicketFieldErrors
     formError?: string
+    values?: CreateTicketFormValues
 }
 
 export const INITIAL_CREATE_TICKET_STATE: CreateTicketState = {

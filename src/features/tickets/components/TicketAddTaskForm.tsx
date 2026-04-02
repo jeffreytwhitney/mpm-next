@@ -9,6 +9,17 @@ import {
 } from '@/features/tasks/actions/taskActionTypes'
 
 import type {TaskTypeDropdownOption} from '@/server/data/taskType'
+import {
+    BUTTON_PRIMARY_CLASS,
+    FORM_CLASS,
+    FORM_ERROR_CLASS,
+    FORM_ROW_LABEL_CLASS,
+    FORM_ROW_VALUE_CLASS,
+    FORM_TWO_COLUMN_GRID_CLASS,
+    ERROR_TEXT_COMPACT_CLASS,
+    INPUT_SMALL_CLASS,
+    REQUIRED_ASTERISK_CLASS,
+} from '@/components/ui/classTokens'
 
 const TASK_ADDED_EVENT = 'ticket-task:added'
 
@@ -97,24 +108,24 @@ export default function TicketAddTaskForm({
     }
 
     return (
-        <form action={addTaskAction} onSubmit={handleSubmit} className="space-y-4 text-sm" suppressHydrationWarning>
+        <form action={addTaskAction} onSubmit={handleSubmit} className={FORM_CLASS} suppressHydrationWarning>
             <input type="hidden" name="projectID" value={String(ticketId)} />
 
-            <div className="grid grid-cols-[12rem_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
-                <span className="font-semibold pt-1">Ticket Number</span>
-                <span className="pt-1">{ticketNumber}</span>
+            <div className={FORM_TWO_COLUMN_GRID_CLASS}>
+                <span className={FORM_ROW_LABEL_CLASS}>Ticket Number</span>
+                <span className={FORM_ROW_VALUE_CLASS}>{ticketNumber}</span>
 
-                <span className="font-semibold pt-1">Ticket Name</span>
-                <span className="pt-1">{ticketName}</span>
+                <span className={FORM_ROW_LABEL_CLASS}>Ticket Name</span>
+                <span className={FORM_ROW_VALUE_CLASS}>{ticketName}</span>
 
-                <span className="font-semibold pt-1">Ticket Description</span>
-                <span className="pt-1">{ticketDescription}</span>
+                <span className={FORM_ROW_LABEL_CLASS}>Ticket Description</span>
+                <span className={FORM_ROW_VALUE_CLASS}>{ticketDescription}</span>
 
-                <span className="font-semibold pt-1">Status</span>
-                <span className="pt-1">Not Started</span>
+                <span className={FORM_ROW_LABEL_CLASS}>Status</span>
+                <span className={FORM_ROW_VALUE_CLASS}>Not Started</span>
 
-                <label htmlFor="taskTypeID" className="font-semibold pt-1">
-                    Task Type <span className="text-red-500">*</span>
+                <label htmlFor="taskTypeID" className={FORM_ROW_LABEL_CLASS}>
+                    Task Type <span className={REQUIRED_ASTERISK_CLASS}>*</span>
                 </label>
                 <div>
                     <select
@@ -122,7 +133,7 @@ export default function TicketAddTaskForm({
                         id="taskTypeID"
                         name="taskTypeID"
                         defaultValue={taskTypeDefaultValue}
-                        className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
+                        className={INPUT_SMALL_CLASS}
                         suppressHydrationWarning
                     >
                         <option value="">-- Select a task type --</option>
@@ -133,69 +144,69 @@ export default function TicketAddTaskForm({
                         ))}
                     </select>
                     {displayErrors.taskTypeID && (
-                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.taskTypeID}</p>
+                        <p className={ERROR_TEXT_COMPACT_CLASS}>{displayErrors.taskTypeID}</p>
                     )}
                 </div>
 
-                <label htmlFor="taskName" className="font-semibold pt-1">
-                    Task Name <span className="text-red-500">*</span>
+                <label htmlFor="taskName" className={FORM_ROW_LABEL_CLASS}>
+                    Task Name <span className={REQUIRED_ASTERISK_CLASS}>*</span>
                 </label>
                 <div>
                     <input
                         id="taskName"
                         name="taskName"
                         defaultValue={formValues?.taskName ?? ''}
-                        className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
+                        className={INPUT_SMALL_CLASS}
                         suppressHydrationWarning
                     />
                     {displayErrors.taskName && (
-                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.taskName}</p>
+                        <p className={ERROR_TEXT_COMPACT_CLASS}>{displayErrors.taskName}</p>
                     )}
                 </div>
 
-                <label htmlFor="manufacturingRev" className="font-semibold pt-1">
-                    Rev <span className="text-red-500">*</span>
+                <label htmlFor="manufacturingRev" className={FORM_ROW_LABEL_CLASS}>
+                    Rev <span className={REQUIRED_ASTERISK_CLASS}>*</span>
                 </label>
                 <div>
                     <input
                         id="manufacturingRev"
                         name="manufacturingRev"
                         defaultValue={formValues?.manufacturingRev ?? ''}
-                        className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
+                        className={INPUT_SMALL_CLASS}
                         suppressHydrationWarning
                     />
                     {displayErrors.manufacturingRev && (
-                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.manufacturingRev}</p>
+                        <p className={ERROR_TEXT_COMPACT_CLASS}>{displayErrors.manufacturingRev}</p>
                     )}
                 </div>
 
-                <label htmlFor="drawingNumber" className="font-semibold pt-1">Drawing Number</label>
+                <label htmlFor="drawingNumber" className={FORM_ROW_LABEL_CLASS}>Drawing Number</label>
                 <input
                     id="drawingNumber"
                     name="drawingNumber"
                     defaultValue={formValues?.drawingNumber ?? ''}
-                    className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
+                    className={INPUT_SMALL_CLASS}
                     suppressHydrationWarning
                 />
 
-                <label htmlFor="opNumber" className="font-semibold pt-1">
-                    Op Number <span className="text-red-500">*</span>
+                <label htmlFor="opNumber" className={FORM_ROW_LABEL_CLASS}>
+                    Op Number <span className={REQUIRED_ASTERISK_CLASS}>*</span>
                 </label>
                 <div>
                     <input
                         id="opNumber"
                         name="opNumber"
                         defaultValue={formValues?.opNumber ?? ''}
-                        className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
+                        className={INPUT_SMALL_CLASS}
                         suppressHydrationWarning
                     />
                     {displayErrors.opNumber && (
-                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.opNumber}</p>
+                        <p className={ERROR_TEXT_COMPACT_CLASS}>{displayErrors.opNumber}</p>
                     )}
                 </div>
 
-                <label htmlFor="dueDate" className="font-semibold pt-1">
-                    Due Date <span className="text-red-500">*</span>
+                <label htmlFor="dueDate" className={FORM_ROW_LABEL_CLASS}>
+                    Due Date <span className={REQUIRED_ASTERISK_CLASS}>*</span>
                 </label>
                 <div>
                     <input
@@ -203,16 +214,16 @@ export default function TicketAddTaskForm({
                         id="dueDate"
                         name="dueDate"
                         defaultValue={formValues?.dueDate ?? ''}
-                        className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
+                        className={INPUT_SMALL_CLASS}
                         suppressHydrationWarning
                     />
                     {displayErrors.dueDate && (
-                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.dueDate}</p>
+                        <p className={ERROR_TEXT_COMPACT_CLASS}>{displayErrors.dueDate}</p>
                     )}
                 </div>
 
-                <label htmlFor="scheduledDueDate" className="font-semibold pt-1">
-                    Scheduled Due Date <span className="text-red-500">*</span>
+                <label htmlFor="scheduledDueDate" className={FORM_ROW_LABEL_CLASS}>
+                    Scheduled Due Date <span className={REQUIRED_ASTERISK_CLASS}>*</span>
                 </label>
                 <div>
                     <input
@@ -220,24 +231,24 @@ export default function TicketAddTaskForm({
                         id="scheduledDueDate"
                         name="scheduledDueDate"
                         defaultValue={formValues?.scheduledDueDate ?? ''}
-                        className="rounded border border-gray-300 bg-white px-2 py-1 w-52"
+                        className={INPUT_SMALL_CLASS}
                         suppressHydrationWarning
                     />
                     {displayErrors.scheduledDueDate && (
-                        <p className="mt-0.5 text-xs text-red-600">{displayErrors.scheduledDueDate}</p>
+                        <p className={ERROR_TEXT_COMPACT_CLASS}>{displayErrors.scheduledDueDate}</p>
                     )}
                 </div>
             </div>
 
             {serverState.formError && (
-                <p className="text-sm text-red-600">{serverState.formError}</p>
+                <p className={FORM_ERROR_CLASS}>{serverState.formError}</p>
             )}
 
             <div>
                 <button
                     type="submit"
                     disabled={isPending}
-                    className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
+                    className={BUTTON_PRIMARY_CLASS}
                 >
                     {isPending ? 'Saving...' : 'Save'}
                 </button>

@@ -5,6 +5,7 @@
  * App Router module for route composition and rendering.
  */
 import React, {useCallback} from 'react'
+import Link from 'next/link'
 import {usePathname, useRouter} from 'next/navigation'
 import {DataTable} from '@/components/DataTable'
 import {type TicketListFilters, type TicketListItem} from '@/server/data/queries/ticketList'
@@ -17,6 +18,9 @@ import {PAGE_SIZE, TEXT_FILTER_CLASS, FILTER_RESET_TITLE} from '@/lib/filterCons
 import {Pagination} from '@/components/Pagination'
 import {useTicketFilters} from '@/features/tickets/hooks/useTicketFilters'
 import {QualityEngineerFilter, DepartmentFilter, SubmittorFilter} from '@/features/tickets/components/TicketListFilterControls'
+import {BUTTON_SECONDARY_CLASS} from '@/components/ui/classTokens'
+import {useAuthUser} from '@/components/AuthUserProvider'
+import {canCreateTickets} from '@/lib/auth/permissions'
 
 type TextFilterKey = 'ticketNumber' | 'ticketName'
 
@@ -32,7 +36,12 @@ interface TicketListClientProps {
 export function TicketListClient({initialTickets, initialFilters, initialDepartmentOptions, initialQualityEngineerOptions, initialSubmittorOptions, totalCount}: TicketListClientProps) {
     const router = useRouter()
     const pathname = usePathname()
+    const currentUser = useAuthUser()
     const lastNavigatedHrefRef = React.useRef<string | null>(null)
+    const canCreateTicket = canCreateTickets(currentUser ? {
+        UserTypeID: currentUser.userTypeID,
+        IsAdmin: currentUser.isAdmin,
+    } : null)
 
     const handleFiltersChanged = useCallback((nextFilters: TicketListFilters) => {
         if (pathname !== '/tickets') {
@@ -118,6 +127,16 @@ export function TicketListClient({initialTickets, initialFilters, initialDepartm
 
     return (
         <div className="mx-auto py-4 px-3">
+            <div className="mb-4 flex justify-end">
+                {canCreateTicket && (
+                    <Link href="/tickets/new" className={`${BUTTON_SECONDARY_CLASS} inline-flex items-center gap-1 text-xs`}>
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Ticket
+                    </Link>
+                )}
+            </div>
             <DataTable
                 columns={ticketColumns}
                 data={initialTickets}
